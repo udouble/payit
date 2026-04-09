@@ -8,10 +8,7 @@
 
     .sidebar { width:250px; background:#2b2b2b; padding:20px; }
 
-    /* 👉 FIX spacing */
-    .account {
-      margin-bottom:10px;
-    }
+    .account { margin-bottom:10px; }
 
     .main { flex:1; padding:20px; }
 
@@ -117,7 +114,7 @@
 
     <div class="topbar">
       <h2>Transacties</h2>
-      <button class="add-btn" onclick="openModal()">＋</button>
+      <button class="add-btn" id="addBtn">＋</button>
     </div>
 
     <table>
@@ -162,6 +159,8 @@ let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let editIndex = null;
 let sortField = null;
 let sortDirection = 1;
+
+document.getElementById("addBtn").addEventListener("click", openModal);
 
 function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -218,7 +217,6 @@ function sortBy(field) {
   renderTransactions();
 }
 
-/* 👉 FIX: modal correct ophalen */
 function openModal() {
   editIndex = null;
 

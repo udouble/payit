@@ -50,12 +50,12 @@
       cursor:pointer;
     }
 
-    /* Kolombreedtes */
-    th:nth-child(1), td:nth-child(1) { width:110px; } /* datum */
-    th:nth-child(2), td:nth-child(2) { width:120px; } /* categorie */
-    th:nth-child(3), td:nth-child(3) { width:auto; }  /* memo groot */
+    /* NIEUWE VOLGORDE */
+    th:nth-child(1), td:nth-child(1) { width:70px; text-align:center; } /* ST */
+    th:nth-child(2), td:nth-child(2) { width:110px; } /* datum */
+    th:nth-child(3), td:nth-child(3) { width:120px; } /* categorie */
     th:nth-child(4), td:nth-child(4) { width:110px; text-align:right; } /* bedrag */
-    th:nth-child(5), td:nth-child(5) { width:80px; text-align:center; } /* status */
+    th:nth-child(5), td:nth-child(5) { width:auto; }  /* memo */
 
     tr:hover { background:#2a2a2a; }
 
@@ -132,11 +132,11 @@
     <table>
       <thead>
         <tr>
+          <th>ST</th>
           <th onclick="sortBy('date')">Datum</th>
           <th onclick="sortBy('category')">Categorie</th>
-          <th>Memo</th>
           <th onclick="sortBy('amount')">Bedrag</th>
-          <th>ST</th>
+          <th>Memo</th>
         </tr>
       </thead>
       <tbody id="transactions"></tbody>
@@ -191,16 +191,15 @@ function renderTransactions() {
 
   list.forEach((t) => {
     const index = transactions.indexOf(t);
-
     const dotClass = t.status === "confirmed" ? "green" : "red";
 
     const row = document.createElement("tr");
     row.innerHTML = `
+      <td>ST <span class="status-dot ${dotClass}"></span></td>
       <td>${t.date}</td>
       <td>${t.category}</td>
-      <td>${t.memo}</td>
       <td>${t.amount} €</td>
-      <td>ST <span class="status-dot ${dotClass}"></span></td>
+      <td>${t.memo}</td>
     `;
 
     row.onclick = () => editTransaction(index);
@@ -216,14 +215,13 @@ function sortBy(field) {
 function openModal() {
   editIndex = null;
 
-  date.value = today();   /* DEFAULT VANDAAG */
+  date.value = today();
   category.value = "";
   memo.value = "";
   amount.value = "";
   status.value = "confirmed";
 
   document.querySelector(".delete-btn").style.display = "none";
-
   modal.style.display = "flex";
 }
 
@@ -238,7 +236,6 @@ function editTransaction(index) {
   status.value = t.status;
 
   document.querySelector(".delete-btn").style.display = "block";
-
   modal.style.display = "flex";
 }
 

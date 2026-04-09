@@ -151,9 +151,10 @@
     <input type="text" id="memo" placeholder="Memo">
     <input type="number" id="amount" placeholder="Bedrag">
 
+    <!-- 👉 DEFAULT = AFWACHTEND -->
     <select id="status">
+      <option value="pending" selected>Afwachtend</option>
       <option value="confirmed">Bevestigd</option>
-      <option value="pending">Afwachtend</option>
     </select>
 
     <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
@@ -199,9 +200,11 @@ function renderTransactions() {
   list.forEach((t) => {
     const index = transactions.indexOf(t);
 
-    /* 👉 FIX: status correct bepalen */
-    const isConfirmed = t.status === "confirmed";
-    const dotClass = isConfirmed ? "green" : "red";
+    /* 👉 DUIDELIJKE STATUS LOGICA */
+    let dotClass = "red"; // default = afwachtend
+    if (t.status === "confirmed") {
+      dotClass = "green";
+    }
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -234,7 +237,8 @@ function openModal() {
   category.value = "";
   memo.value = "";
   amount.value = "";
-  status.value = "confirmed";
+
+  status.value = "pending"; // 👉 altijd rood als default
 
   document.querySelector(".delete-btn").style.display = "none";
   modal.style.display = "flex";
@@ -260,7 +264,6 @@ function saveTransaction() {
   const m = memo.value.trim();
   const a = amount.value;
 
-  /* 👉 VALIDATIE */
   if (!d || !c || !m || a === "" || isNaN(a)) {
     alert("Vul alle velden correct in.");
     return;

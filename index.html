@@ -50,12 +50,19 @@
       cursor:pointer;
     }
 
-    /* NIEUWE VOLGORDE */
-    th:nth-child(1), td:nth-child(1) { width:70px; text-align:center; } /* ST */
-    th:nth-child(2), td:nth-child(2) { width:110px; } /* datum */
-    th:nth-child(3), td:nth-child(3) { width:120px; } /* categorie */
-    th:nth-child(4), td:nth-child(4) { width:110px; text-align:right; } /* bedrag */
-    th:nth-child(5), td:nth-child(5) { width:auto; }  /* memo */
+    /* Kolommen */
+    th:nth-child(1), td:nth-child(1) { width:70px; text-align:center; }
+    th:nth-child(2), td:nth-child(2) { width:110px; }
+    th:nth-child(3), td:nth-child(3) { width:120px; }
+    th:nth-child(4), td:nth-child(4) {
+      width:110px;
+      text-align:right;
+      padding-right:20px; /* 👉 EXTRA RUIMTE */
+    }
+    th:nth-child(5), td:nth-child(5) {
+      width:auto;
+      padding-left:10px; /* 👉 EXTRA RUIMTE */
+    }
 
     tr:hover { background:#2a2a2a; }
 
@@ -107,9 +114,9 @@
       cursor:pointer;
     }
 
-    .save-btn { background:#4caf50; color:white; }
-    .delete-btn { background:#ff4444; color:white; }
-    .close-btn { background:#666; color:white; }
+    .save-btn { background:#4caf50; }
+    .delete-btn { background:#ff4444; }
+    .close-btn { background:#666; }
   </style>
 </head>
 <body>
@@ -132,7 +139,7 @@
     <table>
       <thead>
         <tr>
-          <th>ST</th>
+          <th onclick="sortBy('status')">ST</th>
           <th onclick="sortBy('date')">Datum</th>
           <th onclick="sortBy('category')">Categorie</th>
           <th onclick="sortBy('amount')">Bedrag</th>
@@ -170,6 +177,7 @@
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let editIndex = null;
 let sortField = null;
+let sortDirection = 1; // 1 = asc, -1 = desc
 
 function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -186,7 +194,17 @@ function renderTransactions() {
   let list = [...transactions];
 
   if (sortField) {
-    list.sort((a,b) => a[sortField] > b[sortField] ? 1 : -1);
+    list.sort((a,b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+
+      if (sortField === "status") {
+        valA = a.status === "confirmed" ? 1 : 0;
+        valB = b.status === "confirmed" ? 1 : 0;
+      }
+
+      return valA > valB ? sortDirection : -sortDirection;
+    });
   }
 
   list.forEach((t) => {
@@ -208,7 +226,12 @@ function renderTransactions() {
 }
 
 function sortBy(field) {
-  sortField = field;
+  if (sortField === field) {
+    sortDirection *= -1; // toggle
+  } else {
+    sortField = field;
+    sortDirection = 1;
+  }
   renderTransactions();
 }
 

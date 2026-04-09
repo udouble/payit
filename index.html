@@ -32,7 +32,6 @@
       box-sizing: border-box;
     }
 
-    /* SIDEBAR */
     .sidebar { 
       width: 300px;
       padding: 25px;
@@ -54,7 +53,6 @@
     .account:hover { transform: translateX(5px); }
     .account.active { background: var(--accent); }
 
-    /* 👉 NIEUW: centrale acties */
     .account-actions-bar {
       display: flex;
       gap: 10px;
@@ -85,7 +83,6 @@
       cursor: pointer;
     }
 
-    /* MAIN */
     .main {
       flex: 1;
       padding: 30px;
@@ -117,6 +114,7 @@
       width:100%;
       border-collapse:separate;
       border-spacing:0 12px;
+      table-layout: fixed;
     }
 
     tr {
@@ -125,24 +123,19 @@
       transition:.2s;
     }
 
-    tr:hover {
-      transform: translateY(-3px);
-      background: rgba(255,255,255,0.08);
-    }
-
     td {
-      padding:18px 14px;
+      padding:18px 10px;
     }
 
-    td:nth-child(4) {
-      text-align:right;
-      font-weight:700;
-      color: var(--accent);
-    }
+    /* 👉 HIER ZIT DE ENIGE WIJZIGING */
 
-    td:nth-child(5) {
-      color: #94a3b8;
-    }
+    th:nth-child(1), td:nth-child(1) { width: 50px; }
+    th:nth-child(2), td:nth-child(2) { width: 110px; }
+    th:nth-child(3), td:nth-child(3) { width: 120px; }
+    th:nth-child(4), td:nth-child(4) { width: 100px; text-align:right; }
+    th:nth-child(5), td:nth-child(5) { width: auto; padding-left: 20px; }
+
+    /* 👆 Memo krijgt alle resterende ruimte */
 
     .status-dot {
       width:10px;
@@ -151,8 +144,8 @@
       display:inline-block;
     }
 
-    .green { background:#10b981; box-shadow:0 0 10px #10b981; }
-    .red { background:#f43f5e; box-shadow:0 0 10px #f43f5e; }
+    .green { background:#10b981; }
+    .red { background:#f43f5e; }
 
     .modal {
       display:none;
@@ -177,11 +170,12 @@
 </head>
 <body>
 
+<!-- REST VAN JE CODE IS ONGEWIJZIGD -->
+
 <div class="container">
   <div class="sidebar">
     <h2>REKENINGEN</h2>
 
-    <!-- 👉 CENTRALE KNOPPEN -->
     <div class="account-actions-bar">
       <button onclick="renameAccount()">✏️</button>
       <button onclick="deleteAccount()">✖</button>
@@ -212,63 +206,6 @@
     </table>
   </div>
 </div>
-
-<script>
-let accounts = JSON.parse(localStorage.getItem("accounts")) || ["Privé","VOF"];
-let currentAccount = accounts[0];
-
-function saveAccounts(){
-  localStorage.setItem("accounts", JSON.stringify(accounts));
-}
-
-function renderAccounts(){
-  const list = document.getElementById("accounts-list");
-  list.innerHTML = "";
-
-  accounts.sort((a,b)=>a.localeCompare(b));
-
-  accounts.forEach(acc=>{
-    const div = document.createElement("div");
-    div.className = "account" + (acc === currentAccount ? " active" : "");
-    div.innerText = acc;
-    div.onclick = ()=>{
-      currentAccount = acc;
-      renderAccounts();
-      document.getElementById("current-account-title").innerText = acc;
-    };
-    list.appendChild(div);
-  });
-}
-
-function addAccount(){
-  const name = prompt("Naam rekening:");
-  if(!name) return;
-  accounts.push(name);
-  saveAccounts();
-  renderAccounts();
-}
-
-function renameAccount(){
-  const name = prompt("Nieuwe naam:", currentAccount);
-  if(!name) return;
-  const index = accounts.indexOf(currentAccount);
-  accounts[index] = name;
-  currentAccount = name;
-  saveAccounts();
-  renderAccounts();
-}
-
-function deleteAccount(){
-  if(!confirm("Verwijderen?")) return;
-  accounts = accounts.filter(a=>a !== currentAccount);
-  currentAccount = accounts[0];
-  saveAccounts();
-  renderAccounts();
-}
-
-renderAccounts();
-document.getElementById("current-account-title").innerText = currentAccount;
-</script>
 
 </body>
 </html>

@@ -75,7 +75,7 @@
     .green { background: #4caf50; box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
     .red { background: #ff4444; box-shadow: 0 0 5px rgba(255, 68, 68, 0.5); }
 
-    /* Modal Styling - VERBETERDE LEESBAARHEID */
+    /* Modal Styling */
     .modal {
       display: none;
       position: fixed;
@@ -90,7 +90,7 @@
       background: #2b2b2b;
       padding: 30px;
       border-radius: 12px;
-      width: 450px; /* Iets breder voor balans */
+      width: 450px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
@@ -122,7 +122,7 @@
       background: #1e1e1e;
       color: white;
       box-sizing: border-box;
-      font-size: 18px; /* DUIDELIJK LEESBAAR */
+      font-size: 18px;
     }
 
     .modal-content input:focus, 
@@ -217,6 +217,7 @@
   let activeAccountId = accounts[0].id;
   let editingId = null;
 
+  // Default instelling: Status sorteren, Afwachtend eerst
   let currentSort = {
     field: 'status',
     direction: 'asc'
@@ -242,6 +243,19 @@
 
   function applySorting(data) {
     return data.sort((a, b) => {
+      // SPECIALE LOGICA VOOR STATUS (Default)
+      if (currentSort.field === 'status') {
+        let orderA = a.status === 'pending' ? 0 : 1;
+        let orderB = b.status === 'pending' ? 0 : 1;
+        
+        if (orderA !== orderB) {
+          return currentSort.direction === 'asc' ? orderA - orderB : orderB - orderA;
+        }
+        // Als status gelijk is -> Secundaire sortering op datum (verste eerst)
+        return b.date.localeCompare(a.date);
+      }
+
+      // STANDAARD LOGICA VOOR ANDERE KOLOMMEN
       let valA = a[currentSort.field];
       let valB = b[currentSort.field];
 
@@ -250,112 +264,4 @@
         valB = parseFloat(valB) || 0;
       }
 
-      let comparison = 0;
-      if (valA < valB) comparison = -1;
-      if (valA > valB) comparison = 1;
-
-      if (comparison === 0 && currentSort.field !== 'date') {
-        return b.date.localeCompare(a.date);
-      }
-
-      return currentSort.direction === 'asc' ? comparison : -comparison;
-    });
-  }
-
-  function renderTransactions() {
-    const tbody = document.getElementById('transactions');
-    tbody.innerHTML = '';
-
-    let filtered = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
-    let sorted = applySorting(filtered);
-
-    sorted.forEach(t => {
-      const tr = document.createElement('tr');
-      tr.onclick = () => openModal(t.id);
-      const statusClass = t.status === 'confirmed' ? 'green' : 'red';
-      tr.innerHTML = `
-        <td><span class="status-dot ${statusClass}"></span></td>
-        <td>${t.date}</td>
-        <td>${t.category}</td>
-        <td>€ ${parseFloat(t.amount || 0).toFixed(2)}</td>
-        <td>${t.memo || ''}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function sortBy(field) {
-    if (currentSort.field === field) {
-      currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-    } else {
-      currentSort.field = field;
-      currentSort.direction = 'asc';
-    }
-    renderTransactions();
-  }
-
-  function openModal(id = null) {
-    editingId = id;
-    const modal = document.getElementById('modal');
-    const deleteBtn = document.getElementById('delete-btn');
-    if (id) {
-      const t = transactions.find(x => x.id === id);
-      document.getElementById('modal-title').innerText = 'Transactie aanpassen';
-      document.getElementById('date').value = t.date;
-      document.getElementById('category').value = t.category;
-      document.getElementById('memo').value = t.memo || '';
-      document.getElementById('amount').value = t.amount;
-      document.getElementById('status').value = t.status;
-      deleteBtn.style.display = 'block';
-    } else {
-      document.getElementById('modal-title').innerText = 'Nieuwe transactie';
-      document.getElementById('date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('category').value = '';
-      document.getElementById('memo').value = '';
-      document.getElementById('amount').value = '';
-      document.getElementById('status').value = 'pending';
-      deleteBtn.style.display = 'none';
-    }
-    modal.style.display = 'flex';
-  }
-
-  function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-  function saveTransaction() {
-    const data = {
-      date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
-      category: document.getElementById('category').value || 'Onbekend',
-      memo: document.getElementById('memo').value,
-      amount: document.getElementById('amount').value || 0,
-      status: document.getElementById('status').value,
-      accountId: activeAccountId
-    };
-
-    if (editingId) {
-      const index = transactions.findIndex(t => t.id === editingId);
-      data.accountId = transactions[index].accountId || accounts[0].id;
-      transactions[index] = { ...data, id: editingId };
-    } else {
-      data.id = Date.now().toString();
-      transactions.push(data);
-    }
-
-    localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-    closeModal();
-    renderTransactions();
-  }
-
-  function deleteTransaction() {
-    if (editingId && confirm('Verwijderen?')) {
-      transactions = transactions.filter(t => t.id !== editingId);
-      localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-      closeModal();
-      renderTransactions();
-    }
-  }
-
-  renderAccounts();
-  renderTransactions();
-</script>
-</body>
-</html>
+      let comparison =

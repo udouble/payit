@@ -45,24 +45,13 @@
       white-space:nowrap;
     }
 
-    th {
-      border-bottom:1px solid #444;
-      cursor:pointer;
-    }
+    th { border-bottom:1px solid #444; cursor:pointer; }
 
-    /* Kolommen */
     th:nth-child(1), td:nth-child(1) { width:70px; text-align:center; }
     th:nth-child(2), td:nth-child(2) { width:110px; }
     th:nth-child(3), td:nth-child(3) { width:120px; }
-    th:nth-child(4), td:nth-child(4) {
-      width:110px;
-      text-align:right;
-      padding-right:20px; /* 👉 EXTRA RUIMTE */
-    }
-    th:nth-child(5), td:nth-child(5) {
-      width:auto;
-      padding-left:10px; /* 👉 EXTRA RUIMTE */
-    }
+    th:nth-child(4), td:nth-child(4) { width:110px; text-align:right; padding-right:20px; }
+    th:nth-child(5), td:nth-child(5) { width:auto; padding-left:10px; }
 
     tr:hover { background:#2a2a2a; }
 
@@ -177,7 +166,7 @@
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let editIndex = null;
 let sortField = null;
-let sortDirection = 1; // 1 = asc, -1 = desc
+let sortDirection = 1;
 
 function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -209,7 +198,10 @@ function renderTransactions() {
 
   list.forEach((t) => {
     const index = transactions.indexOf(t);
-    const dotClass = t.status === "confirmed" ? "green" : "red";
+
+    /* 👉 FIX: status correct bepalen */
+    const isConfirmed = t.status === "confirmed";
+    const dotClass = isConfirmed ? "green" : "red";
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -227,7 +219,7 @@ function renderTransactions() {
 
 function sortBy(field) {
   if (sortField === field) {
-    sortDirection *= -1; // toggle
+    sortDirection *= -1;
   } else {
     sortField = field;
     sortDirection = 1;
@@ -263,11 +255,22 @@ function editTransaction(index) {
 }
 
 function saveTransaction() {
+  const d = date.value || today();
+  const c = category.value.trim();
+  const m = memo.value.trim();
+  const a = amount.value;
+
+  /* 👉 VALIDATIE */
+  if (!d || !c || !m || a === "" || isNaN(a)) {
+    alert("Vul alle velden correct in.");
+    return;
+  }
+
   const transaction = {
-    date: date.value || today(),
-    category: category.value,
-    memo: memo.value,
-    amount: parseFloat(amount.value),
+    date: d,
+    category: c,
+    memo: m,
+    amount: parseFloat(a),
     status: status.value
   };
 

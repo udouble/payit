@@ -156,9 +156,10 @@
     <input type="text" id="memo" placeholder="Memo">
     <input type="number" id="amount" placeholder="Bedrag">
 
+    <!-- DEFAULT AFWACHTEND -->
     <select id="status">
+      <option value="pending" selected>Afwachtend</option>
       <option value="confirmed">Bevestigd</option>
-      <option value="pending">Afwachtend</option>
     </select>
 
     <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
@@ -207,7 +208,7 @@ function renderTransactions() {
       <td>${t.date}</td>
       <td>${t.category}</td>
       <td>${t.amount} €</td>
-      <td>${t.memo}</td>
+      <td>${t.memo || ""}</td>
     `;
 
     row.onclick = () => editTransaction(index);
@@ -227,6 +228,15 @@ function sortBy(field) {
 
 function openModal() {
   editIndex = null;
+
+  document.getElementById("date").value = "";
+  document.getElementById("category").value = "";
+  document.getElementById("memo").value = "";
+  document.getElementById("amount").value = "";
+
+  document.getElementById("status").value = "pending";
+
+  document.querySelector(".delete-btn").style.display = "none";
   document.getElementById("modal").style.display = "flex";
 }
 

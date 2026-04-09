@@ -16,8 +16,19 @@
       cursor: pointer;
     }
 
-    .active {
-      background: #4caf50;
+    .active { background:#4caf50; }
+
+    .account-actions {
+      margin-top: 15px;
+    }
+
+    .small-btn {
+      width:100%;
+      margin-top:5px;
+      padding:8px;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
     }
 
     .main { flex: 1; padding: 20px; }
@@ -30,108 +41,103 @@
 
     .add-btn {
       background: #4caf50;
-      border: none;
-      color: white;
-      padding: 12px 18px;
-      border-radius: 6px;
-      font-size: 20px;
-      cursor: pointer;
+      border:none;
+      color:white;
+      padding:12px 18px;
+      border-radius:6px;
+      font-size:20px;
+      cursor:pointer;
     }
 
     table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      table-layout: fixed;
+      width:100%;
+      border-collapse:collapse;
+      margin-top:20px;
+      table-layout:fixed;
     }
 
-    th, td {
-      padding: 10px 5px;
-      white-space: nowrap;
-    }
+    th, td { padding:10px 5px; white-space:nowrap; }
 
-    th {
-      border-bottom: 1px solid #444;
-      cursor: pointer;
-    }
+    th { border-bottom:1px solid #444; cursor:pointer; }
 
-    th:nth-child(1), td:nth-child(1) { width: 70px; text-align: center; }
-    th:nth-child(2), td:nth-child(2) { width: 110px; }
-    th:nth-child(3), td:nth-child(3) { width: 120px; }
-    th:nth-child(4), td:nth-child(4) { width: 110px; text-align: right; padding-right: 20px; }
-    th:nth-child(5), td:nth-child(5) { width: auto; padding-left: 10px; }
-
-    tr:hover { background: #2a2a2a; }
+    th:nth-child(1), td:nth-child(1){ width:70px; text-align:center; }
+    th:nth-child(2), td:nth-child(2){ width:110px; }
+    th:nth-child(3), td:nth-child(3){ width:120px; }
+    th:nth-child(4), td:nth-child(4){ width:110px; text-align:right; padding-right:20px; }
+    th:nth-child(5), td:nth-child(5){ width:auto; padding-left:10px; }
 
     .status-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-left: 5px;
+      display:inline-block;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      margin-left:5px;
     }
 
-    .green { background: lightgreen; }
-    .red { background: red; }
+    .green{ background:lightgreen; }
+    .red{ background:red; }
 
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      justify-content: center;
-      align-items: center;
+    .modal{
+      display:none;
+      position:fixed;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.7);
+      justify-content:center;
+      align-items:center;
     }
 
-    .modal-content {
-      background: #2b2b2b;
-      padding: 30px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 500px;
+    .modal-content{
+      background:#2b2b2b;
+      padding:30px;
+      border-radius:12px;
+      width:90%;
+      max-width:500px;
     }
 
-    input, select {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0 15px 0;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
+    input, select{
+      width:100%;
+      padding:12px;
+      margin:8px 0 15px 0;
+      border-radius:6px;
+      border:none;
     }
 
-    .btn {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
+    .btn{
+      width:100%;
+      padding:12px;
+      margin-top:8px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
     }
 
-    .save-btn { background: #4caf50; color: white; }
-    .delete-btn { background: #ff4444; color: white; }
-    .close-btn { background: #666; color: white; }
+    .save-btn{ background:#4caf50; }
+    .delete-btn{ background:#ff4444; }
+    .close-btn{ background:#666; }
   </style>
 </head>
+
 <body>
 
 <div class="container">
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-    <div class="account active" onclick="selectAccount('Privé', this)">Privé</div>
-    <div class="account" onclick="selectAccount('VOF', this)">VOF</div>
+
+    <div id="accountsList"></div>
+
+    <div class="account-actions">
+      <button class="small-btn" onclick="addAccount()">+ rekening</button>
+      <button class="small-btn" onclick="renameAccount()">hernoemen</button>
+      <button class="small-btn" onclick="deleteAccount()">verwijderen</button>
+    </div>
   </div>
 
   <div class="main">
 
     <div class="topbar">
-      <h2 id="accountTitle">Privé</h2>
+      <h2 id="accountTitle"></h2>
       <button class="add-btn" onclick="openModal()">＋</button>
     </div>
 
@@ -154,15 +160,15 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3>Nieuwe transactie</h3>
+    <h3>Transactie</h3>
 
     <input type="date" id="date">
-    <input type="text" id="category" placeholder="Categorie">
-    <input type="text" id="memo" placeholder="Memo">
-    <input type="number" id="amount" placeholder="Bedrag">
+    <input type="text" id="category">
+    <input type="text" id="memo">
+    <input type="number" id="amount">
 
     <select id="status">
-      <option value="pending" selected>Afwachtend</option>
+      <option value="pending">Afwachtend</option>
       <option value="confirmed">Bevestigd</option>
     </select>
 
@@ -174,145 +180,181 @@
 
 <script>
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-let editIndex = null;
+let accounts = JSON.parse(localStorage.getItem("accounts")) || ["Privé","VOF"];
 
-let currentAccount = "Privé";
+let currentAccount = accounts[0];
+let editIndex = null;
 
 let sortField = null;
 let sortDirection = 1;
 
-function saveToStorage() {
+function saveAll(){
   localStorage.setItem("transactions", JSON.stringify(transactions));
+  localStorage.setItem("accounts", JSON.stringify(accounts));
 }
 
-function today() {
-  return new Date().toISOString().split("T")[0];
+function renderAccounts(){
+  const container = document.getElementById("accountsList");
+  container.innerHTML = "";
+
+  accounts.sort((a,b)=>a.localeCompare(b));
+
+  accounts.forEach(name=>{
+    const div = document.createElement("div");
+    div.className = "account" + (name===currentAccount ? " active":"");
+    div.innerText = name;
+
+    div.onclick = ()=>{
+      currentAccount = name;
+      renderAccounts();
+      renderTransactions();
+    };
+
+    container.appendChild(div);
+  });
+
+  document.getElementById("accountTitle").innerText = currentAccount;
 }
 
-function selectAccount(name, el) {
-  currentAccount = name;
+function addAccount(){
+  const name = prompt("Naam rekening?");
+  if(!name) return;
 
-  document.querySelectorAll(".account").forEach(a => a.classList.remove("active"));
-  el.classList.add("active");
+  accounts.push(name);
+  saveAll();
+  renderAccounts();
+}
 
-  document.getElementById("accountTitle").innerText = name;
+function renameAccount(){
+  const newName = prompt("Nieuwe naam?", currentAccount);
+  if(!newName) return;
 
+  transactions.forEach(t=>{
+    if(t.account===currentAccount){
+      t.account = newName;
+    }
+  });
+
+  accounts = accounts.map(a => a===currentAccount ? newName : a);
+  currentAccount = newName;
+
+  saveAll();
+  renderAccounts();
   renderTransactions();
 }
 
-function renderTransactions() {
+function deleteAccount(){
+  if(!confirm("Zeker verwijderen?")) return;
+
+  accounts = accounts.filter(a => a!==currentAccount);
+  transactions = transactions.filter(t => t.account!==currentAccount);
+
+  currentAccount = accounts[0] || "";
+
+  saveAll();
+  renderAccounts();
+  renderTransactions();
+}
+
+function today(){
+  return new Date().toISOString().split("T")[0];
+}
+
+function renderTransactions(){
   const table = document.getElementById("transactions");
   table.innerHTML = "";
 
-  let list = transactions.filter(t => t.account === currentAccount);
+  let list = transactions.filter(t=>t.account===currentAccount);
 
-  if (sortField) {
-    list.sort((a,b) => {
-      let valA = a[sortField];
-      let valB = b[sortField];
-
-      if (sortField === "status") {
-        valA = a.status === "confirmed" ? 1 : 0;
-        valB = b.status === "confirmed" ? 1 : 0;
+  if(sortField){
+    list.sort((a,b)=>{
+      let A=a[sortField], B=b[sortField];
+      if(sortField==="status"){
+        A=a.status==="confirmed"?1:0;
+        B=b.status==="confirmed"?1:0;
       }
-
-      return valA > valB ? sortDirection : -sortDirection;
+      return A>B ? sortDirection : -sortDirection;
     });
   }
 
-  list.forEach((t) => {
-    const realIndex = transactions.indexOf(t);
-
-    const dotClass = (t.status && t.status.trim() === "confirmed") ? "green" : "red";
+  list.forEach(t=>{
+    const i = transactions.indexOf(t);
+    const color = t.status==="confirmed"?"green":"red";
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>ST <span class="status-dot ${dotClass}"></span></td>
+      <td>ST <span class="status-dot ${color}"></span></td>
       <td>${t.date}</td>
       <td>${t.category}</td>
       <td>${t.amount} €</td>
-      <td>${t.memo || ""}</td>
+      <td>${t.memo||""}</td>
     `;
-
-    row.onclick = () => editTransaction(realIndex);
-
+    row.onclick = ()=>editTransaction(i);
     table.appendChild(row);
   });
 }
 
-function sortBy(field) {
-  if (sortField === field) {
-    sortDirection *= -1;
-  } else {
-    sortField = field;
-    sortDirection = 1;
-  }
+function sortBy(f){
+  if(sortField===f){ sortDirection*=-1; }
+  else{ sortField=f; sortDirection=1; }
   renderTransactions();
 }
 
-function openModal() {
-  editIndex = null;
-
-  date.value = "";
-  category.value = "";
-  memo.value = "";
-  amount.value = "";
-  status.value = "pending";
-
-  document.querySelector(".delete-btn").style.display = "none";
-  modal.style.display = "flex";
+function openModal(){
+  editIndex=null;
+  date.value="";
+  category.value="";
+  memo.value="";
+  amount.value="";
+  status.value="pending";
+  modal.style.display="flex";
 }
 
-function editTransaction(index) {
-  const t = transactions[index];
-  editIndex = index;
-
-  date.value = t.date;
-  category.value = t.category;
-  memo.value = t.memo;
-  amount.value = t.amount;
-  status.value = t.status;
-
-  document.querySelector(".delete-btn").style.display = "block";
-  modal.style.display = "flex";
+function editTransaction(i){
+  const t=transactions[i];
+  editIndex=i;
+  date.value=t.date;
+  category.value=t.category;
+  memo.value=t.memo;
+  amount.value=t.amount;
+  status.value=t.status;
+  modal.style.display="flex";
 }
 
-function saveTransaction() {
+function saveTransaction(){
   const d = date.value || today();
 
-  const transaction = {
-    date: d,
-    category: category.value,
-    memo: memo.value,
-    amount: parseFloat(amount.value),
-    status: status.value,
-    account: currentAccount
+  const obj={
+    date:d,
+    category:category.value,
+    memo:memo.value,
+    amount:parseFloat(amount.value),
+    status:status.value,
+    account:currentAccount
   };
 
-  if (editIndex !== null) {
-    transactions[editIndex] = transaction;
-  } else {
-    transactions.push(transaction);
-  }
+  if(editIndex!==null) transactions[editIndex]=obj;
+  else transactions.push(obj);
 
-  saveToStorage();
+  saveAll();
   renderTransactions();
   closeModal();
 }
 
-function deleteTransaction() {
-  if (editIndex !== null) {
-    transactions.splice(editIndex, 1);
-    saveToStorage();
+function deleteTransaction(){
+  if(editIndex!==null){
+    transactions.splice(editIndex,1);
+    saveAll();
     renderTransactions();
     closeModal();
   }
 }
 
-function closeModal() {
-  modal.style.display = "none";
+function closeModal(){
+  modal.style.display="none";
 }
 
+renderAccounts();
 renderTransactions();
 </script>
 

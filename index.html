@@ -1,20 +1,3 @@
-Dit is werkelijk onacceptabel en ik begrijp je woede volledig. Als developer is er niets erger dan code die "zomaar" stopt met werken.
-
-De reden dat je een leeg scherm ziet, komt door de regel: 
-`let sortConfig = { field: 'date', direction: 'desc' };`
-
-Omdat we in deze versie sorteren op `date` **voordat** de pagina getekend is, crasht het script als er in jouw `localStorage` ook maar één transactie staat waarbij de datum per ongeluk leeg is of een vreemd formaat heeft. JavaScript is op dat punt onverbiddelijk: één fout en het hele script stopt, met een leeg scherm als gevolg.
-
-We gaan dit nu **definitief** oplossen door terug te gaan naar de simpelste sorteermethode die *nooit* kan crashen, ook niet bij corrupte data.
-
-### De Oplossing:
-1.  **Geen automatische sortering bij opstarten**: We laden de data puur zoals ze is.
-2.  **Foutbestendige Toggle**: De sorteerfunctie vangt lege velden op zodat het script nooit meer stopt.
-3.  **Huidige status**: 15pt tekst en werkende rekeningen.
-
-### De Definitieve Fix
-
-```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -283,4 +266,3 @@ We gaan dit nu **definitief** oplossen door terug te gaan naar de simpelste sort
 </script>
 </body>
 </html>
-```

@@ -3,127 +3,88 @@
 <head>
   <title>Payit</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #1e1e1e;
-      color: white;
-    }
+    body { margin:0; font-family:Arial; background:#1e1e1e; color:white; }
+    .container { display:flex; height:100vh; }
 
-    .container {
-      display: flex;
-      height: 100vh;
-    }
-
-    .sidebar {
-      width: 250px;
-      background: #2b2b2b;
-      padding: 20px;
-    }
+    .sidebar { width:250px; background:#2b2b2b; padding:20px; }
 
     .account {
-      padding: 10px;
-      margin: 5px 0;
-      background: #3a3a3a;
-      border-radius: 5px;
+      padding:10px; margin:5px 0;
+      background:#3a3a3a; border-radius:5px;
     }
 
-    .main {
-      flex: 1;
-      padding: 20px;
-    }
+    .main { flex:1; padding:20px; }
 
     .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     }
 
     .add-btn {
-      background: #4caf50;
-      border: none;
-      color: white;
-      padding: 12px 18px;
-      border-radius: 6px;
-      font-size: 20px;
-      cursor: pointer;
+      background:#4caf50; border:none;
+      color:white; padding:12px 18px;
+      border-radius:6px; font-size:20px;
+      cursor:pointer;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
+    table { width:100%; border-collapse:collapse; margin-top:20px; }
 
     th {
-      text-align: left;
-      border-bottom: 1px solid #444;
-      font-size: 18px;
+      text-align:left;
+      border-bottom:1px solid #444;
+      font-size:18px;
+      cursor:pointer;
     }
 
     td {
-      padding: 10px 0;
-      font-size: 16px;
-      cursor: pointer;
+      padding:10px 0;
+      font-size:16px;
+      cursor:pointer;
     }
 
-    tr:hover {
-      background: #2a2a2a;
-    }
+    tr:hover { background:#2a2a2a; }
 
     .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      justify-content: center;
-      align-items: center;
+      display:none;
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.7);
+      justify-content:center;
+      align-items:center;
     }
 
     .modal-content {
-      background: #2b2b2b;
-      padding: 30px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 500px;
+      background:#2b2b2b;
+      padding:30px;
+      border-radius:12px;
+      width:90%;
+      max-width:500px;
     }
 
     input, select {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0 15px 0;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
+      width:100%;
+      padding:12px;
+      margin:8px 0 15px 0;
+      border-radius:6px;
+      border:none;
+      font-size:16px;
     }
 
     .btn {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
+      width:100%;
+      padding:12px;
+      margin-top:8px;
+      border:none;
+      border-radius:6px;
+      font-size:16px;
+      cursor:pointer;
     }
 
-    .save-btn {
-      background: #4caf50;
-      color: white;
-    }
-
-    .delete-btn {
-      background: #ff4444;
-      color: white;
-    }
-
-    .close-btn {
-      background: #666;
-      color: white;
-    }
+    .save-btn { background:#4caf50; color:white; }
+    .delete-btn { background:#ff4444; color:white; }
+    .close-btn { background:#666; color:white; }
   </style>
 </head>
 <body>
@@ -146,10 +107,10 @@
     <table>
       <thead>
         <tr>
-          <th>Datum</th>
-          <th>Categorie</th>
+          <th onclick="sortBy('date')">Datum</th>
+          <th onclick="sortBy('category')">Categorie</th>
           <th>Memo</th>
-          <th>Bedrag</th>
+          <th onclick="sortBy('amount')">Bedrag</th>
           <th>Status</th>
         </tr>
       </thead>
@@ -183,6 +144,7 @@
 <script>
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let editIndex = null;
+let sortField = null;
 
 function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -192,7 +154,15 @@ function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
 
-  transactions.forEach((t, index) => {
+  let list = [...transactions];
+
+  if (sortField) {
+    list.sort((a,b) => a[sortField] > b[sortField] ? 1 : -1);
+  }
+
+  list.forEach((t) => {
+    const index = transactions.indexOf(t);
+
     const row = document.createElement("tr");
 
     const color = t.amount < 0 ? "red" : "lightgreen";
@@ -213,15 +183,20 @@ function renderTransactions() {
   });
 }
 
+function sortBy(field) {
+  sortField = field;
+  renderTransactions();
+}
+
 function openModal() {
   editIndex = null;
   document.getElementById("modalTitle").innerText = "Nieuwe transactie";
 
-  document.getElementById("date").value = "";
-  document.getElementById("category").value = "";
-  document.getElementById("memo").value = "";
-  document.getElementById("amount").value = "";
-  document.getElementById("status").value = "confirmed";
+  date.value = "";
+  category.value = "";
+  memo.value = "";
+  amount.value = "";
+  status.value = "confirmed";
 
   document.querySelector(".delete-btn").style.display = "none";
 
@@ -233,11 +208,11 @@ function editTransaction(index) {
   editIndex = index;
 
   document.getElementById("modalTitle").innerText = "Transactie bewerken";
-  document.getElementById("date").value = t.date;
-  document.getElementById("category").value = t.category;
-  document.getElementById("memo").value = t.memo;
-  document.getElementById("amount").value = t.amount;
-  document.getElementById("status").value = t.status;
+  date.value = t.date;
+  category.value = t.category;
+  memo.value = t.memo;
+  amount.value = t.amount;
+  status.value = t.status;
 
   document.querySelector(".delete-btn").style.display = "block";
 
@@ -246,11 +221,11 @@ function editTransaction(index) {
 
 function saveTransaction() {
   const transaction = {
-    date: document.getElementById("date").value,
-    category: document.getElementById("category").value,
-    memo: document.getElementById("memo").value,
-    amount: parseFloat(document.getElementById("amount").value),
-    status: document.getElementById("status").value
+    date: date.value,
+    category: category.value,
+    memo: memo.value,
+    amount: parseFloat(amount.value),
+    status: status.value
   };
 
   if (editIndex !== null) {

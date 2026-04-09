@@ -64,7 +64,6 @@
       padding: 8px 0;
     }
 
-    /* POPUP */
     .modal {
       display: none;
       position: fixed;
@@ -92,14 +91,23 @@
       border: none;
     }
 
-    .close-btn {
-      background: red;
+    .btn {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
       border: none;
-      color: white;
-      padding: 8px;
       border-radius: 5px;
       cursor: pointer;
-      width: 100%;
+    }
+
+    .save-btn {
+      background: #4caf50;
+      color: white;
+    }
+
+    .close-btn {
+      background: red;
+      color: white;
     }
   </style>
 </head>
@@ -121,43 +129,39 @@
     </div>
 
     <table>
-      <tr>
-        <th>Datum</th>
-        <th>Categorie</th>
-        <th>Memo</th>
-        <th>Bedrag</th>
-        <th>Status</th>
-      </tr>
-
-      <tr>
-        <td>09/04/2026</td>
-        <td>Boodschappen</td>
-        <td>Colruyt</td>
-        <td style="color:red;">-85,20 €</td>
-        <td>🔴</td>
-      </tr>
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Categorie</th>
+          <th>Memo</th>
+          <th>Bedrag</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="transactions">
+      </tbody>
     </table>
 
   </div>
 
 </div>
 
-<!-- POPUP -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <h3>Nieuwe transactie</h3>
 
-    <input type="date">
-    <input type="text" placeholder="Categorie">
-    <input type="text" placeholder="Memo">
-    <input type="number" placeholder="Bedrag">
+    <input type="date" id="date">
+    <input type="text" id="category" placeholder="Categorie">
+    <input type="text" id="memo" placeholder="Memo">
+    <input type="number" id="amount" placeholder="Bedrag">
 
-    <select>
-      <option>Bevestigd</option>
-      <option>Afwachtend</option>
+    <select id="status">
+      <option value="confirmed">Bevestigd</option>
+      <option value="pending">Afwachtend</option>
     </select>
 
-    <button class="close-btn" onclick="closeModal()">Sluiten</button>
+    <button class="btn save-btn" onclick="addTransaction()">Opslaan</button>
+    <button class="btn close-btn" onclick="closeModal()">Sluiten</button>
   </div>
 </div>
 
@@ -168,6 +172,35 @@ function openModal() {
 
 function closeModal() {
   document.getElementById("modal").style.display = "none";
+}
+
+function addTransaction() {
+  const date = document.getElementById("date").value;
+  const category = document.getElementById("category").value;
+  const memo = document.getElementById("memo").value;
+  const amount = document.getElementById("amount").value;
+  const status = document.getElementById("status").value;
+
+  const table = document.getElementById("transactions");
+
+  const row = document.createElement("tr");
+
+  const color = amount < 0 ? "red" : "lightgreen";
+  const sign = amount < 0 ? "" : "+";
+
+  const statusIcon = status === "confirmed" ? "🟢" : "🔴";
+
+  row.innerHTML = `
+    <td>${date}</td>
+    <td>${category}</td>
+    <td>${memo}</td>
+    <td style="color:${color};">${sign}${amount} €</td>
+    <td>${statusIcon}</td>
+  `;
+
+  table.appendChild(row);
+
+  closeModal();
 }
 </script>
 

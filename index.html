@@ -7,19 +7,54 @@
     .container { display: flex; height: 100vh; }
 
     /* Sidebar Styling */
-    .sidebar { width: 250px; background: #2b2b2b; padding: 20px; border-right: 1px solid #444; }
+    .sidebar { width: 280px; background: #2b2b2b; padding: 20px; border-right: 1px solid #444; display: flex; flex-direction: column; }
     
-    .account {
-      padding: 12px;
+    .account-item {
+      display: flex;
+      align-items: center;
       margin-bottom: 8px;
+      gap: 5px;
+    }
+
+    .account {
+      flex: 1;
+      padding: 12px;
       background: #3a3a3a;
       border-radius: 6px;
       cursor: pointer;
       transition: background 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .account:hover { background: #4a4a4a; }
     .account.active { background: #4caf50; font-weight: bold; }
+
+    .acc-action-btn {
+      background: #444;
+      border: none;
+      color: #ccc;
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .acc-action-btn:hover { background: #555; color: white; }
+
+    .add-acc-btn {
+      margin-top: 15px;
+      background: transparent;
+      border: 1px dashed #666;
+      color: #aaa;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .add-acc-btn:hover { border-color: #4caf50; color: #4caf50; }
 
     /* Main Content */
     .main { flex: 1; padding: 20px; overflow-y: auto; }
@@ -42,21 +77,10 @@
     }
 
     /* Table Styling */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-
-    th, td {
-      padding: 12px 5px;
-      text-align: left;
-      border-bottom: 1px solid #333;
-    }
-
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { padding: 12px 5px; text-align: left; border-bottom: 1px solid #333; }
     th { cursor: pointer; color: #888; font-size: 0.9em; user-select: none; }
     th:hover { color: white; }
-
     th:nth-child(1), td:nth-child(1) { width: 50px; text-align: center; }
     th:nth-child(2), td:nth-child(2) { width: 110px; }
     th:nth-child(3), td:nth-child(3) { width: 150px; }
@@ -65,13 +89,7 @@
 
     tr:hover { background: #2a2a2a; cursor: pointer; }
 
-    .status-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-
+    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
     .green { background: #4caf50; box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
     .red { background: #ff4444; box-shadow: 0 0 5px rgba(255, 68, 68, 0.5); }
 
@@ -94,39 +112,12 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    .modal-content label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-      color: #bbb;
-      font-size: 14px;
-      text-transform: uppercase;
+    .modal-content label { display: block; margin-top: 15px; font-weight: bold; color: #bbb; font-size: 14px; text-transform: uppercase; }
+    .modal-content input, .modal-content select {
+      width: 100%; padding: 14px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #1e1e1e; color: white; box-sizing: border-box; font-size: 18px;
     }
 
-    .modal-content input, 
-    .modal-content select {
-      width: 100%;
-      padding: 14px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: 1px solid #444;
-      background: #1e1e1e;
-      color: white;
-      box-sizing: border-box;
-      font-size: 18px;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
+    .btn { width: 100%; padding: 14px; margin-top: 10px; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; }
     .save-btn { background: #4caf50; color: white; }
     .delete-btn { background: #ff4444; color: white; margin-top: 25px; }
     .close-btn { background: #555; color: white; }
@@ -138,6 +129,7 @@
   <div class="sidebar">
     <h2>Rekeningen</h2>
     <div id="accounts-list"></div>
+    <button class="add-acc-btn" onclick="addAccount()">+ Nieuwe rekening</button>
   </div>
 
   <div class="main">
@@ -184,6 +176,7 @@
 </div>
 
 <script>
+  // DATA INITIALISATIE
   let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [
     { id: '1', name: 'Privé' },
     { id: '2', name: 'VOF' }
@@ -193,10 +186,18 @@
   let activeAccountId = accounts[0].id;
   let editingId = null;
 
+  // REKENINGEN FUNCTIES
   function renderAccounts() {
     const list = document.getElementById('accounts-list');
     list.innerHTML = '';
-    accounts.forEach(acc => {
+    
+    // Alfabetisch sorteren van rekeningen
+    const sortedAccounts = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
+
+    sortedAccounts.forEach(acc => {
+      const item = document.createElement('div');
+      item.className = 'account-item';
+
       const div = document.createElement('div');
       div.className = `account ${acc.id === activeAccountId ? 'active' : ''}`;
       div.innerText = acc.name;
@@ -205,18 +206,74 @@
         renderAccounts();
         renderTransactions();
       };
-      list.appendChild(div);
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'acc-action-btn';
+      editBtn.innerText = '✎';
+      editBtn.onclick = (e) => { e.stopPropagation(); renameAccount(acc.id); };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'acc-action-btn';
+      delBtn.innerText = '✕';
+      delBtn.onclick = (e) => { e.stopPropagation(); removeAccount(acc.id); };
+
+      item.appendChild(div);
+      item.appendChild(editBtn);
+      item.appendChild(delBtn);
+      list.appendChild(item);
     });
-    const activeAcc = accounts.find(a => a.id === activeAccountId);
-    document.getElementById('current-account-title').innerText = activeAcc ? activeAcc.name : 'Transacties';
+
+    const activeAcc = accounts.find(a => a.id === activeAccountId) || accounts[0];
+    document.getElementById('current-account-title').innerText = activeAcc.name;
   }
 
+  function addAccount() {
+    const name = prompt("Naam van de nieuwe rekening:");
+    if (name && name.trim() !== "") {
+      const newId = Date.now().toString();
+      accounts.push({ id: newId, name: name.trim() });
+      saveAccounts();
+      activeAccountId = newId;
+      renderAccounts();
+      renderTransactions();
+    }
+  }
+
+  function renameAccount(id) {
+    const acc = accounts.find(a => a.id === id);
+    const newName = prompt("Nieuwe naam voor '" + acc.name + "':", acc.name);
+    if (newName && newName.trim() !== "") {
+      acc.name = newName.trim();
+      saveAccounts();
+      renderAccounts();
+    }
+  }
+
+  function removeAccount(id) {
+    if (accounts.length <= 1) {
+      alert("Je moet minimaal één rekening overhouden.");
+      return;
+    }
+    if (confirm("Weet je zeker dat je deze rekening wilt verwijderen? De transacties blijven bewaard maar horen nergens meer bij.")) {
+      accounts = accounts.filter(a => a.id !== id);
+      if (activeAccountId === id) {
+        activeAccountId = accounts[0].id;
+      }
+      saveAccounts();
+      renderAccounts();
+      renderTransactions();
+    }
+  }
+
+  function saveAccounts() {
+    localStorage.setItem('payit_accounts', JSON.stringify(accounts));
+  }
+
+  // TRANSACTIES FUNCTIES (Onveranderd uit Golden Master)
   function renderTransactions() {
     const tbody = document.getElementById('transactions');
     tbody.innerHTML = '';
-
     const filtered = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
-
     filtered.forEach(t => {
       const tr = document.createElement('tr');
       tr.onclick = () => openModal(t.id);
@@ -268,7 +325,6 @@
       status: document.getElementById('status').value,
       accountId: activeAccountId
     };
-
     if (editingId) {
       const index = transactions.findIndex(t => t.id === editingId);
       data.accountId = transactions[index].accountId || accounts[0].id;
@@ -277,7 +333,6 @@
       data.id = Date.now().toString();
       transactions.push(data);
     }
-
     localStorage.setItem('payit_transactions', JSON.stringify(transactions));
     closeModal();
     renderTransactions();

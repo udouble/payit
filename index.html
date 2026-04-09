@@ -13,10 +13,7 @@
       margin-bottom: 10px;
       background: #3a3a3a;
       border-radius: 5px;
-      cursor: pointer;
     }
-
-    .active { background:#4caf50; }
 
     .main { flex: 1; padding: 20px; }
 
@@ -43,83 +40,93 @@
       table-layout: fixed;
     }
 
-    th, td { padding: 10px 5px; white-space: nowrap; }
+    th, td {
+      padding: 10px 5px;
+      white-space: nowrap;
+    }
 
-    th { border-bottom: 1px solid #444; cursor: pointer; }
+    th {
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+    }
 
-    th:nth-child(1), td:nth-child(1){ width:70px; text-align:center; }
-    th:nth-child(2), td:nth-child(2){ width:110px; }
-    th:nth-child(3), td:nth-child(3){ width:120px; }
-    th:nth-child(4), td:nth-child(4){ width:110px; text-align:right; padding-right:20px; }
-    th:nth-child(5), td:nth-child(5){ width:auto; padding-left:10px; }
+    th:nth-child(1), td:nth-child(1) { width: 70px; text-align: center; }
+    th:nth-child(2), td:nth-child(2) { width: 110px; }
+    th:nth-child(3), td:nth-child(3) { width: 120px; }
+    th:nth-child(4), td:nth-child(4) { width: 110px; text-align: right; padding-right: 20px; }
+    th:nth-child(5), td:nth-child(5) { width: auto; padding-left: 10px; }
 
     tr:hover { background: #2a2a2a; }
 
     .status-dot {
-      display:inline-block;
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      margin-left:5px;
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-left: 5px;
     }
 
-    .green { background:lightgreen; }
-    .red { background:red; }
+    .green { background: lightgreen; }
+    .red { background: red; }
 
     .modal {
-      display:none;
-      position:fixed;
-      width:100%;
-      height:100%;
-      background:rgba(0,0,0,0.7);
-      justify-content:center;
-      align-items:center;
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      justify-content: center;
+      align-items: center;
     }
 
     .modal-content {
-      background:#2b2b2b;
-      padding:30px;
-      border-radius:12px;
-      width:90%;
-      max-width:500px;
+      background: #2b2b2b;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
     }
 
     input, select {
-      width:100%;
-      padding:12px;
-      margin:8px 0 15px 0;
-      border-radius:6px;
-      border:none;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0 15px 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
     }
 
     .btn {
-      width:100%;
-      padding:12px;
-      margin-top:8px;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
     }
 
-    .save-btn { background:#4caf50; }
-    .delete-btn { background:#ff4444; }
-    .close-btn { background:#666; }
+    .save-btn { background: #4caf50; color: white; }
+    .delete-btn { background: #ff4444; color: white; }
+    .close-btn { background: #666; color: white; }
   </style>
 </head>
-
 <body>
 
 <div class="container">
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-    <div id="accounts"></div>
+    <div class="account">Privé</div>
+    <div class="account">VOF</div>
   </div>
 
   <div class="main">
 
     <div class="topbar">
-      <h2 id="title"></h2>
+      <h2>Transacties</h2>
       <button class="add-btn" onclick="openModal()">＋</button>
     </div>
 
@@ -142,15 +149,15 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3>Transactie</h3>
+    <h3 id="modalTitle">Nieuwe transactie</h3>
 
     <input type="date" id="date">
-    <input type="text" id="category">
-    <input type="text" id="memo">
-    <input type="number" id="amount">
+    <input type="text" id="category" placeholder="Categorie">
+    <input type="text" id="memo" placeholder="Memo">
+    <input type="number" id="amount" placeholder="Bedrag">
 
     <select id="status">
-      <option value="pending">Afwachtend</option>
+      <option value="pending" selected>Afwachtend</option>
       <option value="confirmed">Bevestigd</option>
     </select>
 
@@ -162,148 +169,131 @@
 
 <script>
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-let accounts = JSON.parse(localStorage.getItem("accounts")) || ["Privé","VOF"];
-
-let currentAccount = accounts[0];
 let editIndex = null;
 
 let sortField = null;
 let sortDirection = 1;
 
-function saveAll(){
+function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
-  localStorage.setItem("accounts", JSON.stringify(accounts));
 }
 
-function renderAccounts(){
-  const el = document.getElementById("accounts");
-  el.innerHTML = "";
-
-  accounts.sort((a,b)=>a.localeCompare(b));
-
-  accounts.forEach(a=>{
-    const div = document.createElement("div");
-    div.className = "account" + (a===currentAccount?" active":"");
-    div.innerText = a;
-
-    div.onclick = ()=>{
-      currentAccount = a;
-      renderAccounts();
-      renderTransactions();
-    };
-
-    el.appendChild(div);
-  });
-
-  document.getElementById("title").innerText = currentAccount;
-}
-
-function today(){
+function today() {
   return new Date().toISOString().split("T")[0];
 }
 
-function renderTransactions(){
+function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
 
-  let list = transactions.filter(t=>t.account===currentAccount);
+  let list = [...transactions];
 
-  if(sortField){
-    list.sort((a,b)=>{
-      let A=a[sortField], B=b[sortField];
-      if(sortField==="status"){
-        A=a.status==="confirmed"?1:0;
-        B=b.status==="confirmed"?1:0;
+  if (sortField) {
+    list.sort((a,b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+
+      if (sortField === "status") {
+        valA = a.status === "confirmed" ? 1 : 0;
+        valB = b.status === "confirmed" ? 1 : 0;
       }
-      return A>B ? sortDirection : -sortDirection;
+
+      return valA > valB ? sortDirection : -sortDirection;
     });
   }
 
-  list.forEach(t=>{
-    const i = transactions.indexOf(t);
-    const color = t.status==="confirmed"?"green":"red";
+  list.forEach((t) => {
+    const realIndex = transactions.indexOf(t);
+
+    const dotClass = (t.status && t.status.trim() === "confirmed") ? "green" : "red";
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>ST <span class="status-dot ${color}"></span></td>
+      <td>ST <span class="status-dot ${dotClass}"></span></td>
       <td>${t.date}</td>
       <td>${t.category}</td>
       <td>${t.amount} €</td>
-      <td>${t.memo||""}</td>
+      <td>${t.memo || ""}</td>
     `;
-    row.onclick = ()=>editTransaction(i);
+
+    row.onclick = () => editTransaction(realIndex);
+
     table.appendChild(row);
   });
 }
 
-function sortBy(f){
-  if(sortField===f){ sortDirection*=-1; }
-  else{ sortField=f; sortDirection=1; }
+function sortBy(field) {
+  if (sortField === field) {
+    sortDirection *= -1;
+  } else {
+    sortField = field;
+    sortDirection = 1;
+  }
   renderTransactions();
 }
 
-/* 👉 BELANGRIJK: GEEN modal shortcut variabele meer */
-function openModal(){
-  editIndex=null;
+function openModal() {
+  editIndex = null;
 
-  document.getElementById("date").value="";
-  document.getElementById("category").value="";
-  document.getElementById("memo").value="";
-  document.getElementById("amount").value="";
-  document.getElementById("status").value="pending";
+  document.getElementById("date").value = "";
+  document.getElementById("category").value = "";
+  document.getElementById("memo").value = "";
+  document.getElementById("amount").value = "";
+  document.getElementById("status").value = "pending";
 
-  document.querySelector(".delete-btn").style.display="none";
-  document.getElementById("modal").style.display="flex";
+  document.querySelector(".delete-btn").style.display = "none";
+  document.getElementById("modal").style.display = "flex";
 }
 
-function editTransaction(i){
-  const t=transactions[i];
-  editIndex=i;
+function editTransaction(index) {
+  const t = transactions[index];
+  editIndex = index;
 
-  document.getElementById("date").value=t.date;
-  document.getElementById("category").value=t.category;
-  document.getElementById("memo").value=t.memo;
-  document.getElementById("amount").value=t.amount;
-  document.getElementById("status").value=t.status;
+  document.getElementById("date").value = t.date;
+  document.getElementById("category").value = t.category;
+  document.getElementById("memo").value = t.memo;
+  document.getElementById("amount").value = t.amount;
+  document.getElementById("status").value = t.status;
 
-  document.querySelector(".delete-btn").style.display="block";
-  document.getElementById("modal").style.display="flex";
+  document.querySelector(".delete-btn").style.display = "block";
+  document.getElementById("modal").style.display = "flex";
 }
 
-function saveTransaction(){
+function saveTransaction() {
   const d = document.getElementById("date").value || today();
 
-  const obj={
-    date:d,
-    category:document.getElementById("category").value,
-    memo:document.getElementById("memo").value,
-    amount:parseFloat(document.getElementById("amount").value),
-    status:document.getElementById("status").value,
-    account:currentAccount
+  const transaction = {
+    date: d,
+    category: document.getElementById("category").value,
+    memo: document.getElementById("memo").value,
+    amount: parseFloat(document.getElementById("amount").value),
+    status: document.getElementById("status").value
   };
 
-  if(editIndex!==null) transactions[editIndex]=obj;
-  else transactions.push(obj);
+  if (editIndex !== null) {
+    transactions[editIndex] = transaction;
+  } else {
+    transactions.push(transaction);
+  }
 
-  saveAll();
+  saveToStorage();
   renderTransactions();
   closeModal();
 }
 
-function deleteTransaction(){
-  if(editIndex!==null){
-    transactions.splice(editIndex,1);
-    saveAll();
+function deleteTransaction() {
+  if (editIndex !== null) {
+    transactions.splice(editIndex, 1);
+    saveToStorage();
     renderTransactions();
     closeModal();
   }
 }
 
-function closeModal(){
-  document.getElementById("modal").style.display="none";
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
 }
 
-renderAccounts();
 renderTransactions();
 </script>
 

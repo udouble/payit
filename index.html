@@ -18,19 +18,6 @@
 
     .active { background:#4caf50; }
 
-    .account-actions {
-      margin-top: 15px;
-    }
-
-    .small-btn {
-      width:100%;
-      margin-top:5px;
-      padding:8px;
-      border:none;
-      border-radius:5px;
-      cursor:pointer;
-    }
-
     .main { flex: 1; padding: 20px; }
 
     .topbar {
@@ -41,30 +28,32 @@
 
     .add-btn {
       background: #4caf50;
-      border:none;
-      color:white;
-      padding:12px 18px;
-      border-radius:6px;
-      font-size:20px;
-      cursor:pointer;
+      border: none;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 6px;
+      font-size: 20px;
+      cursor: pointer;
     }
 
     table {
-      width:100%;
-      border-collapse:collapse;
-      margin-top:20px;
-      table-layout:fixed;
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      table-layout: fixed;
     }
 
-    th, td { padding:10px 5px; white-space:nowrap; }
+    th, td { padding: 10px 5px; white-space: nowrap; }
 
-    th { border-bottom:1px solid #444; cursor:pointer; }
+    th { border-bottom: 1px solid #444; cursor: pointer; }
 
     th:nth-child(1), td:nth-child(1){ width:70px; text-align:center; }
     th:nth-child(2), td:nth-child(2){ width:110px; }
     th:nth-child(3), td:nth-child(3){ width:120px; }
     th:nth-child(4), td:nth-child(4){ width:110px; text-align:right; padding-right:20px; }
     th:nth-child(5), td:nth-child(5){ width:auto; padding-left:10px; }
+
+    tr:hover { background: #2a2a2a; }
 
     .status-dot {
       display:inline-block;
@@ -74,10 +63,10 @@
       margin-left:5px;
     }
 
-    .green{ background:lightgreen; }
-    .red{ background:red; }
+    .green { background:lightgreen; }
+    .red { background:red; }
 
-    .modal{
+    .modal {
       display:none;
       position:fixed;
       width:100%;
@@ -87,7 +76,7 @@
       align-items:center;
     }
 
-    .modal-content{
+    .modal-content {
       background:#2b2b2b;
       padding:30px;
       border-radius:12px;
@@ -95,7 +84,7 @@
       max-width:500px;
     }
 
-    input, select{
+    input, select {
       width:100%;
       padding:12px;
       margin:8px 0 15px 0;
@@ -103,7 +92,7 @@
       border:none;
     }
 
-    .btn{
+    .btn {
       width:100%;
       padding:12px;
       margin-top:8px;
@@ -112,9 +101,9 @@
       cursor:pointer;
     }
 
-    .save-btn{ background:#4caf50; }
-    .delete-btn{ background:#ff4444; }
-    .close-btn{ background:#666; }
+    .save-btn { background:#4caf50; }
+    .delete-btn { background:#ff4444; }
+    .close-btn { background:#666; }
   </style>
 </head>
 
@@ -124,20 +113,13 @@
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-
-    <div id="accountsList"></div>
-
-    <div class="account-actions">
-      <button class="small-btn" onclick="addAccount()">+ rekening</button>
-      <button class="small-btn" onclick="renameAccount()">hernoemen</button>
-      <button class="small-btn" onclick="deleteAccount()">verwijderen</button>
-    </div>
+    <div id="accounts"></div>
   </div>
 
   <div class="main">
 
     <div class="topbar">
-      <h2 id="accountTitle"></h2>
+      <h2 id="title"></h2>
       <button class="add-btn" onclick="openModal()">＋</button>
     </div>
 
@@ -194,66 +176,26 @@ function saveAll(){
 }
 
 function renderAccounts(){
-  const container = document.getElementById("accountsList");
-  container.innerHTML = "";
+  const el = document.getElementById("accounts");
+  el.innerHTML = "";
 
   accounts.sort((a,b)=>a.localeCompare(b));
 
-  accounts.forEach(name=>{
+  accounts.forEach(a=>{
     const div = document.createElement("div");
-    div.className = "account" + (name===currentAccount ? " active":"");
-    div.innerText = name;
+    div.className = "account" + (a===currentAccount?" active":"");
+    div.innerText = a;
 
     div.onclick = ()=>{
-      currentAccount = name;
+      currentAccount = a;
       renderAccounts();
       renderTransactions();
     };
 
-    container.appendChild(div);
+    el.appendChild(div);
   });
 
-  document.getElementById("accountTitle").innerText = currentAccount;
-}
-
-function addAccount(){
-  const name = prompt("Naam rekening?");
-  if(!name) return;
-
-  accounts.push(name);
-  saveAll();
-  renderAccounts();
-}
-
-function renameAccount(){
-  const newName = prompt("Nieuwe naam?", currentAccount);
-  if(!newName) return;
-
-  transactions.forEach(t=>{
-    if(t.account===currentAccount){
-      t.account = newName;
-    }
-  });
-
-  accounts = accounts.map(a => a===currentAccount ? newName : a);
-  currentAccount = newName;
-
-  saveAll();
-  renderAccounts();
-  renderTransactions();
-}
-
-function deleteAccount(){
-  if(!confirm("Zeker verwijderen?")) return;
-
-  accounts = accounts.filter(a => a!==currentAccount);
-  transactions = transactions.filter(t => t.account!==currentAccount);
-
-  currentAccount = accounts[0] || "";
-
-  saveAll();
-  renderAccounts();
-  renderTransactions();
+  document.getElementById("title").innerText = currentAccount;
 }
 
 function today(){
@@ -300,36 +242,43 @@ function sortBy(f){
   renderTransactions();
 }
 
+/* 👉 BELANGRIJK: GEEN modal shortcut variabele meer */
 function openModal(){
   editIndex=null;
-  date.value="";
-  category.value="";
-  memo.value="";
-  amount.value="";
-  status.value="pending";
-  modal.style.display="flex";
+
+  document.getElementById("date").value="";
+  document.getElementById("category").value="";
+  document.getElementById("memo").value="";
+  document.getElementById("amount").value="";
+  document.getElementById("status").value="pending";
+
+  document.querySelector(".delete-btn").style.display="none";
+  document.getElementById("modal").style.display="flex";
 }
 
 function editTransaction(i){
   const t=transactions[i];
   editIndex=i;
-  date.value=t.date;
-  category.value=t.category;
-  memo.value=t.memo;
-  amount.value=t.amount;
-  status.value=t.status;
-  modal.style.display="flex";
+
+  document.getElementById("date").value=t.date;
+  document.getElementById("category").value=t.category;
+  document.getElementById("memo").value=t.memo;
+  document.getElementById("amount").value=t.amount;
+  document.getElementById("status").value=t.status;
+
+  document.querySelector(".delete-btn").style.display="block";
+  document.getElementById("modal").style.display="flex";
 }
 
 function saveTransaction(){
-  const d = date.value || today();
+  const d = document.getElementById("date").value || today();
 
   const obj={
     date:d,
-    category:category.value,
-    memo:memo.value,
-    amount:parseFloat(amount.value),
-    status:status.value,
+    category:document.getElementById("category").value,
+    memo:document.getElementById("memo").value,
+    amount:parseFloat(document.getElementById("amount").value),
+    status:document.getElementById("status").value,
     account:currentAccount
   };
 
@@ -351,7 +300,7 @@ function deleteTransaction(){
 }
 
 function closeModal(){
-  modal.style.display="none";
+  document.getElementById("modal").style.display="none";
 }
 
 renderAccounts();

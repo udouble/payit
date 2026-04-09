@@ -156,7 +156,6 @@
     <input type="text" id="memo" placeholder="Memo">
     <input type="number" id="amount" placeholder="Bedrag">
 
-    <!-- DEFAULT AFWACHTEND -->
     <select id="status">
       <option value="pending" selected>Afwachtend</option>
       <option value="confirmed">Bevestigd</option>
@@ -199,7 +198,9 @@ function renderTransactions() {
     });
   }
 
-  list.forEach((t, index) => {
+  list.forEach((t) => {
+    const realIndex = transactions.indexOf(t);
+
     const dotClass = (t.status && t.status.trim() === "confirmed") ? "green" : "red";
 
     const row = document.createElement("tr");
@@ -211,7 +212,8 @@ function renderTransactions() {
       <td>${t.memo || ""}</td>
     `;
 
-    row.onclick = () => editTransaction(index);
+    row.onclick = () => editTransaction(realIndex);
+
     table.appendChild(row);
   });
 }
@@ -233,7 +235,6 @@ function openModal() {
   document.getElementById("category").value = "";
   document.getElementById("memo").value = "";
   document.getElementById("amount").value = "";
-
   document.getElementById("status").value = "pending";
 
   document.querySelector(".delete-btn").style.display = "none";

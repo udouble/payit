@@ -13,7 +13,10 @@
       margin-bottom: 10px;
       background: #3a3a3a;
       border-radius: 5px;
+      cursor: pointer;
     }
+
+    .active { background:#4caf50; }
 
     .main { flex: 1; padding: 20px; }
 
@@ -40,15 +43,9 @@
       table-layout: fixed;
     }
 
-    th, td {
-      padding: 10px 5px;
-      white-space: nowrap;
-    }
+    th, td { padding: 10px 5px; white-space: nowrap; }
 
-    th {
-      border-bottom: 1px solid #444;
-      cursor: pointer;
-    }
+    th { border-bottom: 1px solid #444; cursor: pointer; }
 
     th:nth-child(1), td:nth-child(1) { width: 70px; text-align: center; }
     th:nth-child(2), td:nth-child(2) { width: 110px; }
@@ -119,14 +116,16 @@
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-    <div class="account">Privé</div>
-    <div class="account">VOF</div>
+
+    <div class="account active" onclick="selectAccount('Privé', this)">Privé</div>
+    <div class="account" onclick="selectAccount('VOF', this)">VOF</div>
+
   </div>
 
   <div class="main">
 
     <div class="topbar">
-      <h2>Transacties</h2>
+      <h2 id="title">Privé</h2>
       <button class="add-btn" onclick="openModal()">＋</button>
     </div>
 
@@ -149,15 +148,15 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3 id="modalTitle">Nieuwe transactie</h3>
+    <h3>Nieuwe transactie</h3>
 
     <input type="date" id="date">
-    <input type="text" id="category" placeholder="Categorie">
-    <input type="text" id="memo" placeholder="Memo">
-    <input type="number" id="amount" placeholder="Bedrag">
+    <input type="text" id="category">
+    <input type="text" id="memo">
+    <input type="number" id="amount">
 
     <select id="status">
-      <option value="pending" selected>Afwachtend</option>
+      <option value="pending">Afwachtend</option>
       <option value="confirmed">Bevestigd</option>
     </select>
 
@@ -176,6 +175,17 @@ let currentAccount = "Privé";
 let sortField = null;
 let sortDirection = 1;
 
+function selectAccount(name, el){
+  currentAccount = name;
+
+  document.querySelectorAll(".account").forEach(a=>a.classList.remove("active"));
+  el.classList.add("active");
+
+  document.getElementById("title").innerText = name;
+
+  renderTransactions();
+}
+
 function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
 }
@@ -189,20 +199,6 @@ function renderTransactions() {
   table.innerHTML = "";
 
   let list = transactions.filter(t => !t.account || t.account === currentAccount);
-
-  if (sortField) {
-    list.sort((a,b) => {
-      let valA = a[sortField];
-      let valB = b[sortField];
-
-      if (sortField === "status") {
-        valA = a.status === "confirmed" ? 1 : 0;
-        valB = b.status === "confirmed" ? 1 : 0;
-      }
-
-      return valA > valB ? sortDirection : -sortDirection;
-    });
-  }
 
   list.forEach((t) => {
     const realIndex = transactions.indexOf(t);
@@ -219,7 +215,6 @@ function renderTransactions() {
     `;
 
     row.onclick = () => editTransaction(realIndex);
-
     table.appendChild(row);
   });
 }

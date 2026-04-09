@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - Versie 1.9</title>
+  <title>Payit - Versie 1.10</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; font-size: 20px; }
     .container { display: flex; height: 100vh; }
@@ -78,6 +78,13 @@
   <div class="modal-content">
     <h3 id="modal-title">Transactie</h3>
 
+    <!-- NIEUW -->
+    <label>Type</label>
+    <select id="type">
+      <option value="expense">Uitgave</option>
+      <option value="income">Inkomst</option>
+    </select>
+
     <label>Datum</label>
     <input type="date" id="date">
 
@@ -121,34 +128,26 @@ let sortConfig = { field: 'status', direction: 'asc' };
 
 function renderAccounts() {
   const list = document.getElementById('accounts-list');
-  if(!list) return;
   list.innerHTML = '';
-
   const displayAccounts = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
-
   displayAccounts.forEach(acc => {
     const item = document.createElement('div');
     item.className = 'account-item';
-
     item.innerHTML = `
       <div class="account ${acc.id === activeAccountId ? 'active' : ''}" onclick="selectAccount('${acc.id}')">${acc.name}</div>
       <button class="acc-btn" onclick="renameAccount('${acc.id}')">✎</button>
       <button class="acc-btn" onclick="removeAccount('${acc.id}')">✕</button>
     `;
-
     list.appendChild(item);
   });
-
   const activeAcc = accounts.find(a => a.id === activeAccountId) || accounts[0];
   document.getElementById('current-account-title').innerText = activeAcc.name;
-
   updateAccountDropdown();
 }
 
 function updateAccountDropdown() {
   const select = document.getElementById('target-account');
   select.innerHTML = '';
-
   accounts.sort((a, b) => a.name.localeCompare(b.name)).forEach(acc => {
     const opt = document.createElement('option');
     opt.value = acc.id;
@@ -165,35 +164,28 @@ function selectAccount(id) {
 
 function renderTransactions() {
   const tbody = document.getElementById('transactions');
-  if(!tbody) return;
   tbody.innerHTML = '';
-
   let data = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
 
   data.sort((a, b) => {
     let vA = a[sortConfig.field] || "";
     let vB = b[sortConfig.field] || "";
-
     if (sortConfig.field === 'amount') {
       vA = parseFloat(a.amount) || 0;
       vB = parseFloat(b.amount) || 0;
     }
-
     if (sortConfig.field === 'status') {
       vA = a.status === 'pending' ? 0 : 1;
       vB = b.status === 'pending' ? 0 : 1;
     }
-
     if (vA < vB) return sortConfig.direction === 'asc' ? -1 : 1;
     if (vA > vB) return sortConfig.direction === 'asc' ? 1 : -1;
-
     return (b.date || "").localeCompare(a.date || "");
   });
 
   data.forEach(t => {
     const tr = document.createElement('tr');
     tr.onclick = () => openModal(t.id);
-
     tr.innerHTML = `
       <td><span class="status-dot ${t.status === 'confirmed' ? 'green' : 'red'}"></span></td>
       <td>${t.date || ''}</td>
@@ -201,7 +193,6 @@ function renderTransactions() {
       <td>€ ${parseFloat(t.amount || 0).toFixed(2)}</td>
       <td style="color:#888">${t.memo || ''}</td>
     `;
-
     tbody.appendChild(tr);
   });
 }
@@ -215,36 +206,22 @@ function toggleSort(field) {
 function openModal(id = null) {
   editingId = id;
   const m = document.getElementById('modal');
-  const accSelect = document.getElementById('account-select-container');
-  const editActions = document.getElementById('edit-actions');
-
   if (id) {
     const t = transactions.find(x => x.id === id);
-
-    document.getElementById('modal-title').innerText = 'Bewerken';
     document.getElementById('date').value = t.date;
     document.getElementById('category').value = t.category;
     document.getElementById('memo').value = t.memo || '';
-    document.getElementById('amount').value = t.amount;
+    document.getElementById('amount').value = Math.abs(t.amount);
     document.getElementById('status').value = t.status;
-    document.getElementById('target-account').value = t.accountId || accounts[0].id;
-
-    accSelect.style.display = 'block';
-    editActions.style.display = 'flex';
-
+    document.getElementById('type').value = t.amount < 0 ? 'expense' : 'income';
   } else {
-
-    document.getElementById('modal-title').innerText = 'Nieuw';
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
     document.getElementById('category').value = '';
     document.getElementById('memo').value = '';
     document.getElementById('amount').value = '';
     document.getElementById('status').value = 'pending';
-
-    accSelect.style.display = 'none';
-    editActions.style.display = 'none';
+    document.getElementById('type').value = 'expense';
   }
-
   m.style.display = 'flex';
 }
 
@@ -253,13 +230,20 @@ function closeModal() {
 }
 
 function saveTransaction() {
+  let amt = parseFloat(document.getElementById('amount').value) || 0;
+  if (document.getElementById('type').value === 'expense') {
+    amt = -Math.abs(amt);
+  } else {
+    amt = Math.abs(amt);
+  }
+
   const data = {
     date: document.getElementById('date').value,
     category: document.getElementById('category').value || 'Diversen',
     memo: document.getElementById('memo').value,
-    amount: document.getElementById('amount').value || 0,
+    amount: amt,
     status: document.getElementById('status').value,
-    accountId: editingId ? document.getElementById('target-account').value : activeAccountId
+    accountId: activeAccountId
   };
 
   if (editingId) {
@@ -271,26 +255,15 @@ function saveTransaction() {
   }
 
   localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-
   closeModal();
   renderTransactions();
 }
 
 function duplicateTransaction() {
   if (!editingId) return;
-
   const t = transactions.find(x => x.id === editingId);
-
-  const copy = {
-    ...t,
-    id: Date.now().toString(),
-    accountId: activeAccountId
-  };
-
-  transactions.push(copy);
-
+  transactions.push({ ...t, id: Date.now().toString() });
   localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-
   closeModal();
   renderTransactions();
 }
@@ -300,11 +273,8 @@ function addAccount() {
   if (n && n.trim()) {
     const newId = Date.now().toString();
     accounts.push({ id: newId, name: n.trim() });
-
     localStorage.setItem('payit_accounts', JSON.stringify(accounts));
-
     activeAccountId = newId;
-
     renderAccounts();
     renderTransactions();
   }
@@ -313,7 +283,6 @@ function addAccount() {
 function renameAccount(id) {
   const acc = accounts.find(a => a.id === id);
   const n = prompt("Nieuwe naam:", acc.name);
-
   if (n && n.trim()) {
     acc.name = n.trim();
     localStorage.setItem('payit_accounts', JSON.stringify(accounts));
@@ -323,13 +292,11 @@ function renameAccount(id) {
 
 function removeAccount(id) {
   if (accounts.length <= 1) return;
-
   if (!confirm("Rekening verwijderen?")) return;
   if (!confirm("Weet je het zeker? Alle transacties worden dan ook verwijderd.")) return;
 
   accounts = accounts.filter(a => a.id !== id);
   transactions = transactions.filter(t => t.accountId !== id);
-
   activeAccountId = accounts[0].id;
 
   localStorage.setItem('payit_accounts', JSON.stringify(accounts));
@@ -342,9 +309,7 @@ function removeAccount(id) {
 function deleteTransaction() {
   if (editingId && confirm('Wissen?')) {
     transactions = transactions.filter(t => t.id !== editingId);
-
     localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-
     closeModal();
     renderTransactions();
   }

@@ -3,23 +3,10 @@
 <head>
   <title>Payit</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #1e1e1e;
-      color: white;
-    }
+    body { margin: 0; font-family: Arial; background: #1e1e1e; color: white; }
+    .container { display: flex; height: 100vh; }
 
-    .container {
-      display: flex;
-      height: 100vh;
-    }
-
-    .sidebar {
-      width: 250px;
-      background: #2b2b2b;
-      padding: 20px;
-    }
+    .sidebar { width: 250px; background: #2b2b2b; padding: 20px; }
 
     .account {
       padding: 10px;
@@ -28,10 +15,7 @@
       border-radius: 5px;
     }
 
-    .main {
-      flex: 1;
-      padding: 20px;
-    }
+    .main { flex: 1; padding: 20px; }
 
     .topbar {
       display: flex;
@@ -72,9 +56,7 @@
     th:nth-child(4), td:nth-child(4) { width: 110px; text-align: right; padding-right: 20px; }
     th:nth-child(5), td:nth-child(5) { width: auto; padding-left: 10px; }
 
-    tr:hover {
-      background: #2a2a2a;
-    }
+    tr:hover { background: #2a2a2a; }
 
     .status-dot {
       display: inline-block;
@@ -151,10 +133,10 @@
     <table>
       <thead>
         <tr>
-          <th>ST</th>
-          <th>Datum</th>
-          <th>Categorie</th>
-          <th>Bedrag</th>
+          <th onclick="sortBy('status')">ST</th>
+          <th onclick="sortBy('date')">Datum</th>
+          <th onclick="sortBy('category')">Categorie</th>
+          <th onclick="sortBy('amount')">Bedrag</th>
           <th>Memo</th>
         </tr>
       </thead>
@@ -189,6 +171,9 @@
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let editIndex = null;
 
+let sortField = null;
+let sortDirection = 1;
+
 function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
 }
@@ -197,7 +182,23 @@ function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
 
-  transactions.forEach((t, index) => {
+  let list = [...transactions];
+
+  if (sortField) {
+    list.sort((a,b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+
+      if (sortField === "status") {
+        valA = a.status === "confirmed" ? 1 : 0;
+        valB = b.status === "confirmed" ? 1 : 0;
+      }
+
+      return valA > valB ? sortDirection : -sortDirection;
+    });
+  }
+
+  list.forEach((t, index) => {
     const dotClass = t.status === "confirmed" ? "green" : "red";
 
     const row = document.createElement("tr");
@@ -210,14 +211,22 @@ function renderTransactions() {
     `;
 
     row.onclick = () => editTransaction(index);
-
     table.appendChild(row);
   });
 }
 
+function sortBy(field) {
+  if (sortField === field) {
+    sortDirection *= -1;
+  } else {
+    sortField = field;
+    sortDirection = 1;
+  }
+  renderTransactions();
+}
+
 function openModal() {
   editIndex = null;
-
   document.getElementById("modal").style.display = "flex";
 }
 
@@ -232,7 +241,6 @@ function editTransaction(index) {
   document.getElementById("status").value = t.status;
 
   document.querySelector(".delete-btn").style.display = "block";
-
   document.getElementById("modal").style.display = "flex";
 }
 

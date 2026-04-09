@@ -1,62 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - Versie 1.12</title>
+  <title>Payit - Versie 1.13</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; font-size: 20px; }
     .container { display: flex; height: 100vh; }
     .sidebar { width: 300px; background: #2b2b2b; padding: 25px; border-right: 1px solid #444; }
     .sidebar h2 { font-size: 24px; color: #4caf50; margin-bottom: 20px; }
+
     .account-item { display: flex; align-items: center; margin-bottom: 12px; gap: 8px; }
-    .account { flex: 1; padding: 12px 15px; background: #3a3a3a; border-radius: 6px; cursor: pointer; font-size: 20px; }
+    .account { flex: 1; padding: 12px 15px; background: #3a3a3a; border-radius: 6px; cursor: pointer; }
     .account.active { background: #4caf50; font-weight: bold; }
-    .acc-btn { background: #444; border: none; color: #999; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 16px; }
-    .add-acc-btn { width: 100%; padding: 12px; margin-top: 20px; background: transparent; border: 1px dashed #666; color: #aaa; border-radius: 6px; cursor: pointer; font-size: 20px; }
+
+    .add-acc-btn { width: 100%; padding: 12px; margin-top: 20px; border: 1px dashed #666; background: transparent; color: #aaa; border-radius: 6px; }
+
     .main { flex: 1; padding: 30px; overflow-y: auto; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .topbar h2 { font-size: 28px; margin: 0; }
-    .add-btn { background: #4caf50; border: none; color: white; padding: 10px 20px; border-radius: 6px; font-size: 24px; cursor: pointer; }
+
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .topbar h2 { margin: 0; }
+
+    .total {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #aaa;
+    }
+
+    .add-btn { background: #4caf50; border: none; color: white; padding: 10px 20px; border-radius: 6px; font-size: 24px; }
 
     table { width: 100%; border-collapse: collapse; }
-    th { padding: 15px 10px; text-align: left; color: #888; border-bottom: 2px solid #333; cursor: pointer; font-size: 16px; }
-    td { padding: 15px 10px; border-bottom: 1px solid #222; font-size: 20px; }
+    th, td { padding: 15px 10px; border-bottom: 1px solid #222; }
+    th { color: #888; }
 
-    th:nth-child(1), td:nth-child(1) { width: 60px; text-align: center; }
-    th:nth-child(2), td:nth-child(2) { width: 140px; }
-    th:nth-child(3), td:nth-child(3) { width: 200px; }
-    th:nth-child(4), td:nth-child(4) { width: 140px; text-align: right; }
+    td:nth-child(4) { text-align: right; }
 
     .amount-positive { color: #4caf50; }
     .amount-negative { color: #ff5252; }
 
-    .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
-    .green { background: #4caf50; }
-    .red { background: #ff5252; }
+    .status-dot { width: 12px; height: 12px; border-radius: 50%; display:inline-block; }
+    .green { background:#4caf50; }
+    .red { background:#ff5252; }
 
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
-    .modal-content { background: #2b2b2b; padding: 30px; border-radius: 12px; width: 480px; }
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; }
+    .modal-content { background:#2b2b2b; padding:30px; border-radius:12px; width:480px; }
 
-    .modal-content label { display: block; margin-top: 15px; font-size: 14px; color: #888; }
+    .modal-content label { display:block; margin-top:15px; color:#888; }
     .modal-content input, .modal-content select {
-      width: 100%; padding: 12px; margin-top: 5px;
-      background: #1a1a1a; border: 1px solid #444;
-      color: white; border-radius: 6px; font-size: 20px;
+      width:100%; padding:12px; margin-top:5px;
+      background:#1a1a1a; border:1px solid #444; color:white; border-radius:6px;
     }
 
-    .amount-grid { display: flex; gap: 10px; }
+    .amount-grid { display:flex; gap:10px; }
 
-    .btn-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-    .btn { flex: 1; padding: 14px; border-radius: 6px; font-size: 18px; cursor: pointer; }
-    .save-btn { background: #4caf50; color: white; }
-    .duplicate-btn { background: #2196F3; color: white; }
-    .delete-btn { border: 1px solid #ff5252; color: #ff5252; background: transparent; }
-    .close-btn { background: #555; color: white; }
+    .btn-row { display:flex; gap:10px; margin-top:20px; }
+    .btn { flex:1; padding:14px; border-radius:6px; font-size:18px; cursor:pointer; border:none; }
+
+    .save-btn { background:#4caf50; color:white; }
+    .close-btn { background:#555; color:white; }
+    .duplicate-btn { background:#2196F3; color:white; }
+    .delete-btn { border:1px solid #ff5252; color:#ff5252; background:transparent; }
+
+    .spacer { margin-top:30px; }
   </style>
 </head>
 
 <body>
 
 <div class="container">
+
   <div class="sidebar">
     <h2>Rekeningen</h2>
     <div id="accounts-list"></div>
@@ -68,6 +78,8 @@
       <h2 id="current-account-title"></h2>
       <button class="add-btn" onclick="openModal()">＋</button>
     </div>
+
+    <div class="total" id="total"></div>
 
     <table>
       <thead>
@@ -82,6 +94,7 @@
       <tbody id="transactions"></tbody>
     </table>
   </div>
+
 </div>
 
 <div class="modal" id="modal">
@@ -108,8 +121,22 @@
       <option value="confirmed">Bevestigd</option>
     </select>
 
-    <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
-    <button class="btn close-btn" onclick="closeModal()">Annuleren</button>
+    <label>Verplaats naar rekening</label>
+    <select id="target-account"></select>
+
+    <div class="spacer"></div>
+
+    <!-- rij 1 -->
+    <div class="btn-row">
+      <button class="btn duplicate-btn" onclick="duplicateTransaction()">Dupliceren</button>
+      <button class="btn delete-btn" onclick="deleteTransaction()">Verwijderen</button>
+    </div>
+
+    <!-- rij 2 -->
+    <div class="btn-row">
+      <button class="btn close-btn" onclick="closeModal()">Annuleren</button>
+      <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
+    </div>
 
   </div>
 </div>
@@ -120,8 +147,8 @@ let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
 let activeAccountId = localStorage.getItem('active_account') || accounts[0].id;
 let editingId=null;
 
-function formatAmount(value){
-  return new Intl.NumberFormat('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2}).format(value);
+function formatAmount(v){
+  return new Intl.NumberFormat('nl-BE',{minimumFractionDigits:2}).format(v);
 }
 
 function renderAccounts(){
@@ -130,9 +157,7 @@ function renderAccounts(){
   accounts.forEach(acc=>{
     const div=document.createElement('div');
     div.className='account-item';
-    div.innerHTML=`
-      <div class="account ${acc.id===activeAccountId?'active':''}" onclick="selectAccount('${acc.id}')">${acc.name}</div>
-    `;
+    div.innerHTML=`<div class="account ${acc.id===activeAccountId?'active':''}" onclick="selectAccount('${acc.id}')">${acc.name}</div>`;
     list.appendChild(div);
   });
   document.getElementById('current-account-title').innerText=accounts.find(a=>a.id===activeAccountId)?.name;
@@ -141,9 +166,15 @@ function renderAccounts(){
 function renderTransactions(){
   const tbody=document.getElementById('transactions');
   tbody.innerHTML='';
-  transactions.filter(t=>t.accountId===activeAccountId).forEach(t=>{
-    const tr=document.createElement('tr');
 
+  const data=transactions.filter(t=>t.accountId===activeAccountId);
+
+  let total=0;
+
+  data.forEach(t=>{
+    total+=parseFloat(t.amount);
+
+    const tr=document.createElement('tr');
     const cls=t.amount>=0?'amount-positive':'amount-negative';
 
     tr.innerHTML=`
@@ -156,6 +187,8 @@ function renderTransactions(){
     tr.onclick=()=>openModal(t.id);
     tbody.appendChild(tr);
   });
+
+  document.getElementById('total').innerText = "Totaal: € " + formatAmount(total);
 }
 
 function selectAccount(id){
@@ -168,6 +201,7 @@ function selectAccount(id){
 function openModal(id=null){
   editingId=id;
   modal.style.display='flex';
+
   income.value='';
   expense.value='';
 
@@ -180,7 +214,7 @@ function openModal(id=null){
 
     if(t.amount>=0){income.value=t.amount;}
     else{expense.value=Math.abs(t.amount);}
-  }else{
+  } else {
     date.value=new Date().toISOString().split('T')[0];
     category.value='';
     memo.value='';
@@ -214,6 +248,19 @@ function saveTransaction(){
 
   localStorage.setItem('payit_transactions',JSON.stringify(transactions));
   closeModal();
+  renderTransactions();
+}
+
+function duplicateTransaction(){
+  if(!editingId)return;
+  const t=transactions.find(x=>x.id===editingId);
+  transactions.push({...t,id:Date.now().toString()});
+  renderTransactions();
+}
+
+function deleteTransaction(){
+  if(!editingId)return;
+  transactions=transactions.filter(t=>t.id!==editingId);
   renderTransactions();
 }
 

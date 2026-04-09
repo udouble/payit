@@ -3,143 +3,197 @@
 <head>
   <title>Payit</title>
   <style>
-    /* Basisinstelling: 15pt is ongeveer 20px */
-    body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; font-size: 20px; }
+    :root {
+      --bg-dark: #121212;
+      --bg-sidebar: #1e1e1e;
+      --bg-item: #2d2d2d;
+      --accent: #4caf50;
+      --text-main: #e0e0e0;
+      --text-dim: #909090;
+      --danger: #ef5350;
+    }
+
+    body { 
+      margin: 0; 
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+      background: var(--bg-dark); 
+      color: var(--text-main); 
+      font-size: 20px; /* 15pt */
+    }
+
     .container { display: flex; height: 100vh; }
 
     /* Sidebar Styling */
-    .sidebar { width: 300px; background: #2b2b2b; padding: 20px; border-right: 1px solid #444; display: flex; flex-direction: column; }
+    .sidebar { 
+      width: 320px; 
+      background: var(--bg-sidebar); 
+      padding: 30px 20px; 
+      border-right: 1px solid #333; 
+      display: flex; 
+      flex-direction: column; 
+    }
     
-    .sidebar h2 { font-size: 24px; margin-bottom: 20px; }
+    .sidebar h2 { font-size: 24px; margin-bottom: 25px; color: var(--accent); letter-spacing: 1px; }
 
     .account-item {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
-      gap: 10px;
+      margin-bottom: 10px;
+      group: hover;
     }
 
     .account {
       flex: 1;
-      padding: 12px;
-      background: #3a3a3a;
-      border-radius: 6px;
+      padding: 14px 18px;
+      background: var(--bg-item);
+      border-radius: 8px;
       cursor: pointer;
-      transition: background 0.2s;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 20px; /* 15pt */
+      transition: all 0.2s ease;
+      font-size: 20px;
+      border: 1px solid transparent;
     }
 
-    .account:hover { background: #4a4a4a; }
-    .account.active { background: #4caf50; font-weight: bold; }
+    .account:hover { background: #383838; }
+    .account.active { background: rgba(76, 175, 80, 0.15); border-color: var(--accent); color: white; font-weight: 600; }
+
+    .acc-actions { display: flex; gap: 5px; margin-left: 10px; opacity: 0; transition: opacity 0.2s; }
+    .account-item:hover .acc-actions { opacity: 1; }
 
     .acc-action-btn {
-      background: #444;
+      background: #333;
       border: none;
-      color: #ccc;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 18px;
-    }
-
-    .add-acc-btn {
-      margin-top: 15px;
-      background: #444;
-      border: 1px dashed #888;
-      color: white;
-      padding: 12px;
+      color: var(--text-dim);
+      width: 40px;
+      height: 40px;
       border-radius: 6px;
       cursor: pointer;
-      width: 100%;
-      font-size: 20px; /* 15pt */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
     }
 
-    /* Main Content */
-    .main { flex: 1; padding: 20px; overflow-y: auto; }
+    .acc-action-btn:hover { background: #444; color: white; }
+    .acc-action-btn.del:hover { background: var(--danger); }
 
-    .topbar h2 { font-size: 24px; }
+    .add-acc-btn {
+      margin-top: 20px;
+      background: transparent;
+      border: 1px solid #444;
+      color: var(--text-dim);
+      padding: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+
+    .add-acc-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(76, 175, 80, 0.05); }
+
+    /* Main Content */
+    .main { flex: 1; padding: 40px; overflow-y: auto; }
 
     .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 40px;
     }
+
+    .topbar h2 { font-size: 32px; margin: 0; font-weight: 400; }
 
     .add-btn {
-      background: #4caf50;
+      background: var(--accent);
       border: none;
       color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 24px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 28px;
       cursor: pointer;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
     }
 
-    /* Table Styling */
-    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    th, td { padding: 15px 5px; text-align: left; border-bottom: 1px solid #333; font-size: 20px; }
-    th { cursor: pointer; color: #888; user-select: none; text-transform: uppercase; font-size: 16px; }
-    th:hover { color: white; }
-    
-    th:nth-child(1), td:nth-child(1) { width: 60px; text-align: center; }
-    th:nth-child(2), td:nth-child(2) { width: 140px; }
-    th:nth-child(3), td:nth-child(3) { width: 200px; }
-    th:nth-child(4), td:nth-child(4) { width: 130px; text-align: right; }
-    th:nth-child(5), td:nth-child(5) { width: auto; padding-left: 20px; color: #aaa; }
+    .add-btn:hover { transform: scale(1.1); }
 
-    tr:hover { background: #2a2a2a; cursor: pointer; }
+    /* Table Styling */
+    table { width: 100%; border-collapse: collapse; }
+    th { 
+      padding: 15px 10px; 
+      text-align: left; 
+      font-size: 14px; 
+      text-transform: uppercase; 
+      color: var(--text-dim); 
+      letter-spacing: 1px;
+      border-bottom: 2px solid #2d2d2d;
+      cursor: pointer;
+    }
+    th:hover { color: var(--text-main); }
+    
+    td { padding: 20px 10px; border-bottom: 1px solid #222; font-size: 20px; }
+
+    th:nth-child(1), td:nth-child(1) { width: 60px; text-align: center; }
+    th:nth-child(2), td:nth-child(2) { width: 150px; }
+    th:nth-child(3), td:nth-child(3) { width: 220px; }
+    th:nth-child(4), td:nth-child(4) { width: 150px; text-align: right; }
+    th:nth-child(5), td:nth-child(5) { width: auto; padding-left: 30px; color: var(--text-dim); }
+
+    tr:hover td { background: rgba(255,255,255,0.02); cursor: pointer; }
 
     .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
-    .green { background: #4caf50; }
-    .red { background: #ff4444; }
+    .green { background: var(--accent); box-shadow: 0 0 10px rgba(76, 175, 80, 0.4); }
+    .red { background: #ffb74d; box-shadow: 0 0 10px rgba(255, 183, 77, 0.4); }
 
     /* Modal Styling */
     .modal {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.9);
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      backdrop-filter: blur(5px);
     }
 
     .modal-content {
-      background: #2b2b2b;
-      padding: 30px;
-      border-radius: 12px;
-      width: 480px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      background: #252525;
+      padding: 40px;
+      border-radius: 20px;
+      width: 500px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
 
-    .modal-content label { display: block; margin-top: 15px; font-weight: bold; color: #bbb; font-size: 16px; }
+    .modal-content h3 { margin-top: 0; font-size: 24px; margin-bottom: 20px; }
+    .modal-content label { display: block; margin-top: 20px; color: var(--text-dim); font-size: 14px; text-transform: uppercase; }
     .modal-content input, .modal-content select {
-      width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #1e1e1e; color: white; box-sizing: border-box; font-size: 20px;
+      width: 100%; padding: 15px; margin-top: 8px; border-radius: 10px; border: 1px solid #444; background: #1a1a1a; color: white; box-sizing: border-box; font-size: 20px;
     }
 
-    .btn { width: 100%; padding: 14px; margin-top: 10px; border: none; border-radius: 6px; font-size: 20px; font-weight: bold; cursor: pointer; }
-    .save-btn { background: #4caf50; color: white; }
-    .delete-btn { background: #ff4444; color: white; margin-top: 20px; }
-    .close-btn { background: #555; color: white; }
+    .btn { width: 100%; padding: 16px; margin-top: 15px; border: none; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; }
+    .save-btn { background: var(--accent); color: white; }
+    .delete-btn { background: transparent; color: var(--danger); margin-top: 20px; border: 1px solid var(--danger); }
+    .delete-btn:hover { background: var(--danger); color: white; }
+    .close-btn { background: #444; color: white; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <div class="sidebar">
-    <h2>Rekeningen</h2>
+    <h2>REKENINGEN</h2>
     <div id="accounts-list"></div>
     <button class="add-acc-btn" onclick="addAccount()">+ Nieuwe rekening</button>
   </div>
 
   <div class="main">
     <div class="topbar">
-      <h2 id="current-account-title">Transacties</h2>
-      <button class="add-btn" onclick="openModal()">＋</button>
+      <h2 id="current-account-title">Laden...</h2>
+      <button class="add-btn" onclick="openModal()">+</button>
     </div>
 
     <table>
@@ -163,11 +217,11 @@
     <label>Datum</label>
     <input type="date" id="date">
     <label>Categorie</label>
-    <input type="text" id="category">
+    <input type="text" id="category" placeholder="Bijv. Huur">
     <label>Memo</label>
-    <input type="text" id="memo">
+    <input type="text" id="memo" placeholder="Optioneel">
     <label>Bedrag</label>
-    <input type="number" id="amount" step="0.01">
+    <input type="number" id="amount" step="0.01" placeholder="0.00">
     <label>Status</label>
     <select id="status">
       <option value="pending">Afwachtend</option>
@@ -175,7 +229,7 @@
     </select>
     <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
     <button class="btn close-btn" onclick="closeModal()">Annuleren</button>
-    <button class="btn delete-btn" id="delete-btn" onclick="deleteTransaction()" style="display:none;">Verwijderen</button>
+    <button class="btn delete-btn" id="delete-btn" onclick="deleteTransaction()" style="display:none;">Transactie verwijderen</button>
   </div>
 </div>
 
@@ -188,37 +242,42 @@
   let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
   let activeAccountId = accounts[0].id;
   let editingId = null;
-
-  // Sorteer staat
   let sortConfig = { field: 'status', direction: 'asc' };
 
   function renderAccounts() {
     const list = document.getElementById('accounts-list');
     list.innerHTML = '';
-    const sortedAccounts = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
-    sortedAccounts.forEach(acc => {
+    const sorted = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
+    
+    sorted.forEach(acc => {
       const item = document.createElement('div');
       item.className = 'account-item';
+      
       const div = document.createElement('div');
       div.className = `account ${acc.id === activeAccountId ? 'active' : ''}`;
       div.innerText = acc.name;
       div.onclick = () => { activeAccountId = acc.id; renderAccounts(); renderTransactions(); };
       
+      const actions = document.createElement('div');
+      actions.className = 'acc-actions';
+      
       const editBtn = document.createElement('button');
       editBtn.className = 'acc-action-btn';
-      editBtn.innerText = '✎';
+      editBtn.innerHTML = '✎';
       editBtn.onclick = (e) => { e.stopPropagation(); renameAccount(acc.id); };
       
       const delBtn = document.createElement('button');
-      delBtn.className = 'acc-action-btn';
-      delBtn.innerText = '✕';
+      delBtn.className = 'acc-action-btn del';
+      delBtn.innerHTML = '✕';
       delBtn.onclick = (e) => { e.stopPropagation(); removeAccount(acc.id); };
       
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
       item.appendChild(div);
-      item.appendChild(editBtn);
-      item.appendChild(delBtn);
+      item.appendChild(actions);
       list.appendChild(item);
     });
+    
     const activeAcc = accounts.find(a => a.id === activeAccountId) || accounts[0];
     document.getElementById('current-account-title').innerText = activeAcc.name;
   }
@@ -237,7 +296,7 @@
 
   function renameAccount(id) {
     const acc = accounts.find(a => a.id === id);
-    const newName = prompt("Hernoem naar:", acc.name);
+    const newName = prompt("Hernoem rekening:", acc.name);
     if (newName && newName.trim()) {
       acc.name = newName.trim();
       localStorage.setItem('payit_accounts', JSON.stringify(accounts));
@@ -261,109 +320,3 @@
       sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
     } else {
       sortConfig.field = field;
-      sortConfig.direction = 'asc';
-    }
-    renderTransactions();
-  }
-
-  function renderTransactions() {
-    const tbody = document.getElementById('transactions');
-    tbody.innerHTML = '';
-    
-    let filtered = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
-    
-    filtered.sort((a, b) => {
-      let valA = a[sortConfig.field];
-      let valB = b[sortConfig.field];
-
-      if (sortConfig.field === 'status') {
-        valA = a.status === 'pending' ? 0 : 1;
-        valB = b.status === 'pending' ? 0 : 1;
-      } else if (sortConfig.field === 'amount') {
-        valA = parseFloat(a.amount) || 0;
-        valB = parseFloat(b.amount) || 0;
-      }
-
-      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-      return b.date.localeCompare(a.date);
-    });
-
-    filtered.forEach(t => {
-      const tr = document.createElement('tr');
-      tr.onclick = () => openModal(t.id);
-      const statusClass = t.status === 'confirmed' ? 'green' : 'red';
-      tr.innerHTML = `
-        <td><span class="status-dot ${statusClass}"></span></td>
-        <td>${t.date}</td>
-        <td>${t.category}</td>
-        <td>€ ${parseFloat(t.amount || 0).toFixed(2)}</td>
-        <td style="color: #888;">${t.memo || ''}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function openModal(id = null) {
-    editingId = id;
-    const modal = document.getElementById('modal');
-    const deleteBtn = document.getElementById('delete-btn');
-    if (id) {
-      const t = transactions.find(x => x.id === id);
-      document.getElementById('modal-title').innerText = 'Bewerken';
-      document.getElementById('date').value = t.date;
-      document.getElementById('category').value = t.category;
-      document.getElementById('memo').value = t.memo || '';
-      document.getElementById('amount').value = t.amount;
-      document.getElementById('status').value = t.status;
-      deleteBtn.style.display = 'block';
-    } else {
-      document.getElementById('modal-title').innerText = 'Nieuw';
-      document.getElementById('date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('category').value = '';
-      document.getElementById('memo').value = '';
-      document.getElementById('amount').value = '';
-      document.getElementById('status').value = 'pending';
-      deleteBtn.style.display = 'none';
-    }
-    modal.style.display = 'flex';
-  }
-
-  function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-  function saveTransaction() {
-    const data = {
-      date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
-      category: document.getElementById('category').value || 'Diversen',
-      memo: document.getElementById('memo').value,
-      amount: document.getElementById('amount').value || 0,
-      status: document.getElementById('status').value,
-      accountId: activeAccountId
-    };
-    if (editingId) {
-      const index = transactions.findIndex(t => t.id === editingId);
-      data.accountId = transactions[index].accountId || accounts[0].id;
-      transactions[index] = { ...data, id: editingId };
-    } else {
-      data.id = Date.now().toString();
-      transactions.push(data);
-    }
-    localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-    closeModal();
-    renderTransactions();
-  }
-
-  function deleteTransaction() {
-    if (editingId && confirm('Verwijderen?')) {
-      transactions = transactions.filter(t => t.id !== editingId);
-      localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-      closeModal();
-      renderTransactions();
-    }
-  }
-
-  renderAccounts();
-  renderTransactions();
-</script>
-</body>
-</html>

@@ -13,6 +13,11 @@
       margin-bottom: 10px;
       background: #3a3a3a;
       border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .active {
+      background: #4caf50;
     }
 
     .main { flex: 1; padding: 20px; }
@@ -119,14 +124,14 @@
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-    <div class="account">Privé</div>
-    <div class="account">VOF</div>
+    <div class="account active" onclick="selectAccount('Privé', this)">Privé</div>
+    <div class="account" onclick="selectAccount('VOF', this)">VOF</div>
   </div>
 
   <div class="main">
 
     <div class="topbar">
-      <h2>Transacties</h2>
+      <h2 id="accountTitle">Privé</h2>
       <button class="add-btn" onclick="openModal()">＋</button>
     </div>
 
@@ -149,7 +154,7 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3 id="modalTitle">Nieuwe transactie</h3>
+    <h3>Nieuwe transactie</h3>
 
     <input type="date" id="date">
     <input type="text" id="category" placeholder="Categorie">
@@ -171,6 +176,8 @@
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let editIndex = null;
 
+let currentAccount = "Privé";
+
 let sortField = null;
 let sortDirection = 1;
 
@@ -182,11 +189,22 @@ function today() {
   return new Date().toISOString().split("T")[0];
 }
 
+function selectAccount(name, el) {
+  currentAccount = name;
+
+  document.querySelectorAll(".account").forEach(a => a.classList.remove("active"));
+  el.classList.add("active");
+
+  document.getElementById("accountTitle").innerText = name;
+
+  renderTransactions();
+}
+
 function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
 
-  let list = [...transactions];
+  let list = transactions.filter(t => t.account === currentAccount);
 
   if (sortField) {
     list.sort((a,b) => {
@@ -235,39 +253,40 @@ function sortBy(field) {
 function openModal() {
   editIndex = null;
 
-  document.getElementById("date").value = "";
-  document.getElementById("category").value = "";
-  document.getElementById("memo").value = "";
-  document.getElementById("amount").value = "";
-  document.getElementById("status").value = "pending";
+  date.value = "";
+  category.value = "";
+  memo.value = "";
+  amount.value = "";
+  status.value = "pending";
 
   document.querySelector(".delete-btn").style.display = "none";
-  document.getElementById("modal").style.display = "flex";
+  modal.style.display = "flex";
 }
 
 function editTransaction(index) {
   const t = transactions[index];
   editIndex = index;
 
-  document.getElementById("date").value = t.date;
-  document.getElementById("category").value = t.category;
-  document.getElementById("memo").value = t.memo;
-  document.getElementById("amount").value = t.amount;
-  document.getElementById("status").value = t.status;
+  date.value = t.date;
+  category.value = t.category;
+  memo.value = t.memo;
+  amount.value = t.amount;
+  status.value = t.status;
 
   document.querySelector(".delete-btn").style.display = "block";
-  document.getElementById("modal").style.display = "flex";
+  modal.style.display = "flex";
 }
 
 function saveTransaction() {
-  const d = document.getElementById("date").value || today();
+  const d = date.value || today();
 
   const transaction = {
     date: d,
-    category: document.getElementById("category").value,
-    memo: document.getElementById("memo").value,
-    amount: parseFloat(document.getElementById("amount").value),
-    status: document.getElementById("status").value
+    category: category.value,
+    memo: memo.value,
+    amount: parseFloat(amount.value),
+    status: status.value,
+    account: currentAccount
   };
 
   if (editIndex !== null) {
@@ -291,7 +310,7 @@ function deleteTransaction() {
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display = "none";
+  modal.style.display = "none";
 }
 
 renderTransactions();

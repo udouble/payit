@@ -13,10 +13,7 @@
       margin-bottom: 10px;
       background: #3a3a3a;
       border-radius: 5px;
-      cursor: pointer;
     }
-
-    .active { background:#4caf50; }
 
     .main { flex: 1; padding: 20px; }
 
@@ -43,9 +40,15 @@
       table-layout: fixed;
     }
 
-    th, td { padding: 10px 5px; white-space: nowrap; }
+    th, td {
+      padding: 10px 5px;
+      white-space: nowrap;
+    }
 
-    th { border-bottom: 1px solid #444; cursor: pointer; }
+    th {
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+    }
 
     th:nth-child(1), td:nth-child(1) { width: 70px; text-align: center; }
     th:nth-child(2), td:nth-child(2) { width: 110px; }
@@ -69,6 +72,8 @@
     .modal {
       display: none;
       position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.7);
@@ -114,14 +119,14 @@
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-    <div class="account active" onclick="selectAccount('Privé', this)">Privé</div>
-    <div class="account" onclick="selectAccount('VOF', this)">VOF</div>
+    <div class="account">Privé</div>
+    <div class="account">VOF</div>
   </div>
 
   <div class="main">
 
     <div class="topbar">
-      <h2 id="title">Privé</h2>
+      <h2>Transacties</h2>
       <button class="add-btn" onclick="openModal()">＋</button>
     </div>
 
@@ -144,7 +149,7 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3>Transactie</h3>
+    <h3>Nieuwe transactie</h3>
 
     <input type="date" id="date">
     <input type="text" id="category">
@@ -166,25 +171,8 @@
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let editIndex = null;
 
-let currentAccount = "Privé";
-
 let sortField = null;
 let sortDirection = 1;
-
-transactions.forEach(t => {
-  if (!t.account) t.account = "Privé";
-});
-
-function selectAccount(name, el){
-  currentAccount = name;
-
-  document.querySelectorAll(".account").forEach(a=>a.classList.remove("active"));
-  el.classList.add("active");
-
-  document.getElementById("title").innerText = name;
-
-  renderTransactions();
-}
 
 function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -198,36 +186,38 @@ function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
 
-  let list = transactions.filter(t => t.account === currentAccount);
+  let list = [...transactions];
 
   if (sortField) {
     list.sort((a,b) => {
-      let A = a[sortField];
-      let B = b[sortField];
+      let valA = a[sortField];
+      let valB = b[sortField];
 
       if (sortField === "status") {
-        A = a.status === "confirmed" ? 1 : 0;
-        B = b.status === "confirmed" ? 1 : 0;
+        valA = a.status === "confirmed" ? 1 : 0;
+        valB = b.status === "confirmed" ? 1 : 0;
       }
 
-      return A > B ? sortDirection : -sortDirection;
+      return valA > valB ? sortDirection : -sortDirection;
     });
   }
 
-  list.forEach(t => {
-    const i = transactions.indexOf(t);
-    const color = t.status === "confirmed" ? "green" : "red";
+  list.forEach((t) => {
+    const realIndex = transactions.indexOf(t);
+
+    const dotClass = (t.status && t.status.trim() === "confirmed") ? "green" : "red";
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>ST <span class="status-dot ${color}"></span></td>
+      <td>ST <span class="status-dot ${dotClass}"></span></td>
       <td>${t.date}</td>
       <td>${t.category}</td>
       <td>${t.amount} €</td>
       <td>${t.memo || ""}</td>
     `;
 
-    row.onclick = () => editTransaction(i);
+    row.onclick = () => editTransaction(realIndex);
+
     table.appendChild(row);
   });
 }
@@ -245,35 +235,34 @@ function sortBy(field) {
 function openModal() {
   editIndex = null;
 
-  document.getElementById("date").value="";
-  document.getElementById("category").value="";
-  document.getElementById("memo").value="";
-  document.getElementById("amount").value="";
-  document.getElementById("status").value="pending";
+  document.getElementById("date").value = "";
+  document.getElementById("category").value = "";
+  document.getElementById("memo").value = "";
+  document.getElementById("amount").value = "";
+  document.getElementById("status").value = "pending";
 
-  document.querySelector(".delete-btn").style.display="none";
-  document.getElementById("modal").style.display="flex";
+  document.querySelector(".delete-btn").style.display = "none";
+  document.getElementById("modal").style.display = "flex";
 }
 
-function editTransaction(i) {
-  const t = transactions[i];
-  editIndex = i;
+function editTransaction(index) {
+  const t = transactions[index];
+  editIndex = index;
 
-  document.getElementById("date").value=t.date;
-  document.getElementById("category").value=t.category;
-  document.getElementById("memo").value=t.memo;
-  document.getElementById("amount").value=t.amount;
-  document.getElementById("status").value=t.status;
+  document.getElementById("date").value = t.date;
+  document.getElementById("category").value = t.category;
+  document.getElementById("memo").value = t.memo;
+  document.getElementById("amount").value = t.amount;
+  document.getElementById("status").value = t.status;
 
-  document.querySelector(".delete-btn").style.display="block";
-  document.getElementById("modal").style.display="flex";
+  document.querySelector(".delete-btn").style.display = "block";
+  document.getElementById("modal").style.display = "flex";
 }
 
 function saveTransaction() {
   const d = document.getElementById("date").value || today();
 
-  const obj = {
-    account: currentAccount,
+  const transaction = {
     date: d,
     category: document.getElementById("category").value,
     memo: document.getElementById("memo").value,
@@ -281,8 +270,11 @@ function saveTransaction() {
     status: document.getElementById("status").value
   };
 
-  if (editIndex !== null) transactions[editIndex] = obj;
-  else transactions.push(obj);
+  if (editIndex !== null) {
+    transactions[editIndex] = transaction;
+  } else {
+    transactions.push(transaction);
+  }
 
   saveToStorage();
   renderTransactions();
@@ -299,7 +291,7 @@ function deleteTransaction() {
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display="none";
+  document.getElementById("modal").style.display = "none";
 }
 
 renderTransactions();

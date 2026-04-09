@@ -1,35 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - Versie 1.6</title>
+  <title>Payit - Versie 1.6 Stabiel</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; font-size: 20px; }
     .container { display: flex; height: 100vh; }
+
     .sidebar { width: 300px; background: #2b2b2b; padding: 25px; border-right: 1px solid #444; }
     .sidebar h2 { font-size: 24px; color: #4caf50; margin-bottom: 20px; }
+
     .account-item { display: flex; align-items: center; margin-bottom: 12px; gap: 8px; }
-    .account { flex: 1; padding: 12px 15px; background: #3a3a3a; border-radius: 6px; cursor: pointer; font-size: 20px; }
+    
+    .account {
+      flex: 1;
+      padding: 12px 15px;
+      background: #3a3a3a;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 20px;
+    }
     .account.active { background: #4caf50; font-weight: bold; }
-    .acc-btn { background: #444; border: none; color: #999; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 16px; }
-    .add-acc-btn { width: 100%; padding: 12px; margin-top: 20px; background: transparent; border: 1px dashed #666; color: #aaa; border-radius: 6px; cursor: pointer; font-size: 20px; }
+
+    .acc-btn {
+      background: #444;
+      border: none;
+      color: #999;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .add-acc-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      background: transparent;
+      border: 1px dashed #666;
+      color: #aaa;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
     .main { flex: 1; padding: 30px; overflow-y: auto; }
     .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
     .topbar h2 { font-size: 28px; margin: 0; }
-    .add-btn { background: #4caf50; border: none; color: white; padding: 10px 20px; border-radius: 6px; font-size: 24px; cursor: pointer; }
+
+    .add-btn {
+      background: #4caf50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
     table { width: 100%; border-collapse: collapse; }
     th { padding: 15px 10px; text-align: left; color: #888; border-bottom: 2px solid #333; cursor: pointer; font-size: 16px; user-select: none; }
     td { padding: 15px 10px; border-bottom: 1px solid #222; font-size: 20px; }
+
     th:nth-child(1), td:nth-child(1) { width: 60px; text-align: center; }
     th:nth-child(2), td:nth-child(2) { width: 140px; }
     th:nth-child(3), td:nth-child(3) { width: 200px; }
     th:nth-child(4), td:nth-child(4) { width: 140px; text-align: right; }
+
     .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
     .green { background: #4caf50; }
     .red { background: #ff5252; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 1000; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
     .modal-content { background: #2b2b2b; padding: 30px; border-radius: 12px; width: 450px; }
     .modal-content label { display: block; margin-top: 15px; font-size: 14px; color: #888; text-transform: uppercase; }
-    .modal-content input, .modal-content select { width: 100%; padding: 12px; margin-top: 5px; background: #1a1a1a; border: 1px solid #444; color: white; border-radius: 6px; font-size: 20px; box-sizing: border-box; }
+    .modal-content input, .modal-content select {
+      width: 100%; padding: 12px; margin-top: 5px; background: #1a1a1a; border: 1px solid #444; color: white; border-radius: 6px; font-size: 20px; box-sizing: border-box;
+    }
+
     .btn { width: 100%; padding: 14px; margin-top: 15px; border: none; border-radius: 6px; font-size: 20px; font-weight: bold; cursor: pointer; }
     .save-btn { background: #4caf50; color: white; }
     .close-btn { background: #555; color: white; }
@@ -44,18 +99,20 @@
     <div id="accounts-list"></div>
     <button class="add-acc-btn" onclick="addAccount()">+ Nieuwe rekening</button>
   </div>
+
   <div class="main">
     <div class="topbar">
       <h2 id="current-account-title">Transacties</h2>
       <button class="add-btn" onclick="openModal()">＋</button>
     </div>
+
     <table>
       <thead>
         <tr>
-          <th onclick="toggleSort('status')">ST</th>
-          <th onclick="toggleSort('date')">Datum</th>
-          <th onclick="toggleSort('category')">Categorie</th>
-          <th onclick="toggleSort('amount')">Bedrag</th>
+          <th onclick="sortBy('status')">ST</th>
+          <th onclick="sortBy('date')">Datum</th>
+          <th onclick="sortBy('category')">Categorie</th>
+          <th onclick="sortBy('amount')">Bedrag</th>
           <th>Memo</th>
         </tr>
       </thead>
@@ -80,3 +137,103 @@
       <option value="pending">Afwachtend</option>
       <option value="confirmed">Bevestigd</option>
     </select>
+    <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
+    <button class="btn close-btn" onclick="closeModal()">Annuleren</button>
+    <button class="btn delete-btn" id="delete-btn" onclick="deleteTransaction()" style="display:none;">Verwijderen</button>
+  </div>
+</div>
+
+<script>
+  // 1. DATA INITIALISATIE
+  let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [
+    { id: '1', name: 'Privé' },
+    { id: '2', name: 'VOF' }
+  ];
+  let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
+  let activeAccountId = accounts[0].id;
+  let editingId = null;
+
+  // 2. REKENINGEN RENDEREN (Met alfabetische sortering)
+  function renderAccounts() {
+    const list = document.getElementById('accounts-list');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    // Veilig sorteren
+    const sorted = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
+
+    sorted.forEach(acc => {
+      const item = document.createElement('div');
+      item.className = 'account-item';
+      
+      const div = document.createElement('div');
+      div.className = `account ${acc.id === activeAccountId ? 'active' : ''}`;
+      div.innerText = acc.name;
+      div.onclick = () => { activeAccountId = acc.id; renderAccounts(); renderTransactions(); };
+      
+      const btnEdit = document.createElement('button');
+      btnEdit.className = 'acc-btn';
+      btnEdit.innerText = '✎';
+      btnEdit.onclick = (e) => { e.stopPropagation(); renameAccount(acc.id); };
+
+      const btnDel = document.createElement('button');
+      btnDel.className = 'acc-btn';
+      btnDel.innerText = '✕';
+      btnDel.onclick = (e) => { e.stopPropagation(); removeAccount(acc.id); };
+
+      item.appendChild(div);
+      item.appendChild(btnEdit);
+      item.appendChild(btnDel);
+      list.appendChild(item);
+    });
+    
+    const activeAcc = accounts.find(a => a.id === activeAccountId) || accounts[0];
+    document.getElementById('current-account-title').innerText = activeAcc.name;
+  }
+
+  // 3. TRANSACTIES RENDEREN (Met "Afwachtend" bovenaan bij start)
+  function renderTransactions() {
+    const tbody = document.getElementById('transactions');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    let filtered = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
+    
+    // Altijd sorteren: Status 'pending' eerst, dan Datum (verste eerst)
+    filtered.sort((a, b) => {
+      if (a.status === 'pending' && b.status !== 'pending') return -1;
+      if (a.status !== 'pending' && b.status === 'pending') return 1;
+      return (b.date || "").localeCompare(a.date || "");
+    });
+
+    filtered.forEach(t => {
+      const tr = document.createElement('tr');
+      tr.onclick = () => openModal(t.id);
+      tr.innerHTML = `
+        <td><span class="status-dot ${t.status === 'confirmed' ? 'green' : 'red'}"></span></td>
+        <td>${t.date || ''}</td>
+        <td>${t.category || ''}</td>
+        <td>€ ${parseFloat(t.amount || 0).toFixed(2)}</td>
+        <td style="color:#888">${t.memo || ''}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // 4. HEADER SORTERING (Eenvoudig toggelen)
+  let sortDir = 1;
+  function sortBy(field) {
+    sortDir *= -1;
+    transactions.sort((a, b) => {
+      let vA = a[field] || "";
+      let vB = b[field] || "";
+      if (field === 'amount') { vA = parseFloat(a.amount); vB = parseFloat(b.amount); }
+      return vA < vB ? -1 * sortDir : 1 * sortDir;
+    });
+    renderTransactions();
+  }
+
+  // 5. ACCOUNT ACTIES
+  function addAccount() {
+    const n = prompt("Naam rekening:");
+    if (n && n.trim()) {

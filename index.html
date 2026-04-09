@@ -92,14 +92,17 @@
   let activeAccountId = accounts[0].id;
   let editingId = null;
 
-  // STANDAARD SORTERING BIJ START: Status afwachtend eerst
   let sortConfig = { field: 'status', direction: 'asc' };
 
   function renderAccounts() {
     const list = document.getElementById('accounts-list');
     if(!list) return;
     list.innerHTML = '';
-    accounts.forEach(acc => {
+    
+    // De ENIGE wijziging: rekeningen alfabetisch sorteren voor weergave
+    const displayAccounts = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
+
+    displayAccounts.forEach(acc => {
       const item = document.createElement('div');
       item.className = 'account-item';
       const div = document.createElement('div');
@@ -130,7 +133,6 @@
     
     let data = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
     
-    // Altijd sorteren volgens sortConfig
     data.sort((a, b) => {
       let vA = a[sortConfig.field] || "";
       let vB = b[sortConfig.field] || "";
@@ -140,7 +142,6 @@
         vB = parseFloat(b.amount) || 0;
       }
       if (sortConfig.field === 'status') {
-        // pending (0) komt voor confirmed (1) bij 'asc'
         vA = a.status === 'pending' ? 0 : 1;
         vB = b.status === 'pending' ? 0 : 1;
       }
@@ -148,7 +149,6 @@
       if (vA < vB) return sortConfig.direction === 'asc' ? -1 : 1;
       if (vA > vB) return sortConfig.direction === 'asc' ? 1 : -1;
       
-      // Fallback: Nieuwste datum eerst bij gelijke waarde
       return (b.date || "").localeCompare(a.date || "");
     });
 

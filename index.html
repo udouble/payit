@@ -3,22 +3,24 @@
 <head>
   <title>Payit</title>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; font-size: 18px; }
     .container { display: flex; height: 100vh; }
 
     /* Sidebar Styling */
     .sidebar { width: 280px; background: #2b2b2b; padding: 20px; border-right: 1px solid #444; display: flex; flex-direction: column; }
     
+    .sidebar h2 { font-size: 24px; margin-bottom: 20px; }
+
     .account-item {
       display: flex;
       align-items: center;
-      margin-bottom: 8px;
-      gap: 5px;
+      margin-bottom: 10px;
+      gap: 8px;
     }
 
     .account {
       flex: 1;
-      padding: 12px;
+      padding: 14px;
       background: #3a3a3a;
       border-radius: 6px;
       cursor: pointer;
@@ -26,6 +28,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-size: 18px;
     }
 
     .account:hover { background: #4a4a4a; }
@@ -35,29 +38,28 @@
       background: #444;
       border: none;
       color: #ccc;
-      padding: 8px;
+      padding: 10px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 16px;
     }
-
-    .acc-action-btn:hover { background: #555; color: white; }
 
     .add-acc-btn {
       margin-top: 15px;
       background: transparent;
       border: 1px dashed #666;
       color: #aaa;
-      padding: 10px;
+      padding: 12px;
       border-radius: 6px;
       cursor: pointer;
       width: 100%;
+      font-size: 16px;
     }
-
-    .add-acc-btn:hover { border-color: #4caf50; color: #4caf50; }
 
     /* Main Content */
     .main { flex: 1; padding: 20px; overflow-y: auto; }
+
+    .topbar h2 { font-size: 26px; }
 
     .topbar {
       display: flex;
@@ -70,26 +72,27 @@
       background: #4caf50;
       border: none;
       color: white;
-      padding: 12px 18px;
+      padding: 12px 20px;
       border-radius: 6px;
-      font-size: 20px;
+      font-size: 24px;
       cursor: pointer;
     }
 
     /* Table Styling */
     table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    th, td { padding: 12px 5px; text-align: left; border-bottom: 1px solid #333; }
-    th { cursor: pointer; color: #888; font-size: 0.9em; user-select: none; }
+    th, td { padding: 15px 5px; text-align: left; border-bottom: 1px solid #333; font-size: 18px; }
+    th { cursor: pointer; color: #888; font-size: 16px; user-select: none; text-transform: uppercase; }
     th:hover { color: white; }
-    th:nth-child(1), td:nth-child(1) { width: 50px; text-align: center; }
-    th:nth-child(2), td:nth-child(2) { width: 110px; }
-    th:nth-child(3), td:nth-child(3) { width: 150px; }
-    th:nth-child(4), td:nth-child(4) { width: 100px; text-align: right; }
+    
+    th:nth-child(1), td:nth-child(1) { width: 60px; text-align: center; }
+    th:nth-child(2), td:nth-child(2) { width: 130px; }
+    th:nth-child(3), td:nth-child(3) { width: 180px; }
+    th:nth-child(4), td:nth-child(4) { width: 120px; text-align: right; }
     th:nth-child(5), td:nth-child(5) { width: auto; padding-left: 20px; color: #aaa; }
 
     tr:hover { background: #2a2a2a; cursor: pointer; }
 
-    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+    .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
     .green { background: #4caf50; box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
     .red { background: #ff4444; box-shadow: 0 0 5px rgba(255, 68, 68, 0.5); }
 
@@ -176,7 +179,6 @@
 </div>
 
 <script>
-  // DATA INITIALISATIE
   let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [
     { id: '1', name: 'Privé' },
     { id: '2', name: 'VOF' }
@@ -186,43 +188,33 @@
   let activeAccountId = accounts[0].id;
   let editingId = null;
 
-  // REKENINGEN FUNCTIES
+  // Sortering staat
+  let sortConfig = { field: null, direction: 'asc' };
+
   function renderAccounts() {
     const list = document.getElementById('accounts-list');
     list.innerHTML = '';
-    
-    // Alfabetisch sorteren van rekeningen
     const sortedAccounts = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
-
     sortedAccounts.forEach(acc => {
       const item = document.createElement('div');
       item.className = 'account-item';
-
       const div = document.createElement('div');
       div.className = `account ${acc.id === activeAccountId ? 'active' : ''}`;
       div.innerText = acc.name;
-      div.onclick = () => {
-        activeAccountId = acc.id;
-        renderAccounts();
-        renderTransactions();
-      };
-
+      div.onclick = () => { activeAccountId = acc.id; renderAccounts(); renderTransactions(); };
       const editBtn = document.createElement('button');
       editBtn.className = 'acc-action-btn';
       editBtn.innerText = '✎';
       editBtn.onclick = (e) => { e.stopPropagation(); renameAccount(acc.id); };
-
       const delBtn = document.createElement('button');
       delBtn.className = 'acc-action-btn';
       delBtn.innerText = '✕';
       delBtn.onclick = (e) => { e.stopPropagation(); removeAccount(acc.id); };
-
       item.appendChild(div);
       item.appendChild(editBtn);
       item.appendChild(delBtn);
       list.appendChild(item);
     });
-
     const activeAcc = accounts.find(a => a.id === activeAccountId) || accounts[0];
     document.getElementById('current-account-title').innerText = activeAcc.name;
   }
@@ -232,7 +224,7 @@
     if (name && name.trim() !== "") {
       const newId = Date.now().toString();
       accounts.push({ id: newId, name: name.trim() });
-      saveAccounts();
+      localStorage.setItem('payit_accounts', JSON.stringify(accounts));
       activeAccountId = newId;
       renderAccounts();
       renderTransactions();
@@ -241,39 +233,30 @@
 
   function renameAccount(id) {
     const acc = accounts.find(a => a.id === id);
-    const newName = prompt("Nieuwe naam voor '" + acc.name + "':", acc.name);
+    const newName = prompt("Nieuwe naam:", acc.name);
     if (newName && newName.trim() !== "") {
       acc.name = newName.trim();
-      saveAccounts();
+      localStorage.setItem('payit_accounts', JSON.stringify(accounts));
       renderAccounts();
     }
   }
 
   function removeAccount(id) {
-    if (accounts.length <= 1) {
-      alert("Je moet minimaal één rekening overhouden.");
-      return;
-    }
-    if (confirm("Weet je zeker dat je deze rekening wilt verwijderen? De transacties blijven bewaard maar horen nergens meer bij.")) {
+    if (accounts.length <= 1) return alert("Minimaal één rekening vereist.");
+    if (confirm("Rekening verwijderen?")) {
       accounts = accounts.filter(a => a.id !== id);
-      if (activeAccountId === id) {
-        activeAccountId = accounts[0].id;
-      }
-      saveAccounts();
+      if (activeAccountId === id) activeAccountId = accounts[0].id;
+      localStorage.setItem('payit_accounts', JSON.stringify(accounts));
       renderAccounts();
       renderTransactions();
     }
   }
 
-  function saveAccounts() {
-    localStorage.setItem('payit_accounts', JSON.stringify(accounts));
-  }
-
-  // TRANSACTIES FUNCTIES (Onveranderd uit Golden Master)
   function renderTransactions() {
     const tbody = document.getElementById('transactions');
     tbody.innerHTML = '';
     const filtered = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
+    
     filtered.forEach(t => {
       const tr = document.createElement('tr');
       tr.onclick = () => openModal(t.id);
@@ -287,6 +270,32 @@
       `;
       tbody.appendChild(tr);
     });
+  }
+
+  function sortBy(field) {
+    // Toggle richting als hetzelfde veld geklikt wordt
+    if (sortConfig.field === field) {
+      sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortConfig.field = field;
+      sortConfig.direction = 'asc';
+    }
+
+    transactions.sort((a, b) => {
+      let valA = a[field];
+      let valB = b[field];
+      
+      // Numerieke sortering voor bedrag
+      if (field === 'amount') {
+        valA = parseFloat(valA);
+        valB = parseFloat(valB);
+      }
+
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    renderTransactions();
   }
 
   function openModal(id = null) {
@@ -345,15 +354,6 @@
       closeModal();
       renderTransactions();
     }
-  }
-
-  function sortBy(field) {
-    transactions.sort((a, b) => {
-      if (a[field] < b[field]) return -1;
-      if (a[field] > b[field]) return 1;
-      return 0;
-    });
-    renderTransactions();
   }
 
   renderAccounts();

@@ -69,8 +69,6 @@
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.7);
@@ -175,6 +173,10 @@ let currentAccount = "Privé";
 let sortField = null;
 let sortDirection = 1;
 
+transactions.forEach(t => {
+  if (!t.account) t.account = "Privé";
+});
+
 function selectAccount(name, el){
   currentAccount = name;
 
@@ -198,23 +200,36 @@ function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
 
-  let list = transactions.filter(t => !t.account || t.account === currentAccount);
+  let list = transactions.filter(t => t.account === currentAccount);
 
-  list.forEach((t) => {
-    const realIndex = transactions.indexOf(t);
+  if (sortField) {
+    list.sort((a,b) => {
+      let A = a[sortField];
+      let B = b[sortField];
 
-    const dotClass = (t.status && t.status.trim() === "confirmed") ? "green" : "red";
+      if (sortField === "status") {
+        A = a.status === "confirmed" ? 1 : 0;
+        B = b.status === "confirmed" ? 1 : 0;
+      }
+
+      return A > B ? sortDirection : -sortDirection;
+    });
+  }
+
+  list.forEach(t => {
+    const i = transactions.indexOf(t);
+    const color = t.status === "confirmed" ? "green" : "red";
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>ST <span class="status-dot ${dotClass}"></span></td>
+      <td>ST <span class="status-dot ${color}"></span></td>
       <td>${t.date}</td>
       <td>${t.category}</td>
       <td>${t.amount} €</td>
       <td>${t.memo || ""}</td>
     `;
 
-    row.onclick = () => editTransaction(realIndex);
+    row.onclick = () => editTransaction(i);
     table.appendChild(row);
   });
 }
@@ -232,47 +247,44 @@ function sortBy(field) {
 function openModal() {
   editIndex = null;
 
-  document.getElementById("date").value = "";
-  document.getElementById("category").value = "";
-  document.getElementById("memo").value = "";
-  document.getElementById("amount").value = "";
-  document.getElementById("status").value = "pending";
+  date.value="";
+  category.value="";
+  memo.value="";
+  amount.value="";
+  status.value="pending";
 
-  document.querySelector(".delete-btn").style.display = "none";
-  document.getElementById("modal").style.display = "flex";
+  document.querySelector(".delete-btn").style.display="none";
+  modal.style.display="flex";
 }
 
-function editTransaction(index) {
-  const t = transactions[index];
-  editIndex = index;
+function editTransaction(i) {
+  const t = transactions[i];
+  editIndex = i;
 
-  document.getElementById("date").value = t.date;
-  document.getElementById("category").value = t.category;
-  document.getElementById("memo").value = t.memo;
-  document.getElementById("amount").value = t.amount;
-  document.getElementById("status").value = t.status;
+  date.value=t.date;
+  category.value=t.category;
+  memo.value=t.memo;
+  amount.value=t.amount;
+  status.value=t.status;
 
-  document.querySelector(".delete-btn").style.display = "block";
-  document.getElementById("modal").style.display = "flex";
+  document.querySelector(".delete-btn").style.display="block";
+  modal.style.display="flex";
 }
 
 function saveTransaction() {
-  const d = document.getElementById("date").value || today();
+  const d = date.value || today();
 
-  const transaction = {
+  const obj = {
     account: currentAccount,
     date: d,
-    category: document.getElementById("category").value,
-    memo: document.getElementById("memo").value,
-    amount: parseFloat(document.getElementById("amount").value),
-    status: document.getElementById("status").value
+    category: category.value,
+    memo: memo.value,
+    amount: parseFloat(amount.value),
+    status: status.value
   };
 
-  if (editIndex !== null) {
-    transactions[editIndex] = transaction;
-  } else {
-    transactions.push(transaction);
-  }
+  if (editIndex !== null) transactions[editIndex] = obj;
+  else transactions.push(obj);
 
   saveToStorage();
   renderTransactions();
@@ -289,7 +301,7 @@ function deleteTransaction() {
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display = "none";
+  modal.style.display="none";
 }
 
 renderTransactions();

@@ -118,10 +118,10 @@
     <table>
       <thead>
         <tr>
-          <th>ST</th>
-          <th>Datum</th>
-          <th>Categorie</th>
-          <th>Bedrag</th>
+          <th onclick="sortBy('status')">ST</th>
+          <th onclick="sortBy('date')">Datum</th>
+          <th onclick="sortBy('category')">Categorie</th>
+          <th onclick="sortBy('amount')">Bedrag</th>
           <th>Memo</th>
         </tr>
       </thead>
@@ -134,7 +134,7 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3>Transactie</h3>
+    <h3 id="modalTitle">Transactie</h3>
 
     <input type="date" id="date">
     <input type="text" id="category" placeholder="Categorie">
@@ -155,6 +155,8 @@
 <script>
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let editIndex = null;
+let sortField = null;
+let sortDirection = 1;
 
 function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -168,13 +170,28 @@ function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
 
-  transactions.forEach((t, index) => {
+  let list = [...transactions];
 
-    const color = t.status === "confirmed" ? "green" : "red";
+  if (sortField) {
+    list.sort((a,b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+
+      if (sortField === "status") {
+        valA = a.status === "confirmed" ? 1 : 0;
+        valB = b.status === "confirmed" ? 1 : 0;
+      }
+
+      return valA > valB ? sortDirection : -sortDirection;
+    });
+  }
+
+  list.forEach((t, index) => {
+    const dotClass = t.status === "confirmed" ? "green" : "red";
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>ST <span class="status-dot ${color}"></span></td>
+      <td>ST <span class="status-dot ${dotClass}"></span></td>
       <td>${t.date}</td>
       <td>${t.category}</td>
       <td>${t.amount} €</td>
@@ -186,17 +203,24 @@ function renderTransactions() {
   });
 }
 
+function sortBy(field) {
+  if (sortField === field) {
+    sortDirection *= -1;
+  } else {
+    sortField = field;
+    sortDirection = 1;
+  }
+  renderTransactions();
+}
+
 function openModal() {
   editIndex = null;
 
-  document.getElementById("date").value = today();
-  document.getElementById("category").value = "";
-  document.getElementById("memo").value = "";
-  document.getElementById("amount").value = "";
-
-  /* 👉 HARD RESET */
-  const statusSelect = document.getElementById("status");
-  statusSelect.value = "pending";
+  date.value = today();
+  category.value = "";
+  memo.value = "";
+  amount.value = "";
+  status.value = "pending";
 
   document.querySelector(".delete-btn").style.display = "none";
   modal.style.display = "flex";
@@ -210,8 +234,7 @@ function editTransaction(index) {
   category.value = t.category;
   memo.value = t.memo;
   amount.value = t.amount;
-
-  document.getElementById("status").value = t.status;
+  status.value = t.status;
 
   document.querySelector(".delete-btn").style.display = "block";
   modal.style.display = "flex";
@@ -233,7 +256,7 @@ function saveTransaction() {
     category: c,
     memo: m,
     amount: parseFloat(a),
-    status: document.getElementById("status").value
+    status: status.value
   };
 
   if (editIndex !== null) {

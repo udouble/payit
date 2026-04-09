@@ -8,6 +8,11 @@
 
     .sidebar { width:250px; background:#2b2b2b; padding:20px; }
 
+    /* 👉 FIX spacing */
+    .account {
+      margin-bottom:10px;
+    }
+
     .main { flex:1; padding:20px; }
 
     .topbar {
@@ -104,8 +109,8 @@
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-    <div>Privé</div>
-    <div>VOF</div>
+    <div class="account">Privé</div>
+    <div class="account">VOF</div>
   </div>
 
   <div class="main">
@@ -134,7 +139,7 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3 id="modalTitle">Transactie</h3>
+    <h3>Transactie</h3>
 
     <input type="date" id="date">
     <input type="text" id="category" placeholder="Categorie">
@@ -213,31 +218,32 @@ function sortBy(field) {
   renderTransactions();
 }
 
+/* 👉 FIX: modal correct ophalen */
 function openModal() {
   editIndex = null;
 
-  date.value = today();
-  category.value = "";
-  memo.value = "";
-  amount.value = "";
-  status.value = "pending";
+  document.getElementById("date").value = today();
+  document.getElementById("category").value = "";
+  document.getElementById("memo").value = "";
+  document.getElementById("amount").value = "";
+  document.getElementById("status").value = "pending";
 
   document.querySelector(".delete-btn").style.display = "none";
-  modal.style.display = "flex";
+  document.getElementById("modal").style.display = "flex";
 }
 
 function editTransaction(index) {
   const t = transactions[index];
   editIndex = index;
 
-  date.value = t.date;
-  category.value = t.category;
-  memo.value = t.memo;
-  amount.value = t.amount;
-  status.value = t.status;
+  document.getElementById("date").value = t.date;
+  document.getElementById("category").value = t.category;
+  document.getElementById("memo").value = t.memo;
+  document.getElementById("amount").value = t.amount;
+  document.getElementById("status").value = t.status;
 
   document.querySelector(".delete-btn").style.display = "block";
-  modal.style.display = "flex";
+  document.getElementById("modal").style.display = "flex";
 }
 
 function saveTransaction() {
@@ -256,7 +262,7 @@ function saveTransaction() {
     category: c,
     memo: m,
     amount: parseFloat(a),
-    status: status.value
+    status: document.getElementById("status").value
   };
 
   if (editIndex !== null) {
@@ -280,7 +286,7 @@ function deleteTransaction() {
 }
 
 function closeModal() {
-  modal.style.display = "none";
+  document.getElementById("modal").style.display = "none";
 }
 
 renderTransactions();

@@ -138,8 +138,7 @@
           <th>Status</th>
         </tr>
       </thead>
-      <tbody id="transactions">
-      </tbody>
+      <tbody id="transactions"></tbody>
     </table>
 
   </div>
@@ -166,6 +165,50 @@
 </div>
 
 <script>
+let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+
+function saveToStorage() {
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+}
+
+function renderTransactions() {
+  const table = document.getElementById("transactions");
+  table.innerHTML = "";
+
+  transactions.forEach(t => {
+    const row = document.createElement("tr");
+
+    const color = t.amount < 0 ? "red" : "lightgreen";
+    const sign = t.amount < 0 ? "" : "+";
+    const statusIcon = t.status === "confirmed" ? "🟢" : "🔴";
+
+    row.innerHTML = `
+      <td>${t.date}</td>
+      <td>${t.category}</td>
+      <td>${t.memo}</td>
+      <td style="color:${color};">${sign}${t.amount} €</td>
+      <td>${statusIcon}</td>
+    `;
+
+    table.appendChild(row);
+  });
+}
+
+function addTransaction() {
+  const transaction = {
+    date: document.getElementById("date").value,
+    category: document.getElementById("category").value,
+    memo: document.getElementById("memo").value,
+    amount: parseFloat(document.getElementById("amount").value),
+    status: document.getElementById("status").value
+  };
+
+  transactions.push(transaction);
+  saveToStorage();
+  renderTransactions();
+  closeModal();
+}
+
 function openModal() {
   document.getElementById("modal").style.display = "flex";
 }
@@ -174,34 +217,7 @@ function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
-function addTransaction() {
-  const date = document.getElementById("date").value;
-  const category = document.getElementById("category").value;
-  const memo = document.getElementById("memo").value;
-  const amount = document.getElementById("amount").value;
-  const status = document.getElementById("status").value;
-
-  const table = document.getElementById("transactions");
-
-  const row = document.createElement("tr");
-
-  const color = amount < 0 ? "red" : "lightgreen";
-  const sign = amount < 0 ? "" : "+";
-
-  const statusIcon = status === "confirmed" ? "🟢" : "🔴";
-
-  row.innerHTML = `
-    <td>${date}</td>
-    <td>${category}</td>
-    <td>${memo}</td>
-    <td style="color:${color};">${sign}${amount} €</td>
-    <td>${statusIcon}</td>
-  `;
-
-  table.appendChild(row);
-
-  closeModal();
-}
+renderTransactions();
 </script>
 
 </body>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - Versie 1.14</title>
+  <title>Payit - Versie 1.15</title>
 
 <style>
 body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:20px; }
@@ -32,13 +32,18 @@ body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:2
 .duplicate-btn { background:#2196F3; color:white; }
 .delete-btn { border:1px solid #ff5252; color:#ff5252; background:transparent; }
 
-/* BELANGRIJK: consistent spacing */
-.button-section {
-  margin-top:30px;
-}
+.button-section { margin-top:30px; }
+.hidden { visibility:hidden; }
 
-.hidden {
-  visibility:hidden; /* behoudt layout */
+/* NIEUW: totaal box */
+.total-box {
+  background: #fb923c;
+  color: black;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  display: inline-block;
 }
 </style>
 </head>
@@ -55,7 +60,8 @@ body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:2
   <h2 id="current-account-title"></h2>
   <button onclick="openModal()">＋</button>
 
-  <div id="total"></div>
+  <!-- NIEUW -->
+  <div id="total" class="total-box"></div>
 
   <table>
     <thead>
@@ -86,13 +92,11 @@ body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:2
 
     <div class="button-section">
 
-      <!-- RIJ 1 -->
       <div class="btn-row">
         <button id="dup-btn" class="btn duplicate-btn" onclick="duplicateTransaction()">Dupliceren</button>
         <button id="del-btn" class="btn delete-btn" onclick="deleteTransaction()">Verwijderen</button>
       </div>
 
-      <!-- RIJ 2 -->
       <div class="btn-row">
         <button class="btn close-btn" onclick="closeModal()">Annuleren</button>
         <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
@@ -161,14 +165,12 @@ function openModal(id=null){
     if(t.amount>=0) income.value=t.amount;
     else expense.value=Math.abs(t.amount);
 
-    // tonen
     dup-btn.classList.remove('hidden');
     del-btn.classList.remove('hidden');
 
   } else {
     date.value=new Date().toISOString().split('T')[0];
 
-    // VERBERGEN maar layout behouden
     dup-btn.classList.add('hidden');
     del-btn.classList.add('hidden');
   }

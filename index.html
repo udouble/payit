@@ -200,7 +200,7 @@ function renderTransactions() {
   }
 
   list.forEach((t, index) => {
-    const dotClass = t.status === "confirmed" ? "green" : "red";
+    const dotClass = (t.status && t.status.trim() === "confirmed") ? "green" : "red";
 
     const row = document.createElement("tr");
     row.innerHTML = `

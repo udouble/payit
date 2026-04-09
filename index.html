@@ -178,6 +178,10 @@ function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
 }
 
+function today() {
+  return new Date().toISOString().split("T")[0];
+}
+
 function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
@@ -256,8 +260,10 @@ function editTransaction(index) {
 }
 
 function saveTransaction() {
+  const d = document.getElementById("date").value || today();
+
   const transaction = {
-    date: document.getElementById("date").value,
+    date: d,
     category: document.getElementById("category").value,
     memo: document.getElementById("memo").value,
     amount: parseFloat(document.getElementById("amount").value),

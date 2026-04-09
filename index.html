@@ -2,119 +2,157 @@
 <html>
 <head>
   <title>Payit</title>
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
   <style>
     body {
-      margin:0;
-      font-family:-apple-system;
-      background:#1c1c1e;
-      color:white;
+      margin: 0;
+      font-family: Arial;
+      background: #1e1e1e;
+      color: white;
     }
 
-    .container { display:flex; height:100vh; }
+    .container {
+      display: flex;
+      height: 100vh;
+    }
 
-    .sidebar { width:260px; background:#2c2c2e; padding:20px; }
+    .sidebar {
+      width: 250px;
+      background: #2b2b2b;
+      padding: 20px;
+    }
 
     .account {
-      padding:12px;
-      margin:6px 0;
-      background:#3a3a3c;
-      border-radius:8px;
-      cursor:pointer;
+      padding: 10px;
+      margin: 5px 0;
+      background: #3a3a3a;
+      border-radius: 5px;
     }
 
-    .account.active { background:#0a84ff; }
-
-    .main { flex:1; padding:25px; }
+    .main {
+      flex: 1;
+      padding: 20px;
+    }
 
     .topbar {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .add-btn {
-      background:#0a84ff;
-      border:none;
-      color:white;
-      padding:12px 18px;
-      border-radius:10px;
-      font-size:20px;
-      cursor:pointer;
+      background: #4caf50;
+      border: none;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 6px;
+      font-size: 20px;
+      cursor: pointer;
     }
 
     table {
-      width:100%;
-      margin-top:20px;
-      border-collapse:collapse;
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
     }
 
-    th { border-bottom:1px solid #444; }
-    td { padding:12px 0; }
+    th {
+      text-align: left;
+      border-bottom: 1px solid #444;
+      font-size: 18px;
+    }
 
-    /* MODAL */
+    td {
+      padding: 10px 0;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    tr:hover {
+      background: #2a2a2a;
+    }
+
     .modal {
-      display:none;
-      position:fixed;
-      width:100%;
-      height:100%;
-      background:rgba(0,0,0,0.7);
-      justify-content:center;
-      align-items:center;
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      justify-content: center;
+      align-items: center;
     }
 
     .modal-content {
-      background:#2c2c2e;
-      padding:30px;
-      border-radius:16px;
-      width:90%;
-      max-width:500px;
+      background: #2b2b2b;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
     }
 
     input, select {
-      width:100%;
-      padding:14px;
-      margin:10px 0;
-      border-radius:10px;
-      border:none;
-      background:#3a3a3c;
-      color:white;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0 15px 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
     }
 
     .btn {
-      width:100%;
-      padding:14px;
-      margin-top:10px;
-      border:none;
-      border-radius:10px;
-      cursor:pointer;
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
     }
 
-    .save-btn { background:#30d158; }
-    .close-btn { background:#48484a; }
+    .save-btn {
+      background: #4caf50;
+      color: white;
+    }
+
+    .delete-btn {
+      background: #ff4444;
+      color: white;
+    }
+
+    .close-btn {
+      background: #666;
+      color: white;
+    }
   </style>
 </head>
-
 <body>
 
 <div class="container">
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-    <div id="accounts"></div>
+    <div class="account">Privé</div>
+    <div class="account">VOF</div>
   </div>
 
   <div class="main">
 
     <div class="topbar">
       <h2>Transacties</h2>
-      <button class="add-btn" id="addBtn">＋</button>
+      <button class="add-btn" onclick="openModal()">＋</button>
     </div>
 
     <table>
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Categorie</th>
+          <th>Memo</th>
+          <th>Bedrag</th>
+          <th>Status</th>
+        </tr>
+      </thead>
       <tbody id="transactions"></tbody>
     </table>
 
@@ -124,37 +162,122 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3>Nieuwe transactie</h3>
+    <h3 id="modalTitle">Nieuwe transactie</h3>
 
-    <input type="text" id="date" placeholder="Datum">
+    <input type="date" id="date">
     <input type="text" id="category" placeholder="Categorie">
     <input type="text" id="memo" placeholder="Memo">
     <input type="number" id="amount" placeholder="Bedrag">
 
-    <button class="btn save-btn" onclick="addTransaction()">Opslaan</button>
+    <select id="status">
+      <option value="confirmed">Bevestigd</option>
+      <option value="pending">Afwachtend</option>
+    </select>
+
+    <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
+    <button class="btn delete-btn" onclick="deleteTransaction()">Verwijderen</button>
     <button class="btn close-btn" onclick="closeModal()">Sluiten</button>
   </div>
 </div>
 
 <script>
-let transactions = [];
+let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+let editIndex = null;
 
-document.getElementById("addBtn").addEventListener("click", openModal);
+function saveToStorage() {
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+}
+
+function renderTransactions() {
+  const table = document.getElementById("transactions");
+  table.innerHTML = "";
+
+  transactions.forEach((t, index) => {
+    const row = document.createElement("tr");
+
+    const color = t.amount < 0 ? "red" : "lightgreen";
+    const sign = t.amount < 0 ? "" : "+";
+    const statusIcon = t.status === "confirmed" ? "🟢" : "🔴";
+
+    row.innerHTML = `
+      <td>${t.date}</td>
+      <td>${t.category}</td>
+      <td>${t.memo}</td>
+      <td style="color:${color};">${sign}${t.amount} €</td>
+      <td>${statusIcon}</td>
+    `;
+
+    row.onclick = () => editTransaction(index);
+
+    table.appendChild(row);
+  });
+}
 
 function openModal() {
+  editIndex = null;
+  document.getElementById("modalTitle").innerText = "Nieuwe transactie";
+
+  document.getElementById("date").value = "";
+  document.getElementById("category").value = "";
+  document.getElementById("memo").value = "";
+  document.getElementById("amount").value = "";
+  document.getElementById("status").value = "confirmed";
+
+  document.querySelector(".delete-btn").style.display = "none";
+
   document.getElementById("modal").style.display = "flex";
+}
+
+function editTransaction(index) {
+  const t = transactions[index];
+  editIndex = index;
+
+  document.getElementById("modalTitle").innerText = "Transactie bewerken";
+  document.getElementById("date").value = t.date;
+  document.getElementById("category").value = t.category;
+  document.getElementById("memo").value = t.memo;
+  document.getElementById("amount").value = t.amount;
+  document.getElementById("status").value = t.status;
+
+  document.querySelector(".delete-btn").style.display = "block";
+
+  document.getElementById("modal").style.display = "flex";
+}
+
+function saveTransaction() {
+  const transaction = {
+    date: document.getElementById("date").value,
+    category: document.getElementById("category").value,
+    memo: document.getElementById("memo").value,
+    amount: parseFloat(document.getElementById("amount").value),
+    status: document.getElementById("status").value
+  };
+
+  if (editIndex !== null) {
+    transactions[editIndex] = transaction;
+  } else {
+    transactions.push(transaction);
+  }
+
+  saveToStorage();
+  renderTransactions();
+  closeModal();
+}
+
+function deleteTransaction() {
+  if (editIndex !== null && confirm("Zeker verwijderen?")) {
+    transactions.splice(editIndex, 1);
+    saveToStorage();
+    renderTransactions();
+    closeModal();
+  }
 }
 
 function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
-function addTransaction() {
-  const row = document.createElement("tr");
-  row.innerHTML = "<td>" + document.getElementById("memo").value + "</td>";
-  document.getElementById("transactions").appendChild(row);
-  closeModal();
-}
+renderTransactions();
 </script>
 
 </body>

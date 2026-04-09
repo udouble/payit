@@ -239,7 +239,7 @@
     const copy = { 
         ...t, 
         id: Date.now().toString(), 
-        accountId: activeAccountId // Kopieer naar de huidige actieve rekening
+        accountId: activeAccountId
     };
     transactions.push(copy);
     localStorage.setItem('payit_transactions', JSON.stringify(transactions));
@@ -271,13 +271,21 @@
 
   function removeAccount(id) {
     if (accounts.length <= 1) return;
-    if (confirm("Wissen?")) {
-      accounts = accounts.filter(a => a.id !== id);
-      activeAccountId = accounts[0].id;
-      localStorage.setItem('payit_accounts', JSON.stringify(accounts));
-      renderAccounts();
-      renderTransactions();
-    }
+
+    if (!confirm("Rekening verwijderen?")) return;
+
+    if (!confirm("Weet je het zeker? Alle transacties worden dan ook verwijderd.")) return;
+
+    accounts = accounts.filter(a => a.id !== id);
+    transactions = transactions.filter(t => t.accountId !== id);
+
+    activeAccountId = accounts[0].id;
+
+    localStorage.setItem('payit_accounts', JSON.stringify(accounts));
+    localStorage.setItem('payit_transactions', JSON.stringify(transactions));
+
+    renderAccounts();
+    renderTransactions();
   }
 
   function deleteTransaction() {

@@ -22,28 +22,53 @@
     }
 
     .add-btn {
-      background:#4caf50; border:none;
-      color:white; padding:12px 18px;
-      border-radius:6px; font-size:20px;
+      background:#4caf50;
+      border:none;
+      color:white;
+      padding:12px 18px;
+      border-radius:6px;
+      font-size:20px;
       cursor:pointer;
     }
 
-    table { width:100%; border-collapse:collapse; margin-top:20px; }
+    table {
+      width:100%;
+      border-collapse:collapse;
+      margin-top:20px;
+      table-layout:fixed;
+    }
+
+    th, td {
+      padding:10px 5px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
 
     th {
-      text-align:left;
       border-bottom:1px solid #444;
-      font-size:18px;
       cursor:pointer;
     }
 
-    td {
-      padding:10px 0;
-      font-size:16px;
-      cursor:pointer;
-    }
+    /* Kolombreedtes */
+    th:nth-child(1), td:nth-child(1) { width:110px; } /* datum */
+    th:nth-child(2), td:nth-child(2) { width:120px; } /* categorie */
+    th:nth-child(3), td:nth-child(3) { width:auto; }  /* memo groot */
+    th:nth-child(4), td:nth-child(4) { width:110px; text-align:right; } /* bedrag */
+    th:nth-child(5), td:nth-child(5) { width:80px; text-align:center; } /* status */
 
     tr:hover { background:#2a2a2a; }
+
+    .status-dot {
+      display:inline-block;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      margin-left:5px;
+    }
+
+    .green { background:lightgreen; }
+    .red { background:red; }
 
     .modal {
       display:none;
@@ -111,7 +136,7 @@
           <th onclick="sortBy('category')">Categorie</th>
           <th>Memo</th>
           <th onclick="sortBy('amount')">Bedrag</th>
-          <th>Status</th>
+          <th>ST</th>
         </tr>
       </thead>
       <tbody id="transactions"></tbody>
@@ -150,6 +175,10 @@ function saveToStorage() {
   localStorage.setItem("transactions", JSON.stringify(transactions));
 }
 
+function today() {
+  return new Date().toISOString().split("T")[0];
+}
+
 function renderTransactions() {
   const table = document.getElementById("transactions");
   table.innerHTML = "";
@@ -163,22 +192,18 @@ function renderTransactions() {
   list.forEach((t) => {
     const index = transactions.indexOf(t);
 
+    const dotClass = t.status === "confirmed" ? "green" : "red";
+
     const row = document.createElement("tr");
-
-    const color = t.amount < 0 ? "red" : "lightgreen";
-    const sign = t.amount < 0 ? "" : "+";
-    const statusIcon = t.status === "confirmed" ? "🟢" : "🔴";
-
     row.innerHTML = `
       <td>${t.date}</td>
       <td>${t.category}</td>
       <td>${t.memo}</td>
-      <td style="color:${color};">${sign}${t.amount} €</td>
-      <td>${statusIcon}</td>
+      <td>${t.amount} €</td>
+      <td>ST <span class="status-dot ${dotClass}"></span></td>
     `;
 
     row.onclick = () => editTransaction(index);
-
     table.appendChild(row);
   });
 }
@@ -190,9 +215,8 @@ function sortBy(field) {
 
 function openModal() {
   editIndex = null;
-  document.getElementById("modalTitle").innerText = "Nieuwe transactie";
 
-  date.value = "";
+  date.value = today();   /* DEFAULT VANDAAG */
   category.value = "";
   memo.value = "";
   amount.value = "";
@@ -200,14 +224,13 @@ function openModal() {
 
   document.querySelector(".delete-btn").style.display = "none";
 
-  document.getElementById("modal").style.display = "flex";
+  modal.style.display = "flex";
 }
 
 function editTransaction(index) {
   const t = transactions[index];
   editIndex = index;
 
-  document.getElementById("modalTitle").innerText = "Transactie bewerken";
   date.value = t.date;
   category.value = t.category;
   memo.value = t.memo;
@@ -216,12 +239,12 @@ function editTransaction(index) {
 
   document.querySelector(".delete-btn").style.display = "block";
 
-  document.getElementById("modal").style.display = "flex";
+  modal.style.display = "flex";
 }
 
 function saveTransaction() {
   const transaction = {
-    date: date.value,
+    date: date.value || today(),
     category: category.value,
     memo: memo.value,
     amount: parseFloat(amount.value),
@@ -249,7 +272,7 @@ function deleteTransaction() {
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display = "none";
+  modal.style.display = "none";
 }
 
 renderTransactions();

@@ -67,6 +67,10 @@
       cursor: pointer;
     }
 
+    tr:hover {
+      background: #2a2a2a;
+    }
+
     .modal {
       display: none;
       position: fixed;
@@ -85,11 +89,6 @@
       border-radius: 12px;
       width: 90%;
       max-width: 500px;
-    }
-
-    .modal-content h3 {
-      font-size: 24px;
-      margin-bottom: 15px;
     }
 
     input, select {
@@ -116,8 +115,13 @@
       color: white;
     }
 
+    .delete-btn {
+      background: #ff4444;
+      color: white;
+    }
+
     .close-btn {
-      background: red;
+      background: #666;
       color: white;
     }
   </style>
@@ -171,6 +175,7 @@
     </select>
 
     <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
+    <button class="btn delete-btn" onclick="deleteTransaction()">Verwijderen</button>
     <button class="btn close-btn" onclick="closeModal()">Sluiten</button>
   </div>
 </div>
@@ -211,11 +216,15 @@ function renderTransactions() {
 function openModal() {
   editIndex = null;
   document.getElementById("modalTitle").innerText = "Nieuwe transactie";
+
   document.getElementById("date").value = "";
   document.getElementById("category").value = "";
   document.getElementById("memo").value = "";
   document.getElementById("amount").value = "";
   document.getElementById("status").value = "confirmed";
+
+  document.querySelector(".delete-btn").style.display = "none";
+
   document.getElementById("modal").style.display = "flex";
 }
 
@@ -229,6 +238,8 @@ function editTransaction(index) {
   document.getElementById("memo").value = t.memo;
   document.getElementById("amount").value = t.amount;
   document.getElementById("status").value = t.status;
+
+  document.querySelector(".delete-btn").style.display = "block";
 
   document.getElementById("modal").style.display = "flex";
 }
@@ -251,6 +262,15 @@ function saveTransaction() {
   saveToStorage();
   renderTransactions();
   closeModal();
+}
+
+function deleteTransaction() {
+  if (editIndex !== null && confirm("Zeker verwijderen?")) {
+    transactions.splice(editIndex, 1);
+    saveToStorage();
+    renderTransactions();
+    closeModal();
+  }
 }
 
 function closeModal() {

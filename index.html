@@ -150,25 +150,16 @@
 <div class="modal" id="modal">
   <div class="modal-content">
     <h3 id="modal-title">Nieuwe transactie</h3>
-    
     <label>Datum</label>
     <input type="date" id="date">
-    
-    <label>Categorie</label>
-    <input type="text" id="category" placeholder="Bijv. Boodschappen">
-    
-    <label>Memo</label>
-    <input type="text" id="memo" placeholder="Optioneel">
-    
-    <label>Bedrag</label>
+    <input type="text" id="category" placeholder="Categorie">
+    <input type="text" id="memo" placeholder="Memo (optioneel)">
     <input type="number" id="amount" step="0.01" placeholder="0.00">
-
     <label>Status</label>
     <select id="status">
       <option value="pending">Afwachtend</option>
       <option value="confirmed">Bevestigd</option>
     </select>
-
     <button class="btn save-btn" onclick="saveTransaction()">Opslaan</button>
     <button class="btn close-btn" onclick="closeModal()">Annuleren</button>
     <button class="btn delete-btn" id="delete-btn" onclick="deleteTransaction()" style="display:none;">Verwijder Transactie</button>
@@ -176,7 +167,6 @@
 </div>
 
 <script>
-  // 1. DATA INITIALISATIE
   let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [
     { id: '1', name: 'Privé' },
     { id: '2', name: 'VOF' }
@@ -186,11 +176,9 @@
   let activeAccountId = accounts[0].id;
   let editingId = null;
 
-  // 2. REKENINGEN BEHEREN
   function renderAccounts() {
     const list = document.getElementById('accounts-list');
     list.innerHTML = '';
-    
     accounts.forEach(acc => {
       const div = document.createElement('div');
       div.className = `account ${acc.id === activeAccountId ? 'active' : ''}`;
@@ -202,46 +190,51 @@
       };
       list.appendChild(div);
     });
-
     const activeAcc = accounts.find(a => a.id === activeAccountId);
     document.getElementById('current-account-title').innerText = activeAcc ? activeAcc.name : 'Transacties';
   }
 
-  // 3. TRANSACTIES RENDEREN (MET FILTER)
+  // --- SORTEER LOGICA ---
+  function compareTransactions(a, b) {
+    // 1. Sorteer op status: 'pending' (Afwachtend) moet boven 'confirmed' (Bevestigd)
+    if (a.status === 'pending' && b.status === 'confirmed') return -1;
+    if (a.status === 'confirmed' && b.status === 'pending') return 1;
+
+    // 2. Als status gelijk is, sorteer op datum: verste datum eerst (descending)
+    if (a.date > b.date) return -1;
+    if (a.date < b.date) return 1;
+
+    return 0;
+  }
+
   function renderTransactions() {
     const tbody = document.getElementById('transactions');
     tbody.innerHTML = '';
 
-    // Filteren op geselecteerde rekening (met fallback voor oude data zonder accountId)
-    const filtered = transactions.filter(t => {
-      const tAccId = t.accountId || accounts[0].id;
-      return tAccId === activeAccountId;
-    });
+    // Eerst filteren op account, daarna sorteren volgens de nieuwe regels
+    const filteredAndSorted = transactions
+      .filter(t => (t.accountId || accounts[0].id) === activeAccountId)
+      .sort(compareTransactions);
 
-    filtered.forEach(t => {
+    filteredAndSorted.forEach(t => {
       const tr = document.createElement('tr');
       tr.onclick = () => openModal(t.id);
-      
       const statusClass = t.status === 'confirmed' ? 'green' : 'red';
-      const bedrag = parseFloat(t.amount || 0).toFixed(2);
-
       tr.innerHTML = `
         <td><span class="status-dot ${statusClass}"></span></td>
         <td>${t.date}</td>
         <td>${t.category}</td>
-        <td>€ ${bedrag}</td>
+        <td>€ ${parseFloat(t.amount || 0).toFixed(2)}</td>
         <td>${t.memo || ''}</td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  // 4. MODAL FUNCTIES
   function openModal(id = null) {
     editingId = id;
     const modal = document.getElementById('modal');
     const deleteBtn = document.getElementById('delete-btn');
-    
     if (id) {
       const t = transactions.find(x => x.id === id);
       document.getElementById('modal-title').innerText = 'Transactie aanpassen';
@@ -263,11 +256,8 @@
     modal.style.display = 'flex';
   }
 
-  function closeModal() {
-    document.getElementById('modal').style.display = 'none';
-  }
+  function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-  // 5. OPSLAAN & VERWIJDEREN
   function saveTransaction() {
     const data = {
       date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
@@ -280,7 +270,6 @@
 
     if (editingId) {
       const index = transactions.findIndex(t => t.id === editingId);
-      // Behoud het originele accountId bij bewerken
       data.accountId = transactions[index].accountId || accounts[0].id;
       transactions[index] = { ...data, id: editingId };
     } else {
@@ -294,7 +283,7 @@
   }
 
   function deleteTransaction() {
-    if (editingId && confirm('Weet je zeker dat je deze transactie wilt verwijderen?')) {
+    if (editingId && confirm('Verwijderen?')) {
       transactions = transactions.filter(t => t.id !== editingId);
       localStorage.setItem('payit_transactions', JSON.stringify(transactions));
       closeModal();
@@ -302,6 +291,7 @@
     }
   }
 
+  // Overschrijf de kolom-klik sortering om ook rekening te houden met de nieuwe default
   function sortBy(field) {
     transactions.sort((a, b) => {
       if (a[field] < b[field]) return -1;
@@ -311,10 +301,8 @@
     renderTransactions();
   }
 
-  // Start de app
   renderAccounts();
   renderTransactions();
 </script>
-
 </body>
 </html>

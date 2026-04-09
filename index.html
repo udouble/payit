@@ -1,192 +1,208 @@
-  let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id: '1', name: 'Privé' }, { id: '2', name: 'VOF' }];
-  let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
-  let activeAccountId = accounts[0].id;
-  let editingId = null;
-  let sortConfig = { field: 'status', direction: 'asc' };
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payit - Versie 1.9 FIX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  function renderAccounts() {
-    const list = document.getElementById('accounts-list');
-    if(!list) return;
-    list.innerHTML = '';
-    const displayAccounts = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
-    displayAccounts.forEach(acc => {
-      const item = document.createElement('div');
-      item.className = 'account-item';
-      item.innerHTML = `
-        <div class="account ${acc.id === activeAccountId ? 'active' : ''}" onclick="selectAccount('${acc.id}')">${acc.name}</div>
-        <button class="acc-btn" onclick="renameAccount('${acc.id}')">✎</button>
-        <button class="acc-btn" onclick="removeAccount('${acc.id}')">✕</button>
-      `;
-      list.appendChild(item);
-    });
-    const activeAcc = accounts.find(a => a.id === activeAccountId) || accounts[0];
-    document.getElementById('current-account-title').innerText = activeAcc.name;
-    updateAccountDropdown();
-  }
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #020617; color: white; }
+    .container { display: flex; height: 100vh; }
+    .sidebar { width: 300px; background: #111827; padding: 20px; }
+    .account-item { display:flex; gap:8px; margin-bottom:10px; }
+    .account { flex:1; padding:10px; background:#1f2937; border-radius:6px; cursor:pointer; }
+    .account.active { background:#10b981; }
+    .main { flex:1; padding:20px; }
+    table { width:100%; }
+    td { padding:10px; }
+    .status-dot { width:10px;height:10px;border-radius:50%;display:inline-block; }
+    .green { background:#10b981; }
+    .red { background:#ff5252; }
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:center; }
+    .modal-content { background:#111827; padding:20px; width:400px; }
+  </style>
+</head>
 
-  function updateAccountDropdown() {
-    const select = document.getElementById('target-account');
-    select.innerHTML = '';
-    accounts.sort((a, b) => a.name.localeCompare(b.name)).forEach(acc => {
-      const opt = document.createElement('option');
-      opt.value = acc.id;
-      opt.innerText = acc.name;
-      select.appendChild(opt);
-    });
-  }
+<body>
 
-  function selectAccount(id) {
-    activeAccountId = id;
-    renderAccounts();
-    renderTransactions();
-  }
+<div class="container">
+  <div class="sidebar">
+    <h2>Rekeningen</h2>
+    <div id="accounts-list"></div>
+    <button onclick="addAccount()">+ Nieuwe rekening</button>
+  </div>
 
-  function renderTransactions() {
-    const tbody = document.getElementById('transactions');
-    if(!tbody) return;
-    tbody.innerHTML = '';
-    let data = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
-    data.sort((a, b) => {
-      let vA = a[sortConfig.field] || "";
-      let vB = b[sortConfig.field] || "";
-      if (sortConfig.field === 'amount') { vA = parseFloat(a.amount) || 0; vB = parseFloat(b.amount) || 0; }
-      if (sortConfig.field === 'status') { vA = a.status === 'pending' ? 0 : 1; vB = b.status === 'pending' ? 0 : 1; }
-      if (vA < vB) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (vA > vB) return sortConfig.direction === 'asc' ? 1 : -1;
-      return (b.date || "").localeCompare(a.date || "");
-    });
-    data.forEach(t => {
+  <div class="main">
+    <h2 id="current-account-title"></h2>
+    <button onclick="openModal()">+</button>
+
+    <table>
+      <tbody id="transactions"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <input type="date" id="date">
+    <input type="text" id="category">
+    <input type="text" id="memo">
+    <input type="number" id="amount">
+    <select id="status">
+      <option value="pending">Afwachtend</option>
+      <option value="confirmed">Bevestigd</option>
+    </select>
+
+    <select id="target-account"></select>
+
+    <button onclick="saveTransaction()">Opslaan</button>
+    <button onclick="duplicateTransaction()">Dupliceren</button>
+    <button onclick="deleteTransaction()">Verwijderen</button>
+    <button onclick="closeModal()">Annuleren</button>
+  </div>
+</div>
+
+<script>
+let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id: '1', name: 'Privé' }, { id: '2', name: 'VOF' }];
+let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
+let activeAccountId = accounts[0].id;
+let editingId = null;
+let sortConfig = { field: 'status', direction: 'asc' };
+
+function renderAccounts() {
+  const list = document.getElementById('accounts-list');
+  list.innerHTML = '';
+
+  [...accounts].sort((a,b)=>a.name.localeCompare(b.name)).forEach(acc=>{
+    const div = document.createElement('div');
+    div.className = 'account-item';
+
+    div.innerHTML = `
+      <div class="account ${acc.id===activeAccountId?'active':''}" onclick="selectAccount('${acc.id}')">
+        ${acc.name}
+      </div>
+      <button onclick="renameAccount('${acc.id}')">✎</button>
+      <button onclick="removeAccount('${acc.id}')">✕</button>
+    `;
+
+    list.appendChild(div);
+  });
+
+  document.getElementById('current-account-title').innerText =
+    accounts.find(a=>a.id===activeAccountId)?.name;
+}
+
+function renderTransactions() {
+  const tbody = document.getElementById('transactions');
+  tbody.innerHTML = '';
+
+  transactions
+    .filter(t=>t.accountId===activeAccountId)
+    .forEach(t=>{
       const tr = document.createElement('tr');
-      tr.onclick = () => openModal(t.id);
+
       tr.innerHTML = `
-        <td><span class="status-dot ${t.status === 'confirmed' ? 'green' : 'red'}"></span></td>
-        <td>${t.date || ''}</td>
-        <td>${t.category || ''}</td>
-        <td>€ ${parseFloat(t.amount || 0).toFixed(2)}</td>
-        <td style="color:#888">${t.memo || ''}</td>
+        <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
+        <td>${t.date||''}</td>
+        <td>${t.category||''}</td>
+        <td>€ ${parseFloat(t.amount||0).toFixed(2)}</td>
+        <td>${t.memo||''}</td>
       `;
+
+      tr.onclick = ()=>openModal(t.id);
+
       tbody.appendChild(tr);
     });
+}
+
+function openModal(id=null){
+  editingId=id;
+  document.getElementById('modal').style.display='flex';
+
+  if(id){
+    const t = transactions.find(x=>x.id===id);
+    date.value=t.date;
+    category.value=t.category;
+    memo.value=t.memo;
+    amount.value=t.amount;
+    status.value=t.status;
+  } else {
+    date.value=new Date().toISOString().split('T')[0];
+    category.value='';
+    memo.value='';
+    amount.value='';
+    status.value='pending';
+  }
+}
+
+function closeModal(){ modal.style.display='none'; }
+
+function saveTransaction(){
+  const data={
+    id: editingId || Date.now().toString(),
+    date: date.value,
+    category: category.value,
+    memo: memo.value,
+    amount: amount.value,
+    status: status.value,
+    accountId: activeAccountId
+  };
+
+  if(editingId){
+    const i=transactions.findIndex(t=>t.id===editingId);
+    transactions[i]=data;
+  } else {
+    transactions.push(data);
   }
 
-  function toggleSort(field) {
-    sortConfig.direction = (sortConfig.field === field && sortConfig.direction === 'asc') ? 'desc' : 'asc';
-    sortConfig.field = field;
-    renderTransactions();
-  }
+  localStorage.setItem('payit_transactions', JSON.stringify(transactions));
+  closeModal();
+  renderTransactions();
+}
 
-  function openModal(id = null) {
-    editingId = id;
-    const m = document.getElementById('modal');
-    const accSelect = document.getElementById('account-select-container');
-    const editActions = document.getElementById('edit-actions');
+function duplicateTransaction(){
+  if(!editingId) return;
+  const t=transactions.find(x=>x.id===editingId);
+  transactions.push({...t,id:Date.now().toString()});
+  renderTransactions();
+}
 
-    if (id) {
-      const t = transactions.find(x => x.id === id);
-      document.getElementById('modal-title').innerText = 'Bewerken';
-      document.getElementById('date').value = t.date;
-      document.getElementById('category').value = t.category;
-      document.getElementById('memo').value = t.memo || '';
-      document.getElementById('amount').value = t.amount;
-      document.getElementById('status').value = t.status;
-      document.getElementById('target-account').value = t.accountId || accounts[0].id;
-      accSelect.style.display = 'block';
-      editActions.style.display = 'flex';
-    } else {
-      document.getElementById('modal-title').innerText = 'Nieuw';
-      document.getElementById('date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('category').value = '';
-      document.getElementById('memo').value = '';
-      document.getElementById('amount').value = '';
-      document.getElementById('status').value = 'pending';
-      accSelect.style.display = 'none';
-      editActions.style.display = 'none';
-    }
-    m.style.display = 'flex';
-  }
+function deleteTransaction(){
+  transactions=transactions.filter(t=>t.id!==editingId);
+  renderTransactions();
+}
 
-  function closeModal() { document.getElementById('modal').style.display = 'none'; }
+function addAccount(){
+  const n=prompt("Naam?");
+  if(!n) return;
+  const id=Date.now().toString();
+  accounts.push({id,name:n});
+  activeAccountId=id;
+  renderAccounts();
+}
 
-  function saveTransaction() {
-    const data = {
-      date: document.getElementById('date').value,
-      category: document.getElementById('category').value || 'Diversen',
-      memo: document.getElementById('memo').value,
-      amount: document.getElementById('amount').value || 0,
-      status: document.getElementById('status').value,
-      accountId: editingId ? document.getElementById('target-account').value : activeAccountId
-    };
-    if (editingId) {
-      const i = transactions.findIndex(t => t.id === editingId);
-      transactions[i] = { ...data, id: editingId };
-    } else {
-      data.id = Date.now().toString();
-      transactions.push(data);
-    }
-    localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-    closeModal();
-    renderTransactions();
-  }
+function renameAccount(id){
+  const acc=accounts.find(a=>a.id===id);
+  const n=prompt("Nieuwe naam",acc.name);
+  if(n) acc.name=n;
+  renderAccounts();
+}
 
-  function duplicateTransaction() {
-    if (!editingId) return;
-    const t = transactions.find(x => x.id === editingId);
-    const copy = { ...t, id: Date.now().toString(), accountId: activeAccountId };
-    transactions.push(copy);
-    localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-    closeModal();
-    renderTransactions();
-  }
-
-  function addAccount() {
-    const n = prompt("Naam rekening:");
-    if (n && n.trim()) {
-      const newId = Date.now().toString();
-      accounts.push({ id: newId, name: n.trim() });
-      localStorage.setItem('payit_accounts', JSON.stringify(accounts));
-      activeAccountId = newId;
-      renderAccounts();
-      renderTransactions();
-    }
-  }
-
-  function renameAccount(id) {
-    const acc = accounts.find(a => a.id === id);
-    const n = prompt("Nieuwe naam:", acc.name);
-    if (n && n.trim()) {
-      acc.name = n.trim();
-      localStorage.setItem('payit_accounts', JSON.stringify(accounts));
-      renderAccounts();
-    }
-  }
-
-  function removeAccount(id) {
-    if (accounts.length <= 1) return;
-    if (!confirm("Rekening verwijderen?")) return;
-    if (!confirm("Weet je het zeker? Alle transacties worden dan ook verwijderd.")) return;
-
-    accounts = accounts.filter(a => a.id !== id);
-    transactions = transactions.filter(t => t.accountId !== id);
-    activeAccountId = accounts[0].id;
-
-    localStorage.setItem('payit_accounts', JSON.stringify(accounts));
-    localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-
-    renderAccounts();
-    renderTransactions();
-  }
-
-  function deleteTransaction() {
-    if (editingId && confirm('Wissen?')) {
-      transactions = transactions.filter(t => t.id !== editingId);
-      localStorage.setItem('payit_transactions', JSON.stringify(transactions));
-      closeModal();
-      renderTransactions();
-    }
-  }
-
+function removeAccount(id){
+  accounts=accounts.filter(a=>a.id!==id);
+  transactions=transactions.filter(t=>t.accountId!==id);
+  activeAccountId=accounts[0]?.id;
   renderAccounts();
   renderTransactions();
+}
+
+function selectAccount(id){
+  activeAccountId=id;
+  renderAccounts();
+  renderTransactions();
+}
+
+renderAccounts();
+renderTransactions();
 </script>
 
 </body>

@@ -114,10 +114,8 @@
 
   <div class="sidebar">
     <h2>Rekeningen</h2>
-
     <div class="account active" onclick="selectAccount('Privé', this)">Privé</div>
     <div class="account" onclick="selectAccount('VOF', this)">VOF</div>
-
   </div>
 
   <div class="main">
@@ -146,7 +144,7 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3>Nieuwe transactie</h3>
+    <h3>Transactie</h3>
 
     <input type="date" id="date">
     <input type="text" id="category">
@@ -247,40 +245,40 @@ function sortBy(field) {
 function openModal() {
   editIndex = null;
 
-  date.value="";
-  category.value="";
-  memo.value="";
-  amount.value="";
-  status.value="pending";
+  document.getElementById("date").value="";
+  document.getElementById("category").value="";
+  document.getElementById("memo").value="";
+  document.getElementById("amount").value="";
+  document.getElementById("status").value="pending";
 
   document.querySelector(".delete-btn").style.display="none";
-  document.getElementById("modal").style.display = "flex";
+  document.getElementById("modal").style.display="flex";
 }
 
 function editTransaction(i) {
   const t = transactions[i];
   editIndex = i;
 
-  date.value=t.date;
-  category.value=t.category;
-  memo.value=t.memo;
-  amount.value=t.amount;
-  status.value=t.status;
+  document.getElementById("date").value=t.date;
+  document.getElementById("category").value=t.category;
+  document.getElementById("memo").value=t.memo;
+  document.getElementById("amount").value=t.amount;
+  document.getElementById("status").value=t.status;
 
   document.querySelector(".delete-btn").style.display="block";
-  modal.style.display="flex";
+  document.getElementById("modal").style.display="flex";
 }
 
 function saveTransaction() {
-  const d = date.value || today();
+  const d = document.getElementById("date").value || today();
 
   const obj = {
     account: currentAccount,
     date: d,
-    category: category.value,
-    memo: memo.value,
-    amount: parseFloat(amount.value),
-    status: status.value
+    category: document.getElementById("category").value,
+    memo: document.getElementById("memo").value,
+    amount: parseFloat(document.getElementById("amount").value),
+    status: document.getElementById("status").value
   };
 
   if (editIndex !== null) transactions[editIndex] = obj;
@@ -301,7 +299,7 @@ function deleteTransaction() {
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display = "none";
+  document.getElementById("modal").style.display="none";
 }
 
 renderTransactions();

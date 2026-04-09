@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit</title>
+  <title>Payit - Versie 1.5</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; font-size: 20px; }
     .container { display: flex; height: 100vh; }
@@ -87,14 +87,13 @@
 </div>
 
 <script>
-  // BASIS DATA
   let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id: '1', name: 'Privé' }, { id: '2', name: 'VOF' }];
   let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
   let activeAccountId = accounts[0].id;
   let editingId = null;
 
-  // SORTERING (Standaard leeg om crash te voorkomen)
-  let sortConfig = { field: null, direction: 'asc' };
+  // STANDAARD SORTERING BIJ START: Status afwachtend eerst
+  let sortConfig = { field: 'status', direction: 'asc' };
 
   function renderAccounts() {
     const list = document.getElementById('accounts-list');
@@ -131,24 +130,27 @@
     
     let data = transactions.filter(t => (t.accountId || accounts[0].id) === activeAccountId);
     
-    // Alleen sorteren als er een veld gekozen is
-    if (sortConfig.field) {
-      data.sort((a, b) => {
-        let vA = a[sortConfig.field] || "";
-        let vB = b[sortConfig.field] || "";
-        if (sortConfig.field === 'amount') {
-          vA = parseFloat(a.amount) || 0;
-          vB = parseFloat(b.amount) || 0;
-        }
-        if (sortConfig.field === 'status') {
-          vA = a.status === 'pending' ? 0 : 1;
-          vB = b.status === 'pending' ? 0 : 1;
-        }
-        if (vA < vB) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (vA > vB) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
+    // Altijd sorteren volgens sortConfig
+    data.sort((a, b) => {
+      let vA = a[sortConfig.field] || "";
+      let vB = b[sortConfig.field] || "";
+      
+      if (sortConfig.field === 'amount') {
+        vA = parseFloat(a.amount) || 0;
+        vB = parseFloat(b.amount) || 0;
+      }
+      if (sortConfig.field === 'status') {
+        // pending (0) komt voor confirmed (1) bij 'asc'
+        vA = a.status === 'pending' ? 0 : 1;
+        vB = b.status === 'pending' ? 0 : 1;
+      }
+
+      if (vA < vB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (vA > vB) return sortConfig.direction === 'asc' ? 1 : -1;
+      
+      // Fallback: Nieuwste datum eerst bij gelijke waarde
+      return (b.date || "").localeCompare(a.date || "");
+    });
 
     data.forEach(t => {
       const tr = document.createElement('tr');

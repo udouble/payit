@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - Versie 1.23</title>
+  <title>Payit - Versie 1.24</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; font-size: 20px; }
     .container { display: flex; height: 100vh; }
@@ -12,7 +12,6 @@
     .account { padding: 12px 15px; background: #3a3a3a; border-radius: 6px; margin-bottom: 10px; cursor: pointer; }
     .account.active { background: #4caf50; font-weight: bold; }
 
-    /* FIX: grotere knop */
     .add-account-btn {
       width: 100%;
       padding: 16px;
@@ -28,7 +27,6 @@
     .main { flex: 1; padding: 30px; overflow-y: auto; }
 
     .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-
     .left-controls { display:flex; align-items:center; gap:12px; }
 
     .add-btn {
@@ -86,7 +84,6 @@
     .positive { color:#4caf50; }
     .negative { color:#ff5252; }
 
-    /* MODAL */
     .modal {
       display:none;
       position:fixed;
@@ -104,7 +101,6 @@
       width:480px;
     }
 
-    /* FIX: inputs + dropdowns uniform groot */
     .modal-content input,
     .modal-content select {
       width:100%;
@@ -117,6 +113,11 @@
       font-size:20px;
       height:56px;
       box-sizing:border-box;
+    }
+
+    .amount-row {
+      display:flex;
+      gap:10px;
     }
 
     .btn-row {
@@ -176,13 +177,16 @@
   </div>
 </div>
 
-<!-- MODAL blijft identiek -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <input type="date" id="date">
     <input type="text" id="category" placeholder="Categorie">
     <input type="text" id="memo" placeholder="Memo">
-    <input type="number" id="amount" placeholder="Bedrag">
+
+    <div class="amount-row">
+      <input type="number" id="income" placeholder="Inkomsten">
+      <input type="number" id="expense" placeholder="Uitgaven">
+    </div>
 
     <select id="status">
       <option value="pending">Afwachtend</option>
@@ -204,7 +208,6 @@
 </div>
 
 <script>
-/* JS VOLLEDIG IDENTIEK AAN 1.22 — NIETS GEWIJZIGD */
 let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1', name:'Privé' }];
 let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
 let activeAccountId = localStorage.getItem('active_account') || accounts[0].id;
@@ -286,34 +289,48 @@ function openModal(id=null){
   editingId = id;
   document.getElementById('modal').style.display='flex';
 
+  income.value = '';
+  expense.value = '';
+
   if(id){
     const t = transactions.find(x=>x.id===id);
     date.value = t.date;
     category.value = t.category;
     memo.value = t.memo;
-    amount.value = t.amount;
     status.value = t.status;
+
+    if(t.amount >= 0){
+      income.value = t.amount;
+    } else {
+      expense.value = Math.abs(t.amount);
+    }
+
     document.getElementById('target-account').value = t.accountId;
   } else {
     date.value = new Date().toISOString().split('T')[0];
     category.value = '';
     memo.value = '';
-    amount.value = '';
     status.value = 'pending';
   }
 }
 
-function closeModal(){ document.getElementById('modal').style.display='none'; }
-
 function saveTransaction(){
+  let amount = 0;
+
+  if(income.value){
+    amount = parseFloat(income.value);
+  } else if(expense.value){
+    amount = -parseFloat(expense.value);
+  }
+
   const data = {
     id: editingId || Date.now().toString(),
     date: date.value,
     category: category.value,
     memo: memo.value,
-    amount: parseFloat(amount.value || 0),
+    amount: amount,
     status: status.value,
-    accountId: editingId ? document.getElementById('target-account').value : activeAccountId
+    accountId: editingId ? target-account.value : activeAccountId
   };
 
   if(editingId){
@@ -327,6 +344,8 @@ function saveTransaction(){
   closeModal();
   renderTransactions();
 }
+
+function closeModal(){ document.getElementById('modal').style.display='none'; }
 
 function duplicateTransaction(){
   if(!editingId) return;

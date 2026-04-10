@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - Versie 2.0 (STABIEL)</title>
+  <title>Payit - Versie 2.1</title>
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #1e1e1e; color: white; font-size: 20px; }
     .container { display: flex; height: 100vh; }
@@ -72,6 +72,32 @@
     .cancel { background: #666; }
     .dup { background: #2196F3; }
     .del { background: #ff5252; }
+
+    /* autocomplete */
+    .autocomplete-box {
+      position: relative;
+    }
+
+    .autocomplete-list {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 2000;
+    }
+
+    .autocomplete-item {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .autocomplete-item:hover {
+      background: #333;
+    }
   </style>
 </head>
 
@@ -114,7 +140,12 @@
 <div class="modal-content">
 
 <input type="date" id="date">
-<input type="text" id="category" placeholder="Categorie">
+
+<div class="autocomplete-box">
+  <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
+  <div id="category-list" class="autocomplete-list"></div>
+</div>
+
 <input type="text" id="memo" placeholder="Memo">
 
 <div class="amount-row">
@@ -143,6 +174,52 @@
 </div>
 
 <script>
+
+/* categorieën */
+let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
+"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW",
+"BMW - onderhoud en verzekering","Consensus","Correctie","Delhaize",
+"Dienstencheques","Diversen","Eneco","Etentjes","Invecon","Kampen",
+"Kapper-voeten","KBC","Lening","Maxem","NOG TE ONTVANGEN",
+"Nutsvoorzieningen","Onderhoud","Opzij","Opzij voor liq.reserve 01/2027",
+"Overige","Overschrijving","Paypal","Pensioen","Rekening courant",
+"Reserve","Restant voor de maand","Straetus","Straetus-tweewekelijks",
+"Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"
+];
+
+function filterCategories() {
+  const input = document.getElementById('category').value.toLowerCase();
+  const list = document.getElementById('category-list');
+  list.innerHTML = '';
+
+  const matches = categories.filter(c => c.toLowerCase().includes(input));
+
+  matches.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'autocomplete-item';
+    div.innerText = c;
+    div.onclick = () => {
+      document.getElementById('category').value = c;
+      list.innerHTML = '';
+    };
+    list.appendChild(div);
+  });
+
+  if (input && !categories.includes(document.getElementById('category').value)) {
+    const add = document.createElement('div');
+    add.className = 'autocomplete-item';
+    add.innerText = '+ Toevoegen: ' + document.getElementById('category').value;
+    add.onclick = () => {
+      categories.push(document.getElementById('category').value);
+      localStorage.setItem('payit_categories', JSON.stringify(categories));
+      list.innerHTML = '';
+    };
+    list.appendChild(add);
+  }
+}
+
+/* originele code blijft identiek hieronder */
+
 let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id: '1', name: 'Privé' }, { id: '2', name: 'VOF' }];
 let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
 let activeAccountId = localStorage.getItem('active_account') || accounts[0].id;
@@ -325,6 +402,7 @@ function selectAccount(id) {
 
 renderAccounts();
 renderTransactions();
+
 </script>
 
 </body>

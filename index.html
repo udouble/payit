@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - Versie 1.18</title>
+  <title>Payit - Versie 1.19</title>
 
 <style>
 body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:20px; }
@@ -13,35 +13,58 @@ body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:2
 
 .main { flex:1; padding:30px; }
 
-/* 🔥 FIX: tabel layout */
-table {
-  width:100%;
-  border-collapse:collapse;
-  table-layout:fixed;
+/* HEADER ROW */
+.header-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
 }
+
+/* TOTAAL */
+.total-box {
+  background:#fb923c;
+  color:black;
+  padding:14px 18px;
+  border-radius:10px;
+  font-weight:bold;
+  display:inline-block;
+}
+
+/* PLUS KNOP */
+.add-btn {
+  background:#4caf50;
+  border:none;
+  color:white;
+  padding:12px 18px;
+  font-size:22px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* TABEL */
+table { width:100%; border-collapse:collapse; table-layout:fixed; }
 
 th, td {
   padding:12px 10px;
   border-bottom:1px solid #222;
-  overflow:hidden;
   white-space:nowrap;
+  overflow:hidden;
   text-overflow:ellipsis;
 }
 
 th { color:#888; }
 
-/* kolombreedtes */
 th:nth-child(1), td:nth-child(1) { width:50px; text-align:center; }
 th:nth-child(2), td:nth-child(2) { width:130px; }
 th:nth-child(3), td:nth-child(3) { width:180px; }
 th:nth-child(4), td:nth-child(4) { width:140px; text-align:right; }
 th:nth-child(5), td:nth-child(5) { width:auto; }
 
-/* bedragen */
 .amount-pos { color:#4caf50; }
 .amount-neg { color:#ff5252; }
 
-/* modal */
+/* MODAL */
 .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; }
 .modal-content { background:#2b2b2b; padding:30px; border-radius:12px; width:480px; }
 
@@ -78,15 +101,6 @@ th:nth-child(5), td:nth-child(5) { width:auto; }
 
 .button-section { margin-top:30px; }
 .hidden { visibility:hidden; }
-
-.total-box {
-  background:#fb923c;
-  color:black;
-  padding:14px 18px;
-  border-radius:10px;
-  font-weight:bold;
-  margin-bottom:20px;
-}
 </style>
 </head>
 
@@ -99,10 +113,11 @@ th:nth-child(5), td:nth-child(5) { width:auto; }
 </div>
 
 <div class="main">
-  <h2 id="current-account-title"></h2>
-  <button onclick="openModal()">＋</button>
 
-  <div id="total" class="total-box"></div>
+  <div class="header-row">
+    <div id="total" class="total-box"></div>
+    <button class="add-btn" onclick="openModal()">＋</button>
+  </div>
 
   <table>
     <thead>
@@ -116,6 +131,7 @@ th:nth-child(5), td:nth-child(5) { width:auto; }
     </thead>
     <tbody id="transactions"></tbody>
   </table>
+
 </div>
 
 </div>
@@ -170,6 +186,19 @@ let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
 let activeAccountId = localStorage.getItem('active_account') || accounts[0].id;
 let editingId=null;
 
+/* 🔥 FIX: dropdown vullen */
+function updateAccountDropdown(){
+  const select=document.getElementById('target-account');
+  if(!select) return;
+  select.innerHTML='';
+  accounts.forEach(acc=>{
+    const opt=document.createElement('option');
+    opt.value=acc.id;
+    opt.innerText=acc.name;
+    select.appendChild(opt);
+  });
+}
+
 function formatAmount(v){
   return new Intl.NumberFormat('nl-BE',{minimumFractionDigits:2}).format(v);
 }
@@ -180,6 +209,7 @@ function renderAccounts(){
   accounts.forEach(acc=>{
     list.innerHTML+=`<div class="account ${acc.id===activeAccountId?'active':''}" onclick="selectAccount('${acc.id}')">${acc.name}</div>`;
   });
+  updateAccountDropdown(); // 🔥 belangrijk
 }
 
 function renderTransactions(){
@@ -189,8 +219,8 @@ function renderTransactions(){
   let total=0;
 
   transactions.filter(t=>t.accountId===activeAccountId).forEach(t=>{
-    const amount = parseFloat(t.amount) || 0;
-    total += amount;
+    const amount=parseFloat(t.amount)||0;
+    total+=amount;
 
     tbody.innerHTML+=`
       <tr onclick="openModal('${t.id}')">
@@ -223,6 +253,8 @@ function openModal(id=null){
     if(t.amount>=0) income.value=t.amount;
     else expense.value=Math.abs(t.amount);
 
+    document.getElementById('target-account').value=t.accountId;
+
     dup-btn.classList.remove('hidden');
     del-btn.classList.remove('hidden');
 
@@ -248,7 +280,7 @@ function saveTransaction(){
     memo:memo.value,
     amount:amount,
     status:status.value,
-    accountId:activeAccountId
+    accountId:document.getElementById('target-account').value || activeAccountId
   };
 
   if(editingId){

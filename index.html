@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Payit - Versie 2.1</title>
+<title>Payit - Versie 2.1 FIX</title>
 
 <style>
 body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:20px; }
@@ -70,10 +70,10 @@ th { color:#888; }
   position:absolute;
   background:#1a1a1a;
   border:1px solid #444;
-  width:calc(100% - 62px);
+  width:100%;
   max-height:200px;
   overflow-y:auto;
-  z-index:10;
+  z-index:1000;
 }
 
 .autocomplete-item {
@@ -116,14 +116,13 @@ th { color:#888; }
 </div>
 </div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
 
 <input type="date" id="date">
 
 <div style="position:relative;">
-<input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
+<input type="text" id="category" placeholder="Categorie">
 <div id="autocomplete" class="autocomplete-list"></div>
 </div>
 
@@ -156,6 +155,13 @@ th { color:#888; }
 
 <script>
 
+/* 🔒 EXACT 2.0 BASIS */
+let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1', name:'Privé' }];
+let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
+let activeAccountId = localStorage.getItem('active_account') || accounts[0].id;
+let editingId=null;
+let showConfirmed=false;
+
 /* CATEGORIEEN */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
 "Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW",
@@ -168,15 +174,16 @@ let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
 "Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"
 ];
 
-function filterCategories(){
-  const input = document.getElementById('category').value.toLowerCase();
-  const list = document.getElementById('autocomplete');
+/* AUTOCOMPLETE */
+document.getElementById('category').addEventListener('input', function(){
+  const input=this.value.toLowerCase();
+  const list=document.getElementById('autocomplete');
   list.innerHTML='';
 
-  const filtered = categories.filter(c => c.toLowerCase().includes(input));
+  const filtered=categories.filter(c=>c.toLowerCase().includes(input));
 
   filtered.forEach(c=>{
-    const div = document.createElement('div');
+    const div=document.createElement('div');
     div.className='autocomplete-item';
     div.innerText=c;
     div.onclick=()=>{
@@ -186,27 +193,18 @@ function filterCategories(){
     list.appendChild(div);
   });
 
-  /* toevoegen */
-  if(input && !categories.includes(category.value)){
-    const add = document.createElement('div');
+  if(input && !categories.includes(this.value)){
+    const add=document.createElement('div');
     add.className='autocomplete-item';
-    add.innerText='+ Toevoegen: '+category.value;
+    add.innerText='+ Toevoegen: '+this.value;
     add.onclick=()=>{
-      categories.push(category.value);
+      categories.push(this.value);
       localStorage.setItem('payit_categories', JSON.stringify(categories));
       list.innerHTML='';
     };
     list.appendChild(add);
   }
-}
-
-/* REST VAN JE CODE = ONGEWIJZIGD 2.0 */
-
-let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1', name:'Privé' }];
-let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
-let activeAccountId = localStorage.getItem('active_account') || accounts[0].id;
-let editingId=null;
-let showConfirmed=false;
+});
 
 function formatCurrency(n){
   return "€ " + Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});
@@ -233,8 +231,10 @@ function renderTransactions(){
   const tbody=document.getElementById('transactions');
   tbody.innerHTML='';
   let data=transactions.filter(t=>t.accountId===activeAccountId);
+
   let pending=data.filter(t=>t.status!=='confirmed');
   let confirmed=data.filter(t=>t.status==='confirmed');
+
   data=showConfirmed?[...pending,...confirmed]:pending;
 
   let total=0;
@@ -251,7 +251,7 @@ function renderTransactions(){
     </tr>`;
   });
 
-  total.innerText="Totaal: "+formatCurrency(total);
+  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
 }
 
 function toggleConfirmed(){
@@ -319,12 +319,14 @@ function duplicateTransaction(){
   if(!editingId)return;
   const t=transactions.find(x=>x.id===editingId);
   transactions.push({...t,id:Date.now().toString()});
+  localStorage.setItem('payit_transactions',JSON.stringify(transactions));
   renderTransactions();
 }
 
 function deleteTransaction(){
   if(editingId && confirm('Wissen?')){
     transactions=transactions.filter(t=>t.id!==editingId);
+    localStorage.setItem('payit_transactions',JSON.stringify(transactions));
     renderTransactions();
   }
 }

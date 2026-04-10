@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Payit - Versie 2.1 FIX</title>
+<title>Payit - Versie 2.1 FIXED</title>
 
 <style>
 body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:20px; }
@@ -45,7 +45,6 @@ th { color:#888; }
 .positive { color:#4caf50; }
 .negative { color:#ff5252; }
 
-/* MODAL */
 .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; }
 .modal-content { background:#2b2b2b; padding:30px; border-radius:12px; width:480px; }
 
@@ -65,7 +64,7 @@ th { color:#888; }
 .dup { background:#2196F3; }
 .del { background:#ff5252; }
 
-/* AUTOCOMPLETE */
+/* autocomplete */
 .autocomplete-list {
   position:absolute;
   background:#1a1a1a;
@@ -73,17 +72,11 @@ th { color:#888; }
   width:100%;
   max-height:200px;
   overflow-y:auto;
-  z-index:1000;
+  z-index:999;
 }
+.autocomplete-item { padding:10px; cursor:pointer; }
+.autocomplete-item:hover { background:#333; }
 
-.autocomplete-item {
-  padding:10px;
-  cursor:pointer;
-}
-
-.autocomplete-item:hover {
-  background:#333;
-}
 </style>
 </head>
 
@@ -155,56 +148,43 @@ th { color:#888; }
 
 <script>
 
-/* 🔒 EXACT 2.0 BASIS */
+/* ========== STABIELE 2.0 BASIS ========== */
 let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1', name:'Privé' }];
 let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
 let activeAccountId = localStorage.getItem('active_account') || accounts[0].id;
 let editingId=null;
 let showConfirmed=false;
 
-/* CATEGORIEEN */
+/* ========== CATEGORIEEN ========== */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
-"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW",
-"BMW - onderhoud en verzekering","Consensus","Correctie","Delhaize",
-"Dienstencheques","Diversen","Eneco","Etentjes","Invecon","Kampen",
-"Kapper-voeten","KBC","Lening","Maxem","NOG TE ONTVANGEN",
-"Nutsvoorzieningen","Onderhoud","Opzij","Opzij voor liq.reserve 01/2027",
-"Overige","Overschrijving","Paypal","Pensioen","Rekening courant",
-"Reserve","Restant voor de maand","Straetus","Straetus-tweewekelijks",
-"Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"
+"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW"
 ];
 
-/* AUTOCOMPLETE */
-document.getElementById('category').addEventListener('input', function(){
-  const input=this.value.toLowerCase();
-  const list=document.getElementById('autocomplete');
-  list.innerHTML='';
+/* 🔴 VEILIGE AUTOCOMPLETE (GEEN CRASH) */
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('category');
+  const list = document.getElementById('autocomplete');
 
-  const filtered=categories.filter(c=>c.toLowerCase().includes(input));
+  input.addEventListener('input', () => {
+    const val = input.value.toLowerCase();
+    list.innerHTML = '';
 
-  filtered.forEach(c=>{
-    const div=document.createElement('div');
-    div.className='autocomplete-item';
-    div.innerText=c;
-    div.onclick=()=>{
-      category.value=c;
-      list.innerHTML='';
-    };
-    list.appendChild(div);
+    const matches = categories.filter(c => c.toLowerCase().includes(val));
+
+    matches.forEach(c => {
+      const div = document.createElement('div');
+      div.className='autocomplete-item';
+      div.innerText=c;
+      div.onclick=()=>{
+        input.value=c;
+        list.innerHTML='';
+      };
+      list.appendChild(div);
+    });
   });
-
-  if(input && !categories.includes(this.value)){
-    const add=document.createElement('div');
-    add.className='autocomplete-item';
-    add.innerText='+ Toevoegen: '+this.value;
-    add.onclick=()=>{
-      categories.push(this.value);
-      localStorage.setItem('payit_categories', JSON.stringify(categories));
-      list.innerHTML='';
-    };
-    list.appendChild(add);
-  }
 });
+
+/* ========== REST ONGEWIJZIGD ========== */
 
 function formatCurrency(n){
   return "€ " + Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v2.5 (fix render + categorie stabiel)</title>
+  <title>Payit - v2.4 (categorie popup opgeschoond)</title>
 
   <style>
-    body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:20px;}
+    body { margin:0; font-family:Arial, sans-serif; background:#1e1e1e; color:white; font-size:20px;}
     .container{display:flex;height:100vh;}
 
     .sidebar{width:300px;background:#2b2b2b;padding:25px;border-right:1px solid #444;}
@@ -12,9 +12,8 @@
     .account.active{background:#4caf50;font-weight:bold;}
 
     .add-account-btn,.cat-btn{
-      width:100%; padding:16px; margin-top:10px;
-      background:#444; border:none; color:white;
-      border-radius:8px; font-size:20px; cursor:pointer;
+      width:100%;padding:16px;margin-top:10px;background:#444;border:none;color:white;
+      border-radius:8px;font-size:20px;cursor:pointer;
     }
 
     .main{flex:1;padding:30px;}
@@ -40,10 +39,8 @@
     .modal-content{background:#2b2b2b;padding:30px;border-radius:12px;width:500px;}
 
     input,select{
-      width:100%; padding:18px; margin-top:12px;
-      background:#1a1a1a; border:1px solid #444;
-      color:white; border-radius:8px; font-size:20px;
-      box-sizing:border-box;
+      width:100%;padding:18px;margin-top:12px;background:#1a1a1a;border:1px solid #444;
+      color:white;border-radius:8px;font-size:20px;box-sizing:border-box;
     }
 
     select{height:56px;}
@@ -60,9 +57,8 @@
 
     .autocomplete-box{position:relative;}
     .autocomplete-list{
-      position:absolute;width:100%;background:#1a1a1a;
-      border:1px solid #444;max-height:200px;overflow-y:auto;
-      z-index:10;
+      position:absolute;width:100%;background:#1a1a1a;border:1px solid #444;
+      max-height:200px;overflow-y:auto;z-index:10;
     }
     .autocomplete-item{padding:10px;cursor:pointer;}
     .autocomplete-item:hover{background:#333;}
@@ -107,7 +103,7 @@
 </div>
 </div>
 
-<!-- MODAL -->
+<!-- TRANSACTIE MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
 
@@ -145,7 +141,7 @@
 </div>
 </div>
 
-<!-- CATEGORIE -->
+<!-- CATEGORIE POPUP (OPGESCHOOND) -->
 <div class="cat-modal" id="catModal">
 <div class="modal-content">
   <h3>Categorie toevoegen</h3>
@@ -161,7 +157,11 @@
 
 <script>
 
-let categories = JSON.parse(localStorage.getItem('payit_categories')) || ["Apple Pay","Bancontact","BTW"];
+/* DATA */
+let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
+"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW"
+];
+
 let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
 let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
 
@@ -171,31 +171,34 @@ let showConfirmed=false;
 
 /* AUTOCOMPLETE */
 function filterCategories(){
-  const val=category.value.toLowerCase();
+  const val=document.getElementById('category').value.toLowerCase();
   const list=document.getElementById('category-list');
   list.innerHTML='';
   categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
-    let d=document.createElement('div');
+    const d=document.createElement('div');
     d.className='autocomplete-item';
     d.innerText=c;
-    d.onclick=()=>{category.value=c;list.innerHTML='';};
+    d.onclick=()=>{document.getElementById('category').value=c;list.innerHTML='';};
     list.appendChild(d);
   });
 }
 
+/* CLICK OUTSIDE */
 document.addEventListener('click',e=>{
-  if(!category.contains(e.target)) document.getElementById('category-list').innerHTML='';
+  const input=document.getElementById('category');
+  const list=document.getElementById('category-list');
+  if(!input.contains(e.target) && !list.contains(e.target)) list.innerHTML='';
 });
 
 /* CATEGORY */
-function openCatModal(){catModal.style.display='flex';}
-function closeCatModal(){catModal.style.display='none';}
+function openCatModal(){document.getElementById('catModal').style.display='flex';}
+function closeCatModal(){document.getElementById('catModal').style.display='none';}
 function addCategory(){
-  const val=newCat.value.trim();
+  const val=document.getElementById('newCat').value.trim();
   if(val && !categories.includes(val)){
     categories.push(val);
     localStorage.setItem('payit_categories',JSON.stringify(categories));
-    newCat.value='';
+    document.getElementById('newCat').value='';
   }
 }
 
@@ -212,7 +215,7 @@ function renderAccounts(){
   const sel=document.getElementById('target-account');
   sel.innerHTML='';
   accounts.forEach(a=>{
-    let o=document.createElement('option');
+    const o=document.createElement('option');
     o.value=a.id;o.innerText=a.name;
     sel.appendChild(o);
   });
@@ -233,7 +236,6 @@ function renderTransactions(){
 
   data.forEach(t=>{
     total+=Number(t.amount);
-
     tbody.innerHTML+=`
     <tr onclick="openModal('${t.id}')">
       <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
@@ -249,53 +251,54 @@ function renderTransactions(){
 
 function toggleConfirmed(){
   showConfirmed=!showConfirmed;
-  filterBtn.innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
+  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
   renderTransactions();
 }
 
 function openModal(id=null){
   editingId=id;
-  modal.style.display='flex';
+  document.getElementById('modal').style.display='flex';
 
-  income.value='';expense.value='';
+  document.getElementById('income').value='';
+  document.getElementById('expense').value='';
 
   if(id){
-    let t=transactions.find(x=>x.id===id);
-    date.value=t.date;
-    category.value=t.category;
-    memo.value=t.memo;
-    status.value=t.status;
+    const t=transactions.find(x=>x.id===id);
+    document.getElementById('date').value=t.date;
+    document.getElementById('category').value=t.category;
+    document.getElementById('memo').value=t.memo;
+    document.getElementById('status').value=t.status;
 
-    if(t.amount>=0) income.value=t.amount;
-    else expense.value=Math.abs(t.amount);
+    if(t.amount>=0) document.getElementById('income').value=t.amount;
+    else document.getElementById('expense').value=Math.abs(t.amount);
 
-    target-account.value=t.accountId;
+    document.getElementById('target-account').value=t.accountId;
   } else {
-    date.value=new Date().toISOString().split('T')[0];
+    document.getElementById('date').value=new Date().toISOString().split('T')[0];
   }
 }
 
-function closeModal(){modal.style.display='none';}
+function closeModal(){document.getElementById('modal').style.display='none';}
 
 function saveTransaction(){
-  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
+  let amount=0;
+  if(document.getElementById('income').value) amount=parseFloat(document.getElementById('income').value);
+  else if(document.getElementById('expense').value) amount=-parseFloat(document.getElementById('expense').value);
 
-  let data={
+  const data={
     id:editingId||Date.now().toString(),
-    date:date.value,
-    category:category.value,
-    memo:memo.value,
+    date:document.getElementById('date').value,
+    category:document.getElementById('category').value,
+    memo:document.getElementById('memo').value,
     amount,
-    status:status.value,
-    accountId:editingId?target-account.value:activeAccountId
+    status:document.getElementById('status').value,
+    accountId:editingId?document.getElementById('target-account').value:activeAccountId
   };
 
   if(editingId){
-    let i=transactions.findIndex(t=>t.id===editingId);
+    const i=transactions.findIndex(t=>t.id===editingId);
     transactions[i]=data;
-  } else {
-    transactions.push(data);
-  }
+  } else transactions.push(data);
 
   localStorage.setItem('payit_transactions',JSON.stringify(transactions));
   closeModal();
@@ -304,7 +307,7 @@ function saveTransaction(){
 
 function duplicateTransaction(){
   if(!editingId) return;
-  let t=transactions.find(x=>x.id===editingId);
+  const t=transactions.find(x=>x.id===editingId);
   transactions.push({...t,id:Date.now().toString()});
   renderTransactions();
 }
@@ -317,11 +320,8 @@ function deleteTransaction(){
 }
 
 function addAccount(){
-  let n=prompt("Naam rekening:");
-  if(n){
-    accounts.push({id:Date.now().toString(),name:n});
-    renderAccounts();
-  }
+  const n=prompt("Naam rekening:");
+  if(n){accounts.push({id:Date.now().toString(),name:n});renderAccounts();}
 }
 
 function selectAccount(id){

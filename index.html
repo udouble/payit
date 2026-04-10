@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.2 (kolommen gefixt)</title>
+  <title>Payit - v3.2 (categorie validatie hersteld)</title>
 
   <style>
     body {
@@ -14,7 +14,6 @@
 
     .container{display:flex;height:100vh;}
 
-    /* SIDEBAR */
     .sidebar{
       width:260px;
       background:#2a2a2d;
@@ -45,7 +44,6 @@
       cursor:pointer;
     }
 
-    /* MAIN */
     .main{flex:1;padding:24px;}
 
     .topbar{
@@ -85,12 +83,7 @@
       cursor:pointer;
     }
 
-    /* TABLE */
-    table{
-      width:100%;
-      border-collapse:collapse;
-      table-layout:fixed;
-    }
+    table{width:100%;border-collapse:collapse;}
 
     th{
       text-align:left;
@@ -104,20 +97,9 @@
       padding:10px 8px;
       border-bottom:1px solid #2a2a2d;
       font-size:14px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
     }
 
-    /* KOLOMMEN GEFIXT */
-    th:nth-child(1), td:nth-child(1){width:30px;}       /* ST */
-    th:nth-child(2), td:nth-child(2){width:110px;}      /* Datum */
-    th:nth-child(3), td:nth-child(3){width:180px;}      /* Categorie */
-    th:nth-child(4), td:nth-child(4){
-      width:120px;
-      text-align:right;
-    }                                                   /* Bedrag */
-    th:nth-child(5), td:nth-child(5){width:auto;}        /* Memo */
+    td:nth-child(4){text-align:right;}
 
     .positive{color:#4caf50;}
     .negative{color:#ff5e57;}
@@ -132,7 +114,6 @@
     .green{background:#4caf50;}
     .red{background:#ff5e57;}
 
-    /* MODAL */
     .modal{
       display:none;
       position:fixed;
@@ -163,7 +144,6 @@
     select{height:40px;}
 
     .amount-row{display:flex;gap:8px;}
-
     .btn-row{display:flex;gap:8px;margin-top:16px;}
 
     .btn{
@@ -180,7 +160,6 @@
     .dup{background:#3f8cff;}
     .del{background:#ff5e57;}
 
-    /* AUTOCOMPLETE */
     .autocomplete-box{position:relative;}
     .autocomplete-list{
       position:absolute;
@@ -189,6 +168,7 @@
       border:1px solid #333;
       max-height:160px;
       overflow-y:auto;
+      z-index:10;
     }
 
     .autocomplete-item{
@@ -199,7 +179,6 @@
 
     .autocomplete-item:hover{background:#333;}
 
-    /* CATEGORY MODAL */
     .cat-modal{
       display:none;
       position:fixed;
@@ -288,10 +267,8 @@
 <!-- CATEGORY -->
 <div class="cat-modal" id="catModal">
 <div class="modal-content">
-  <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
-
+  <h3>Categorie toevoegen</h3>
   <input type="text" id="newCat" placeholder="Nieuwe categorie">
-
   <div class="btn-row">
     <button class="btn save" onclick="addCategory()">Toevoegen</button>
     <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
@@ -301,7 +278,6 @@
 
 <script>
 
-/* IDENTIEK */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
 "Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW"
 ];
@@ -313,52 +289,49 @@ let activeAccountId = accounts[0].id;
 let editingId=null;
 let showConfirmed=false;
 
-/* autocomplete */
 function filterCategories(){
   const val=category.value.toLowerCase();
-  document.getElementById('category-list').innerHTML='';
+  category-list.innerHTML='';
   categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
     let d=document.createElement('div');
     d.className='autocomplete-item';
     d.innerText=c;
-    d.onclick=()=>{category.value=c;document.getElementById('category-list').innerHTML='';};
-    document.getElementById('category-list').appendChild(d);
+    d.onclick=()=>{category.value=c;category-list.innerHTML='';};
+    category-list.appendChild(d);
   });
 }
 
 document.addEventListener('click',e=>{
-  if(!document.getElementById('category').contains(e.target))
-    document.getElementById('category-list').innerHTML='';
+  if(!category.contains(e.target)) category-list.innerHTML='';
 });
 
-/* categorie */
-function openCatModal(){document.getElementById('catModal').style.display='flex';}
-function closeCatModal(){document.getElementById('catModal').style.display='none';}
+function openCatModal(){catModal.style.display='flex';}
+function closeCatModal(){catModal.style.display='none';}
+
 function addCategory(){
-  const val=document.getElementById('newCat').value.trim();
+  const val=newCat.value.trim();
   if(val && !categories.includes(val)){
     categories.push(val);
     localStorage.setItem('payit_categories',JSON.stringify(categories));
-    document.getElementById('newCat').value='';
+    newCat.value='';
   }
 }
 
-/* core */
-function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
+function formatCurrency(n){
+  return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});
+}
 
 function renderAccounts(){
-  const list=document.getElementById('accounts-list');
-  list.innerHTML='';
+  accounts-list.innerHTML='';
   accounts.forEach(a=>{
-    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
+    accounts-list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
   });
 
-  const sel=document.getElementById('target-account');
-  sel.innerHTML='';
+  target-account.innerHTML='';
   accounts.forEach(a=>{
     let o=document.createElement('option');
     o.value=a.id;o.innerText=a.name;
-    sel.appendChild(o);
+    target-account.appendChild(o);
   });
 }
 
@@ -387,18 +360,18 @@ function renderTransactions(){
     </tr>`;
   });
 
-  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
+  total.innerText="Totaal: "+formatCurrency(total);
 }
 
 function toggleConfirmed(){
   showConfirmed=!showConfirmed;
-  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
+  filterBtn.innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
   renderTransactions();
 }
 
 function openModal(id=null){
   editingId=id;
-  document.getElementById('modal').style.display='flex';
+  modal.style.display='flex';
 
   income.value='';expense.value='';
 
@@ -412,13 +385,19 @@ function openModal(id=null){
     if(t.amount>=0) income.value=t.amount;
     else expense.value=Math.abs(t.amount);
 
-    document.getElementById('target-account').value=t.accountId;
+    target-account.value=t.accountId;
   } else date.value=new Date().toISOString().split('T')[0];
 }
 
-function closeModal(){document.getElementById('modal').style.display='none';}
+function closeModal(){modal.style.display='none';}
 
 function saveTransaction(){
+
+  if(!categories.includes(category.value)){
+    alert("Categorie bestaat niet. Voeg deze eerst toe.");
+    return;
+  }
+
   let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
 
   let data={
@@ -428,7 +407,7 @@ function saveTransaction(){
     memo:memo.value,
     amount,
     status:status.value,
-    accountId:editingId?document.getElementById('target-account').value:activeAccountId
+    accountId:editingId?target-account.value:activeAccountId
   };
 
   if(editingId){

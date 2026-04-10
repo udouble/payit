@@ -1,206 +1,251 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.1 (compact UI refinement)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-      background:#1c1c1e;
-      color:#e5e5e7;
-      font-size:15px;
-    }
+<title>Payit - v3.2 (responsive layout)</title>
 
-    .container{display:flex;height:100vh;}
+<style>
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:#1c1c1e;
+  color:#e5e5e7;
+  font-size:15px;
+}
 
-    /* SIDEBAR */
-    .sidebar{
-      width:260px;
-      background:#2a2a2d;
-      padding:18px;
-      border-right:1px solid #3a3a3d;
-    }
+.container{display:flex;height:100vh;overflow:hidden;}
 
-    .account{
-      padding:10px 12px;
-      border-radius:6px;
-      margin-bottom:6px;
-      cursor:pointer;
-      font-size:14px;
-    }
+/* SIDEBAR */
+.sidebar{
+  width:260px;
+  background:#2a2a2d;
+  padding:18px;
+  border-right:1px solid #3a3a3d;
+  transition:transform .25s ease;
+}
 
-    .account:hover{background:#3a3a3d;}
-    .account.active{background:#3f8cff;color:white;}
+.sidebar.hidden{
+  transform:translateX(-100%);
+  position:absolute;
+  z-index:1000;
+  height:100%;
+}
 
-    .add-account-btn,.cat-btn{
-      width:100%;
-      padding:10px;
-      margin-top:8px;
-      background:#3a3a3d;
-      border:none;
-      color:#ccc;
-      border-radius:6px;
-      font-size:13px;
-      cursor:pointer;
-    }
+.account{
+  padding:10px 12px;
+  border-radius:6px;
+  margin-bottom:6px;
+  cursor:pointer;
+  font-size:14px;
+}
 
-    /* MAIN */
-    .main{flex:1;padding:24px;}
+.account:hover{background:#3a3a3d;}
+.account.active{background:#3f8cff;color:white;}
 
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:18px;
-    }
+.add-account-btn,.cat-btn{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  background:#3a3a3d;
+  border:none;
+  color:#ccc;
+  border-radius:6px;
+  font-size:13px;
+  cursor:pointer;
+}
 
-    .total-box{
-      background:#ff9f43;
-      color:#000;
-      padding:6px 12px;
-      border-radius:6px;
-      font-size:13px;
-      font-weight:600;
-    }
+/* MAIN */
+.main{flex:1;padding:20px;overflow:auto;}
 
-    .filter-btn{
-      background:#3a3a3d;
-      padding:8px 12px;
-      border:none;
-      border-radius:6px;
-      font-size:12px;
-      color:#ccc;
-      cursor:pointer;
-    }
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+}
 
-    .add-btn{
-      background:#3f8cff;
-      width:36px;
-      height:36px;
-      border-radius:10px;
-      font-size:20px;
-      border:none;
-      color:white;
-      cursor:pointer;
-    }
+.left-controls{display:flex;gap:8px;align-items:center;}
 
-    /* TABLE */
-    table{width:100%;border-collapse:collapse;}
+.menu-btn{
+  display:none;
+  background:#3a3a3d;
+  border:none;
+  color:white;
+  font-size:18px;
+  border-radius:6px;
+  width:36px;
+  height:36px;
+}
 
-    th{
-      text-align:left;
-      font-size:12px;
-      color:#888;
-      padding:8px;
-      border-bottom:1px solid #333;
-    }
+.total-box{
+  background:#ff9f43;
+  color:#000;
+  padding:6px 12px;
+  border-radius:6px;
+  font-size:13px;
+  font-weight:600;
+}
 
-    td{
-      padding:10px 8px;
-      border-bottom:1px solid #2a2a2d;
-      font-size:14px;
-    }
+.filter-btn{
+  background:#3a3a3d;
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  font-size:12px;
+  color:#ccc;
+  cursor:pointer;
+}
 
-    td:nth-child(4){text-align:right;}
+.add-btn{
+  background:#3f8cff;
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  font-size:20px;
+  border:none;
+  color:white;
+}
 
-    .positive{color:#4caf50;}
-    .negative{color:#ff5e57;}
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
 
-    .status-dot{
-      width:6px;
-      height:6px;
-      border-radius:50%;
-      display:inline-block;
-    }
+th{
+  text-align:left;
+  font-size:12px;
+  color:#888;
+  padding:8px;
+  border-bottom:1px solid #333;
+}
 
-    .green{background:#4caf50;}
-    .red{background:#ff5e57;}
+td{
+  padding:10px 8px;
+  border-bottom:1px solid #2a2a2d;
+  font-size:14px;
+}
 
-    /* MODAL */
-    .modal{
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.75);
-      justify-content:center;
-      align-items:center;
-    }
+td:nth-child(4){text-align:right;}
 
-    .modal-content{
-      background:#2a2a2d;
-      padding:20px;
-      border-radius:10px;
-      width:420px;
-    }
+.positive{color:#4caf50;}
+.negative{color:#ff5e57;}
 
-    input,select{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      background:#1c1c1e;
-      border:1px solid #3a3a3d;
-      color:white;
-      border-radius:6px;
-      font-size:14px;
-    }
+.status-dot{
+  width:6px;height:6px;border-radius:50%;
+  display:inline-block;
+}
 
-    select{height:40px;}
+.green{background:#4caf50;}
+.red{background:#ff5e57;}
 
-    .amount-row{display:flex;gap:8px;}
+/* MODAL */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  justify-content:center;
+  align-items:center;
+}
 
-    .btn-row{display:flex;gap:8px;margin-top:16px;}
+.modal-content{
+  background:#2a2a2d;
+  padding:20px;
+  border-radius:10px;
+  width:420px;
+}
 
-    .btn{
-      flex:1;
-      padding:10px;
-      border:none;
-      border-radius:6px;
-      font-size:13px;
-      cursor:pointer;
-    }
+/* MOBILE MODAL */
+@media (max-width:600px){
+  .modal-content{
+    width:100%;
+    height:100%;
+    border-radius:0;
+  }
+}
 
-    .save{background:#4caf50;}
-    .cancel{background:#555;}
-    .dup{background:#3f8cff;}
-    .del{background:#ff5e57;}
+/* INPUTS */
+input,select{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  background:#1c1c1e;
+  border:1px solid #3a3a3d;
+  color:white;
+  border-radius:6px;
+  font-size:14px;
+}
 
-    /* AUTOCOMPLETE */
-    .autocomplete-box{position:relative;}
-    .autocomplete-list{
-      position:absolute;
-      width:100%;
-      background:#1c1c1e;
-      border:1px solid #333;
-      max-height:160px;
-      overflow-y:auto;
-    }
+select{height:40px;}
 
-    .autocomplete-item{
-      padding:8px;
-      cursor:pointer;
-      font-size:13px;
-    }
+.amount-row{display:flex;gap:8px;}
 
-    .autocomplete-item:hover{background:#333;}
+.btn-row{display:flex;gap:8px;margin-top:16px;}
 
-    /* CATEGORY MODAL */
-    .cat-modal{
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.75);
-      justify-content:center;
-      align-items:center;
-    }
-  </style>
+.btn{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  font-size:13px;
+  cursor:pointer;
+}
+
+.save{background:#4caf50;}
+.cancel{background:#555;}
+.dup{background:#3f8cff;}
+.del{background:#ff5e57;}
+
+.autocomplete-box{position:relative;}
+.autocomplete-list{
+  position:absolute;
+  width:100%;
+  background:#1c1c1e;
+  border:1px solid #333;
+  max-height:160px;
+  overflow-y:auto;
+}
+
+.autocomplete-item{
+  padding:8px;
+  cursor:pointer;
+}
+
+.autocomplete-item:hover{background:#333;}
+
+.cat-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  justify-content:center;
+  align-items:center;
+}
+
+/* TABLET */
+@media (max-width:900px){
+  .sidebar{width:220px;}
+}
+
+/* MOBILE */
+@media (max-width:700px){
+  .menu-btn{display:block;}
+  .sidebar{
+    position:absolute;
+    left:0;
+    top:0;
+    height:100%;
+    transform:translateX(-100%);
+  }
+  .sidebar.active{transform:translateX(0);}
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
   <div id="accounts-list"></div>
   <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
   <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
@@ -209,7 +254,8 @@
 <div class="main">
 
 <div class="topbar">
-  <div style="display:flex;gap:8px;">
+  <div class="left-controls">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
     <div id="total" class="total-box"></div>
     <button class="filter-btn" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
   </div>
@@ -219,11 +265,11 @@
 <table>
 <thead>
 <tr>
-  <th>ST</th>
-  <th>Datum</th>
-  <th>Categorie</th>
-  <th>Bedrag</th>
-  <th>Memo</th>
+<th>ST</th>
+<th>Datum</th>
+<th>Categorie</th>
+<th>Bedrag</th>
+<th>Memo</th>
 </tr>
 </thead>
 <tbody id="transactions-body"></tbody>
@@ -239,32 +285,32 @@
 <input type="date" id="date">
 
 <div class="autocomplete-box">
-  <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
-  <div id="category-list" class="autocomplete-list"></div>
+<input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
+<div id="category-list" class="autocomplete-list"></div>
 </div>
 
 <input type="text" id="memo" placeholder="Memo">
 
 <div class="amount-row">
-  <input type="number" id="income" placeholder="Inkomsten">
-  <input type="number" id="expense" placeholder="Uitgaven">
+<input type="number" id="income" placeholder="Inkomsten">
+<input type="number" id="expense" placeholder="Uitgaven">
 </div>
 
 <select id="status">
-  <option value="pending">Afwachtend</option>
-  <option value="confirmed">Bevestigd</option>
+<option value="pending">Afwachtend</option>
+<option value="confirmed">Bevestigd</option>
 </select>
 
 <select id="target-account"></select>
 
 <div class="btn-row">
-  <button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
-  <button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
+<button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
+<button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
 </div>
 
 <div class="btn-row">
-  <button class="btn cancel" onclick="closeModal()">Annuleren</button>
-  <button class="btn save" onclick="saveTransaction()">Opslaan</button>
+<button class="btn cancel" onclick="closeModal()">Annuleren</button>
+<button class="btn save" onclick="saveTransaction()">Opslaan</button>
 </div>
 
 </div>
@@ -273,25 +319,26 @@
 <!-- CATEGORY -->
 <div class="cat-modal" id="catModal">
 <div class="modal-content">
-  <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
+<h3>Categorie toevoegen</h3>
 
-  <input type="text" id="newCat" placeholder="Nieuwe categorie">
+<input type="text" id="newCat">
 
-  <div class="btn-row">
-    <button class="btn save" onclick="addCategory()">Toevoegen</button>
-    <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
-  </div>
+<div class="btn-row">
+<button class="btn save" onclick="addCategory()">Toevoegen</button>
+<button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
+</div>
 </div>
 </div>
 
 <script>
 
-/* === IDENTIEK AAN 3.0 FUNCTIONEEL === */
+/* === FUNCTIONALITEIT ONGEWIJZIGD === */
 
-let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
-"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW"
-];
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('active');
+}
 
+let categories = JSON.parse(localStorage.getItem('payit_categories')) || ["Apple Pay","Bancontact","BTW"];
 let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
 let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
 
@@ -299,7 +346,6 @@ let activeAccountId = accounts[0].id;
 let editingId=null;
 let showConfirmed=false;
 
-/* autocomplete */
 function filterCategories(){
   const val=category.value.toLowerCase();
   category-list.innerHTML='';
@@ -316,7 +362,6 @@ document.addEventListener('click',e=>{
   if(!category.contains(e.target)) category-list.innerHTML='';
 });
 
-/* categorie */
 function openCatModal(){catModal.style.display='flex';}
 function closeCatModal(){catModal.style.display='none';}
 function addCategory(){
@@ -328,7 +373,6 @@ function addCategory(){
   }
 }
 
-/* core */
 function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
 
 function renderAccounts(){
@@ -382,7 +426,6 @@ function toggleConfirmed(){
 function openModal(id=null){
   editingId=id;
   modal.style.display='flex';
-
   income.value='';expense.value='';
 
   if(id){
@@ -440,269 +483,6 @@ function deleteTransaction(){
 
 function addAccount(){
   let n=prompt("Naam rekening:");
-  if(n){accounts.push({id:Date.now().toString(),name:n});renderAccounts();}
-}
-
-function selectAccount(id){
-  activeAccountId=id;
-  renderAccounts();
-  renderTransactions();
-}
-
-renderAccounts();
-renderTransactions();
-
-</script>
-
-</body>
-</html>  <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
-  <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
-</div>
-
-<div class="main">
-
-<div class="topbar">
-  <div style="display:flex;gap:10px;">
-    <div id="total" class="total-box"></div>
-    <button class="filter-btn" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
-  </div>
-  <button class="add-btn" onclick="openModal()">＋</button>
-</div>
-
-<table>
-<thead>
-<tr>
-  <th>ST</th>
-  <th>Datum</th>
-  <th>Categorie</th>
-  <th>Bedrag</th>
-  <th>Memo</th>
-</tr>
-</thead>
-<tbody id="transactions-body"></tbody>
-</table>
-
-</div>
-</div>
-
-<!-- TRANSACTIE MODAL -->
-<div class="modal" id="modal">
-<div class="modal-content">
-
-<input type="date" id="date">
-
-<div class="autocomplete-box">
-  <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
-  <div id="category-list" class="autocomplete-list"></div>
-</div>
-
-<input type="text" id="memo" placeholder="Memo">
-
-<div class="amount-row">
-  <input type="number" id="income" placeholder="Inkomsten">
-  <input type="number" id="expense" placeholder="Uitgaven">
-</div>
-
-<select id="status">
-  <option value="pending">Afwachtend</option>
-  <option value="confirmed">Bevestigd</option>
-</select>
-
-<select id="target-account"></select>
-
-<div class="btn-row">
-  <button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
-  <button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
-</div>
-
-<div class="btn-row">
-  <button class="btn cancel" onclick="closeModal()">Annuleren</button>
-  <button class="btn save" onclick="saveTransaction()">Opslaan</button>
-</div>
-
-</div>
-</div>
-
-<!-- CATEGORIE POPUP (OPGESCHOOND) -->
-<div class="cat-modal" id="catModal">
-<div class="modal-content">
-  <h3>Categorie toevoegen</h3>
-
-  <input type="text" id="newCat" placeholder="Nieuwe categorie">
-
-  <div class="btn-row">
-    <button class="btn save" onclick="addCategory()">Toevoegen</button>
-    <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
-  </div>
-</div>
-</div>
-
-<script>
-
-/* DATA */
-let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
-"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW"
-];
-
-let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
-let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
-
-let activeAccountId = accounts[0].id;
-let editingId=null;
-let showConfirmed=false;
-
-/* AUTOCOMPLETE */
-function filterCategories(){
-  const val=document.getElementById('category').value.toLowerCase();
-  const list=document.getElementById('category-list');
-  list.innerHTML='';
-  categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
-    const d=document.createElement('div');
-    d.className='autocomplete-item';
-    d.innerText=c;
-    d.onclick=()=>{document.getElementById('category').value=c;list.innerHTML='';};
-    list.appendChild(d);
-  });
-}
-
-/* CLICK OUTSIDE */
-document.addEventListener('click',e=>{
-  const input=document.getElementById('category');
-  const list=document.getElementById('category-list');
-  if(!input.contains(e.target) && !list.contains(e.target)) list.innerHTML='';
-});
-
-/* CATEGORY */
-function openCatModal(){document.getElementById('catModal').style.display='flex';}
-function closeCatModal(){document.getElementById('catModal').style.display='none';}
-function addCategory(){
-  const val=document.getElementById('newCat').value.trim();
-  if(val && !categories.includes(val)){
-    categories.push(val);
-    localStorage.setItem('payit_categories',JSON.stringify(categories));
-    document.getElementById('newCat').value='';
-  }
-}
-
-/* CORE */
-function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
-
-function renderAccounts(){
-  const list=document.getElementById('accounts-list');
-  list.innerHTML='';
-  accounts.forEach(a=>{
-    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
-  });
-
-  const sel=document.getElementById('target-account');
-  sel.innerHTML='';
-  accounts.forEach(a=>{
-    const o=document.createElement('option');
-    o.value=a.id;o.innerText=a.name;
-    sel.appendChild(o);
-  });
-}
-
-function renderTransactions(){
-  const tbody=document.getElementById('transactions-body');
-  tbody.innerHTML='';
-
-  let data=transactions.filter(t=>t.accountId===activeAccountId);
-
-  let pending=data.filter(t=>t.status!=='confirmed');
-  let confirmed=data.filter(t=>t.status==='confirmed');
-
-  data=showConfirmed?[...pending,...confirmed]:pending;
-
-  let total=0;
-
-  data.forEach(t=>{
-    total+=Number(t.amount);
-    tbody.innerHTML+=`
-    <tr onclick="openModal('${t.id}')">
-      <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
-      <td>${t.date}</td>
-      <td>${t.category}</td>
-      <td class="${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
-      <td>${t.memo||''}</td>
-    </tr>`;
-  });
-
-  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
-}
-
-function toggleConfirmed(){
-  showConfirmed=!showConfirmed;
-  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
-  renderTransactions();
-}
-
-function openModal(id=null){
-  editingId=id;
-  document.getElementById('modal').style.display='flex';
-
-  document.getElementById('income').value='';
-  document.getElementById('expense').value='';
-
-  if(id){
-    const t=transactions.find(x=>x.id===id);
-    document.getElementById('date').value=t.date;
-    document.getElementById('category').value=t.category;
-    document.getElementById('memo').value=t.memo;
-    document.getElementById('status').value=t.status;
-
-    if(t.amount>=0) document.getElementById('income').value=t.amount;
-    else document.getElementById('expense').value=Math.abs(t.amount);
-
-    document.getElementById('target-account').value=t.accountId;
-  } else {
-    document.getElementById('date').value=new Date().toISOString().split('T')[0];
-  }
-}
-
-function closeModal(){document.getElementById('modal').style.display='none';}
-
-function saveTransaction(){
-  let amount=0;
-  if(document.getElementById('income').value) amount=parseFloat(document.getElementById('income').value);
-  else if(document.getElementById('expense').value) amount=-parseFloat(document.getElementById('expense').value);
-
-  const data={
-    id:editingId||Date.now().toString(),
-    date:document.getElementById('date').value,
-    category:document.getElementById('category').value,
-    memo:document.getElementById('memo').value,
-    amount,
-    status:document.getElementById('status').value,
-    accountId:editingId?document.getElementById('target-account').value:activeAccountId
-  };
-
-  if(editingId){
-    const i=transactions.findIndex(t=>t.id===editingId);
-    transactions[i]=data;
-  } else transactions.push(data);
-
-  localStorage.setItem('payit_transactions',JSON.stringify(transactions));
-  closeModal();
-  renderTransactions();
-}
-
-function duplicateTransaction(){
-  if(!editingId) return;
-  const t=transactions.find(x=>x.id===editingId);
-  transactions.push({...t,id:Date.now().toString()});
-  renderTransactions();
-}
-
-function deleteTransaction(){
-  if(editingId && confirm('Wissen?')){
-    transactions=transactions.filter(t=>t.id!==editingId);
-    renderTransactions();
-  }
-}
-
-function addAccount(){
-  const n=prompt("Naam rekening:");
   if(n){accounts.push({id:Date.now().toString(),name:n});renderAccounts();}
 }
 

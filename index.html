@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.2 (kolommen gefixt)</title>
+  <title>Payit - v3.3 (volledige categorie lijst)</title>
 
   <style>
     body {
@@ -14,7 +14,6 @@
 
     .container{display:flex;height:100vh;}
 
-    /* SIDEBAR */
     .sidebar{
       width:260px;
       background:#2a2a2d;
@@ -45,7 +44,6 @@
       cursor:pointer;
     }
 
-    /* MAIN */
     .main{flex:1;padding:24px;}
 
     .topbar{
@@ -85,7 +83,6 @@
       cursor:pointer;
     }
 
-    /* TABLE */
     table{
       width:100%;
       border-collapse:collapse;
@@ -109,15 +106,11 @@
       text-overflow:ellipsis;
     }
 
-    /* KOLOMMEN GEFIXT */
-    th:nth-child(1), td:nth-child(1){width:30px;}       /* ST */
-    th:nth-child(2), td:nth-child(2){width:110px;}      /* Datum */
-    th:nth-child(3), td:nth-child(3){width:180px;}      /* Categorie */
-    th:nth-child(4), td:nth-child(4){
-      width:120px;
-      text-align:right;
-    }                                                   /* Bedrag */
-    th:nth-child(5), td:nth-child(5){width:auto;}        /* Memo */
+    th:nth-child(1), td:nth-child(1){width:30px;}
+    th:nth-child(2), td:nth-child(2){width:110px;}
+    th:nth-child(3), td:nth-child(3){width:180px;}
+    th:nth-child(4), td:nth-child(4){width:120px;text-align:right;}
+    th:nth-child(5), td:nth-child(5){width:auto;}
 
     .positive{color:#4caf50;}
     .negative{color:#ff5e57;}
@@ -132,7 +125,6 @@
     .green{background:#4caf50;}
     .red{background:#ff5e57;}
 
-    /* MODAL */
     .modal{
       display:none;
       position:fixed;
@@ -163,7 +155,6 @@
     select{height:40px;}
 
     .amount-row{display:flex;gap:8px;}
-
     .btn-row{display:flex;gap:8px;margin-top:16px;}
 
     .btn{
@@ -180,7 +171,6 @@
     .dup{background:#3f8cff;}
     .del{background:#ff5e57;}
 
-    /* AUTOCOMPLETE */
     .autocomplete-box{position:relative;}
     .autocomplete-list{
       position:absolute;
@@ -199,7 +189,6 @@
 
     .autocomplete-item:hover{background:#333;}
 
-    /* CATEGORY MODAL */
     .cat-modal{
       display:none;
       position:fixed;
@@ -289,9 +278,7 @@
 <div class="cat-modal" id="catModal">
 <div class="modal-content">
   <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
-
   <input type="text" id="newCat" placeholder="Nieuwe categorie">
-
   <div class="btn-row">
     <button class="btn save" onclick="addCategory()">Toevoegen</button>
     <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
@@ -301,9 +288,16 @@
 
 <script>
 
-/* IDENTIEK */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
-"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW"
+"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW",
+"BMW - onderhoud en verzekering","Consensus","Correctie","Delhaize",
+"Dienstencheques","Diversen","Eneco","Etentjes","Invecon","Kampen",
+"Kapper-voeten","KBC","Lening","Maxem","NOG TE ONTVANGEN",
+"Nutsvoorzieningen","Onderhoud","Opzij",
+"Opzij voor liq.reserve 01/2027","Overige","Overschrijving",
+"Paypal","Pensioen","Rekening courant","Reserve",
+"Restant voor de maand","Straetus","Straetus-tweewekelijks",
+"Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"
 ];
 
 let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
@@ -313,7 +307,6 @@ let activeAccountId = accounts[0].id;
 let editingId=null;
 let showConfirmed=false;
 
-/* autocomplete */
 function filterCategories(){
   const val=category.value.toLowerCase();
   document.getElementById('category-list').innerHTML='';
@@ -331,9 +324,9 @@ document.addEventListener('click',e=>{
     document.getElementById('category-list').innerHTML='';
 });
 
-/* categorie */
 function openCatModal(){document.getElementById('catModal').style.display='flex';}
 function closeCatModal(){document.getElementById('catModal').style.display='none';}
+
 function addCategory(){
   const val=document.getElementById('newCat').value.trim();
   if(val && !categories.includes(val)){
@@ -343,8 +336,9 @@ function addCategory(){
   }
 }
 
-/* core */
-function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
+function formatCurrency(n){
+  return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});
+}
 
 function renderAccounts(){
   const list=document.getElementById('accounts-list');

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.2 (categorie validatie hersteld)</title>
+  <title>Payit - v3.3 (fix categorie + render)</title>
 
   <style>
     body {
@@ -346,10 +346,10 @@ function renderTransactions(){
 
   data=showConfirmed?[...pending,...confirmed]:pending;
 
-  let total=0;
+  let totalAmount=0;
 
   data.forEach(t=>{
-    total+=Number(t.amount);
+    totalAmount+=Number(t.amount);
     tbody.innerHTML+=`
     <tr onclick="openModal('${t.id}')">
       <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
@@ -360,7 +360,7 @@ function renderTransactions(){
     </tr>`;
   });
 
-  total.innerText="Totaal: "+formatCurrency(total);
+  document.getElementById('total').innerText="Totaal: "+formatCurrency(totalAmount);
 }
 
 function toggleConfirmed(){
@@ -430,6 +430,7 @@ function duplicateTransaction(){
 function deleteTransaction(){
   if(editingId && confirm('Wissen?')){
     transactions=transactions.filter(t=>t.id!==editingId);
+    localStorage.setItem('payit_transactions',JSON.stringify(transactions));
     renderTransactions();
   }
 }

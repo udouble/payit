@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v2.3 (dropdown fix + categoriebeheer)</title>
+  <title>Payit - v2.4 (clean categoriebeheer)</title>
 
   <style>
     body { margin:0; font-family:Arial; background:#1e1e1e; color:white; font-size:20px;}
@@ -11,8 +11,7 @@
     .account{padding:12px;background:#3a3a3a;border-radius:6px;margin-bottom:10px;cursor:pointer;}
     .account.active{background:#4caf50;font-weight:bold;}
 
-    .add-account-btn,
-    .cat-btn{
+    .add-account-btn,.cat-btn{
       width:100%;
       padding:16px;
       margin-top:10px;
@@ -58,11 +57,7 @@
       box-sizing:border-box;
     }
 
-    /* 🔥 FIX: dropdowns terug normaal groot */
-    select{
-      height:56px;
-      font-size:20px;
-    }
+    select{height:56px;}
 
     .amount-row{display:flex;gap:10px;}
 
@@ -87,7 +82,6 @@
     .autocomplete-item{padding:10px;cursor:pointer;}
     .autocomplete-item:hover{background:#333;}
 
-    /* categorie modal */
     .cat-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;}
   </style>
 </head>
@@ -99,8 +93,7 @@
 <div class="sidebar">
   <div id="accounts-list"></div>
   <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
-
-  <button class="cat-btn" onclick="openCatModal()">Categorieën beheren</button>
+  <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
 </div>
 
 <div class="main">
@@ -129,7 +122,7 @@
 </div>
 </div>
 
-<!-- TRANSACTIE MODAL -->
+<!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
 
@@ -167,12 +160,10 @@
 </div>
 </div>
 
-<!-- CATEGORIE MODAL -->
+<!-- CATEGORIE -->
 <div class="cat-modal" id="catModal">
 <div class="modal-content">
-  <h3>Categorieën</h3>
-
-  <div id="catList"></div>
+  <h3>Categorie toevoegen</h3>
 
   <input type="text" id="newCat" placeholder="Nieuwe categorie">
 
@@ -185,7 +176,6 @@
 
 <script>
 
-/* DATA */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || ["Apple Pay","Bancontact","BTW"];
 let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
 let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
@@ -193,79 +183,67 @@ let activeAccountId = accounts[0].id;
 let editingId=null;
 let showConfirmed=false;
 
-/* CATEGORY AUTOCOMPLETE */
+/* AUTOCOMPLETE */
 function filterCategories(){
-  const val=document.getElementById('category').value.toLowerCase();
-  const list=document.getElementById('category-list');
-  list.innerHTML='';
+  const val=category.value.toLowerCase();
+  category-list.innerHTML='';
   categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
-    let div=document.createElement('div');
-    div.className='autocomplete-item';
-    div.innerText=c;
-    div.onclick=()=>{document.getElementById('category').value=c;list.innerHTML='';};
-    list.appendChild(div);
+    let d=document.createElement('div');
+    d.className='autocomplete-item';
+    d.innerText=c;
+    d.onclick=()=>{category.value=c;category-list.innerHTML='';};
+    category-list.appendChild(d);
   });
 }
 
-/* CLICK OUTSIDE FIX */
+/* CLICK OUTSIDE */
 document.addEventListener('click',e=>{
-  if(!document.getElementById('category').contains(e.target))
-    document.getElementById('category-list').innerHTML='';
+  if(!category.contains(e.target)) category-list.innerHTML='';
 });
 
-/* CATEGORY MANAGEMENT */
-function openCatModal(){
-  document.getElementById('catModal').style.display='flex';
-  renderCatList();
-}
-function closeCatModal(){
-  document.getElementById('catModal').style.display='none';
-}
-function renderCatList(){
-  const div=document.getElementById('catList');
-  div.innerHTML='';
-  categories.forEach(c=>{
-    div.innerHTML+=`<div>${c}</div>`;
-  });
-}
+/* CATEGORY */
+function openCatModal(){catModal.style.display='flex';}
+function closeCatModal(){catModal.style.display='none';}
 function addCategory(){
-  const val=document.getElementById('newCat').value;
-  if(val){
+  const val=newCat.value.trim();
+  if(val && !categories.includes(val)){
     categories.push(val);
     localStorage.setItem('payit_categories',JSON.stringify(categories));
-    renderCatList();
+    newCat.value='';
   }
 }
 
-/* BASIC APP (ongewijzigd) */
+/* CORE */
 function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
 
 function renderAccounts(){
-  const list=document.getElementById('accounts-list');
-  list.innerHTML='';
+  accounts-list.innerHTML='';
   accounts.forEach(a=>{
-    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
+    accounts-list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
   });
 
-  const sel=document.getElementById('target-account');
-  sel.innerHTML='';
+  target-account.innerHTML='';
   accounts.forEach(a=>{
     let o=document.createElement('option');
     o.value=a.id;o.innerText=a.name;
-    sel.appendChild(o);
+    target-account.appendChild(o);
   });
 }
 
 function renderTransactions(){
-  const tbody=document.getElementById('transactions');
-  tbody.innerHTML='';
-  let data=transactions.filter(t=>t.accountId===activeAccountId);
+  transactionsEl=transactions.filter(t=>t.accountId===activeAccountId);
 
+  let pending=transactionsEl.filter(t=>t.status!=='confirmed');
+  let confirmed=transactionsEl.filter(t=>t.status==='confirmed');
+
+  transactionsEl=showConfirmed?[...pending,...confirmed]:pending;
+
+  transactions.innerHTML='';
   let total=0;
 
-  data.forEach(t=>{
+  transactionsEl.forEach(t=>{
     total+=Number(t.amount);
-    tbody.innerHTML+=`
+    transactions.innerHTML+=`
     <tr onclick="openModal('${t.id}')">
       <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
       <td>${t.date}</td>
@@ -275,37 +253,40 @@ function renderTransactions(){
     </tr>`;
   });
 
-  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
+  total.innerText="Totaal: "+formatCurrency(total);
+}
+
+function toggleConfirmed(){
+  showConfirmed=!showConfirmed;
+  filterBtn.innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
+  renderTransactions();
 }
 
 function openModal(id=null){
   editingId=id;
-  document.getElementById('modal').style.display='flex';
+  modal.style.display='flex';
+  income.value='';expense.value='';
 
   if(id){
-    const t=transactions.find(x=>x.id===id);
-    document.getElementById('date').value=t.date;
-    document.getElementById('category').value=t.category;
-    document.getElementById('memo').value=t.memo;
-    document.getElementById('status').value=t.status;
+    let t=transactions.find(x=>x.id===id);
+    date.value=t.date;
+    category.value=t.category;
+    memo.value=t.memo;
+    status.value=t.status;
 
-    if(t.amount>=0) document.getElementById('income').value=t.amount;
-    else document.getElementById('expense').value=Math.abs(t.amount);
+    if(t.amount>=0) income.value=t.amount;
+    else expense.value=Math.abs(t.amount);
 
-    document.getElementById('target-account').value=t.accountId;
-  } else {
-    document.getElementById('date').value=new Date().toISOString().split('T')[0];
-  }
+    target-account.value=t.accountId;
+  } else date.value=new Date().toISOString().split('T')[0];
 }
 
-function closeModal(){document.getElementById('modal').style.display='none';}
+function closeModal(){modal.style.display='none';}
 
 function saveTransaction(){
-  let amount=0;
-  if(income.value) amount=parseFloat(income.value);
-  else if(expense.value) amount=-parseFloat(expense.value);
+  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
 
-  const data={
+  let data={
     id:editingId||Date.now().toString(),
     date:date.value,
     category:category.value,
@@ -316,7 +297,7 @@ function saveTransaction(){
   };
 
   if(editingId){
-    const i=transactions.findIndex(t=>t.id===editingId);
+    let i=transactions.findIndex(t=>t.id===editingId);
     transactions[i]=data;
   } else transactions.push(data);
 
@@ -325,8 +306,22 @@ function saveTransaction(){
   renderTransactions();
 }
 
+function duplicateTransaction(){
+  if(!editingId) return;
+  let t=transactions.find(x=>x.id===editingId);
+  transactions.push({...t,id:Date.now().toString()});
+  renderTransactions();
+}
+
+function deleteTransaction(){
+  if(editingId && confirm('Wissen?')){
+    transactions=transactions.filter(t=>t.id!==editingId);
+    renderTransactions();
+  }
+}
+
 function addAccount(){
-  const n=prompt("Naam rekening:");
+  let n=prompt("Naam rekening:");
   if(n){accounts.push({id:Date.now().toString(),name:n});renderAccounts();}
 }
 

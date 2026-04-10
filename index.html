@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.1 (compact UI refinement)</title>
+  <title>Payit - v3.2 (kolommen gefixt)</title>
 
   <style>
     body {
@@ -86,7 +86,11 @@
     }
 
     /* TABLE */
-    table{width:100%;border-collapse:collapse;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
 
     th{
       text-align:left;
@@ -100,9 +104,20 @@
       padding:10px 8px;
       border-bottom:1px solid #2a2a2d;
       font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    td:nth-child(4){text-align:right;}
+    /* KOLOMMEN GEFIXT */
+    th:nth-child(1), td:nth-child(1){width:30px;}       /* ST */
+    th:nth-child(2), td:nth-child(2){width:110px;}      /* Datum */
+    th:nth-child(3), td:nth-child(3){width:180px;}      /* Categorie */
+    th:nth-child(4), td:nth-child(4){
+      width:120px;
+      text-align:right;
+    }                                                   /* Bedrag */
+    th:nth-child(5), td:nth-child(5){width:auto;}        /* Memo */
 
     .positive{color:#4caf50;}
     .negative{color:#ff5e57;}
@@ -286,8 +301,7 @@
 
 <script>
 
-/* === IDENTIEK AAN 3.0 FUNCTIONEEL === */
-
+/* IDENTIEK */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
 "Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW"
 ];
@@ -302,29 +316,30 @@ let showConfirmed=false;
 /* autocomplete */
 function filterCategories(){
   const val=category.value.toLowerCase();
-  category-list.innerHTML='';
+  document.getElementById('category-list').innerHTML='';
   categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
     let d=document.createElement('div');
     d.className='autocomplete-item';
     d.innerText=c;
-    d.onclick=()=>{category.value=c;category-list.innerHTML='';};
-    category-list.appendChild(d);
+    d.onclick=()=>{category.value=c;document.getElementById('category-list').innerHTML='';};
+    document.getElementById('category-list').appendChild(d);
   });
 }
 
 document.addEventListener('click',e=>{
-  if(!category.contains(e.target)) category-list.innerHTML='';
+  if(!document.getElementById('category').contains(e.target))
+    document.getElementById('category-list').innerHTML='';
 });
 
 /* categorie */
-function openCatModal(){catModal.style.display='flex';}
-function closeCatModal(){catModal.style.display='none';}
+function openCatModal(){document.getElementById('catModal').style.display='flex';}
+function closeCatModal(){document.getElementById('catModal').style.display='none';}
 function addCategory(){
-  const val=newCat.value.trim();
+  const val=document.getElementById('newCat').value.trim();
   if(val && !categories.includes(val)){
     categories.push(val);
     localStorage.setItem('payit_categories',JSON.stringify(categories));
-    newCat.value='';
+    document.getElementById('newCat').value='';
   }
 }
 
@@ -332,16 +347,18 @@ function addCategory(){
 function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
 
 function renderAccounts(){
-  accounts-list.innerHTML='';
+  const list=document.getElementById('accounts-list');
+  list.innerHTML='';
   accounts.forEach(a=>{
-    accounts-list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
+    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
   });
 
-  target-account.innerHTML='';
+  const sel=document.getElementById('target-account');
+  sel.innerHTML='';
   accounts.forEach(a=>{
     let o=document.createElement('option');
     o.value=a.id;o.innerText=a.name;
-    target-account.appendChild(o);
+    sel.appendChild(o);
   });
 }
 
@@ -375,13 +392,13 @@ function renderTransactions(){
 
 function toggleConfirmed(){
   showConfirmed=!showConfirmed;
-  filterBtn.innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
+  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
   renderTransactions();
 }
 
 function openModal(id=null){
   editingId=id;
-  modal.style.display='flex';
+  document.getElementById('modal').style.display='flex';
 
   income.value='';expense.value='';
 
@@ -395,11 +412,11 @@ function openModal(id=null){
     if(t.amount>=0) income.value=t.amount;
     else expense.value=Math.abs(t.amount);
 
-    target-account.value=t.accountId;
+    document.getElementById('target-account').value=t.accountId;
   } else date.value=new Date().toISOString().split('T')[0];
 }
 
-function closeModal(){modal.style.display='none';}
+function closeModal(){document.getElementById('modal').style.display='none';}
 
 function saveTransaction(){
   let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
@@ -411,7 +428,7 @@ function saveTransaction(){
     memo:memo.value,
     amount,
     status:status.value,
-    accountId:editingId?target-account.value:activeAccountId
+    accountId:editingId?document.getElementById('target-account').value:activeAccountId
   };
 
   if(editingId){

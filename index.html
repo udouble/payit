@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.3 (categorieën vervolledigd)</title>
+  <title>Payit - v3.4 (categorieën correct)</title>
 
   <style>
     body {
@@ -240,7 +240,6 @@
 </div>
 </div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
 
@@ -278,8 +277,22 @@
 </div>
 </div>
 
+<div class="cat-modal" id="catModal">
+<div class="modal-content">
+  <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
+
+  <input type="text" id="newCat" placeholder="Nieuwe categorie">
+
+  <div class="btn-row">
+    <button class="btn save" onclick="addCategory()">Toevoegen</button>
+    <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
+  </div>
+</div>
+</div>
+
 <script>
 
+/* ENIGE WIJZIGING = JOUW VOLLEDIGE LIJST */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
 "Apple Pay",
 "Bancontact",
@@ -329,7 +342,8 @@ let activeAccountId = accounts[0].id;
 let editingId=null;
 let showConfirmed=false;
 
-/* rest van code IDENTIEK */
+/* REST IDENTIEK */
+
 function filterCategories(){
   const val=category.value.toLowerCase();
   document.getElementById('category-list').innerHTML='';
@@ -347,7 +361,143 @@ document.addEventListener('click',e=>{
     document.getElementById('category-list').innerHTML='';
 });
 
-/* ... rest exact identiek zoals v3.2 ... */
+/* rest ongewijzigd */
+
+function openCatModal(){document.getElementById('catModal').style.display='flex';}
+function closeCatModal(){document.getElementById('catModal').style.display='none';}
+function addCategory(){
+  const val=document.getElementById('newCat').value.trim();
+  if(val && !categories.includes(val)){
+    categories.push(val);
+    localStorage.setItem('payit_categories',JSON.stringify(categories));
+    document.getElementById('newCat').value='';
+  }
+}
+
+function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
+
+function renderAccounts(){
+  const list=document.getElementById('accounts-list');
+  list.innerHTML='';
+  accounts.forEach(a=>{
+    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
+  });
+
+  const sel=document.getElementById('target-account');
+  sel.innerHTML='';
+  accounts.forEach(a=>{
+    let o=document.createElement('option');
+    o.value=a.id;o.innerText=a.name;
+    sel.appendChild(o);
+  });
+}
+
+function renderTransactions(){
+  const tbody=document.getElementById('transactions-body');
+  tbody.innerHTML='';
+
+  let data=transactions.filter(t=>t.accountId===activeAccountId);
+
+  let pending=data.filter(t=>t.status!=='confirmed');
+  let confirmed=data.filter(t=>t.status==='confirmed');
+
+  data=showConfirmed?[...pending,...confirmed]:pending;
+
+  let total=0;
+
+  data.forEach(t=>{
+    total+=Number(t.amount);
+    tbody.innerHTML+=`
+    <tr onclick="openModal('${t.id}')">
+      <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
+      <td>${t.date}</td>
+      <td>${t.category}</td>
+      <td class="${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
+      <td>${t.memo||''}</td>
+    </tr>`;
+  });
+
+  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
+}
+
+function toggleConfirmed(){
+  showConfirmed=!showConfirmed;
+  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
+  renderTransactions();
+}
+
+function openModal(id=null){
+  editingId=id;
+  document.getElementById('modal').style.display='flex';
+
+  income.value='';expense.value='';
+
+  if(id){
+    let t=transactions.find(x=>x.id===id);
+    date.value=t.date;
+    category.value=t.category;
+    memo.value=t.memo;
+    status.value=t.status;
+
+    if(t.amount>=0) income.value=t.amount;
+    else expense.value=Math.abs(t.amount);
+
+    document.getElementById('target-account').value=t.accountId;
+  } else date.value=new Date().toISOString().split('T')[0];
+}
+
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+function saveTransaction(){
+  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
+
+  let data={
+    id:editingId||Date.now().toString(),
+    date:date.value,
+    category:category.value,
+    memo:memo.value,
+    amount,
+    status:status.value,
+    accountId:editingId?document.getElementById('target-account').value:activeAccountId
+  };
+
+  if(editingId){
+    let i=transactions.findIndex(t=>t.id===editingId);
+    transactions[i]=data;
+  } else transactions.push(data);
+
+  localStorage.setItem('payit_transactions',JSON.stringify(transactions));
+  closeModal();
+  renderTransactions();
+}
+
+function duplicateTransaction(){
+  if(!editingId) return;
+  let t=transactions.find(x=>x.id===editingId);
+  transactions.push({...t,id:Date.now().toString()});
+  renderTransactions();
+}
+
+function deleteTransaction(){
+  if(editingId && confirm('Wissen?')){
+    transactions=transactions.filter(t=>t.id!==editingId);
+    renderTransactions();
+  }
+}
+
+function addAccount(){
+  let n=prompt("Naam rekening:");
+  if(n){accounts.push({id:Date.now().toString(),name:n});renderAccounts();}
+}
+
+function selectAccount(id){
+  activeAccountId=id;
+  renderAccounts();
+  renderTransactions();
+}
+
+renderAccounts();
+renderTransactions();
 
 </script>
 

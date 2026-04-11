@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.3 (volledige categorie lijst)</title>
+  <title>Payit - v3.3 (supabase read test)</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
     body {
@@ -74,6 +76,405 @@
 
     .add-btn{
       background:#3f8cff;
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      font-size:20px;
+      border:none;
+      color:white;
+      cursor:pointer;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
+
+    th{
+      text-align:left;
+      font-size:12px;
+      color:#888;
+      padding:8px;
+      border-bottom:1px solid #333;
+    }
+
+    td{
+      padding:10px 8px;
+      border-bottom:1px solid #2a2a2d;
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    th:nth-child(1), td:nth-child(1){width:30px;}
+    th:nth-child(2), td:nth-child(2){width:110px;}
+    th:nth-child(3), td:nth-child(3){width:180px;}
+    th:nth-child(4), td:nth-child(4){width:120px;text-align:right;}
+    th:nth-child(5), td:nth-child(5){width:auto;}
+
+    .positive{color:#4caf50;}
+    .negative{color:#ff5e57;}
+
+    .status-dot{
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      display:inline-block;
+    }
+
+    .green{background:#4caf50;}
+    .red{background:#ff5e57;}
+
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.75);
+      justify-content:center;
+      align-items:center;
+    }
+
+    .modal-content{
+      background:#2a2a2d;
+      padding:20px;
+      border-radius:10px;
+      width:420px;
+    }
+
+    input,select{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      background:#1c1c1e;
+      border:1px solid #3a3a3d;
+      color:white;
+      border-radius:6px;
+      font-size:14px;
+    }
+
+    select{height:40px;}
+
+    .amount-row{display:flex;gap:8px;}
+    .btn-row{display:flex;gap:8px;margin-top:16px;}
+
+    .btn{
+      flex:1;
+      padding:10px;
+      border:none;
+      border-radius:6px;
+      font-size:13px;
+      cursor:pointer;
+    }
+
+    .save{background:#4caf50;}
+    .cancel{background:#555;}
+    .dup{background:#3f8cff;}
+    .del{background:#ff5e57;}
+
+    .autocomplete-box{position:relative;}
+    .autocomplete-list{
+      position:absolute;
+      width:100%;
+      background:#1c1c1e;
+      border:1px solid #333;
+      max-height:160px;
+      overflow-y:auto;
+    }
+
+    .autocomplete-item{
+      padding:8px;
+      cursor:pointer;
+      font-size:13px;
+    }
+
+    .autocomplete-item:hover{background:#333;}
+
+    .cat-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.75);
+      justify-content:center;
+      align-items:center;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+  <div id="accounts-list"></div>
+  <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
+  <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
+</div>
+
+<div class="main">
+
+<div class="topbar">
+  <div style="display:flex;gap:8px;">
+    <div id="total" class="total-box"></div>
+    <button class="filter-btn" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
+  </div>
+  <button class="add-btn" onclick="openModal()">＋</button>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>ST</th>
+  <th>Datum</th>
+  <th>Categorie</th>
+  <th>Bedrag</th>
+  <th>Memo</th>
+</tr>
+</thead>
+<tbody id="transactions-body"></tbody>
+</table>
+
+</div>
+</div>
+
+<div class="modal" id="modal">
+<div class="modal-content">
+
+<input type="date" id="date">
+
+<div class="autocomplete-box">
+  <input type="text" id="category" oninput="filterCategories()">
+  <div id="category-list" class="autocomplete-list"></div>
+</div>
+
+<input type="text" id="memo">
+
+<div class="amount-row">
+  <input type="number" id="income">
+  <input type="number" id="expense">
+</div>
+
+<select id="status">
+  <option value="pending">Afwachtend</option>
+  <option value="confirmed">Bevestigd</option>
+</select>
+
+<select id="target-account"></select>
+
+<div class="btn-row">
+  <button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
+  <button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
+</div>
+
+<div class="btn-row">
+  <button class="btn cancel" onclick="closeModal()">Annuleren</button>
+  <button class="btn save" onclick="saveTransaction()">Opslaan</button>
+</div>
+
+</div>
+</div>
+
+<div class="cat-modal" id="catModal">
+<div class="modal-content">
+  <h3>Categorie toevoegen</h3>
+  <input type="text" id="newCat">
+  <div class="btn-row">
+    <button class="btn save" onclick="addCategory()">Toevoegen</button>
+    <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
+  </div>
+</div>
+</div>
+
+<script>
+
+/* SUPABASE */
+const supabase = window.supabase.createClient(
+  "JOUW_PROJECT_URL",
+  "JOUW_ANON_KEY"
+);
+
+/* DATA */
+let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
+"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW"
+];
+
+let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
+
+let transactions = [];
+
+async function loadTransactions(){
+  const { data, error } = await supabase.from('transactions').select('*');
+  if(!error) transactions = data || [];
+  renderTransactions();
+}
+
+let activeAccountId = accounts[0].id;
+let editingId=null;
+let showConfirmed=false;
+
+/* REST = IDENTIEK */
+
+function filterCategories(){
+  const val=category.value.toLowerCase();
+  document.getElementById('category-list').innerHTML='';
+  categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
+    let d=document.createElement('div');
+    d.className='autocomplete-item';
+    d.innerText=c;
+    d.onclick=()=>{category.value=c;document.getElementById('category-list').innerHTML='';};
+    document.getElementById('category-list').appendChild(d);
+  });
+}
+
+document.addEventListener('click',e=>{
+  if(!document.getElementById('category').contains(e.target))
+    document.getElementById('category-list').innerHTML='';
+});
+
+function openCatModal(){document.getElementById('catModal').style.display='flex';}
+function closeCatModal(){document.getElementById('catModal').style.display='none';}
+
+function addCategory(){
+  const val=document.getElementById('newCat').value.trim();
+  if(val && !categories.includes(val)){
+    categories.push(val);
+    localStorage.setItem('payit_categories',JSON.stringify(categories));
+    document.getElementById('newCat').value='';
+  }
+}
+
+function formatCurrency(n){
+  return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});
+}
+
+function renderAccounts(){
+  const list=document.getElementById('accounts-list');
+  list.innerHTML='';
+  accounts.forEach(a=>{
+    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
+  });
+
+  const sel=document.getElementById('target-account');
+  sel.innerHTML='';
+  accounts.forEach(a=>{
+    let o=document.createElement('option');
+    o.value=a.id;o.innerText=a.name;
+    sel.appendChild(o);
+  });
+}
+
+function renderTransactions(){
+  const tbody=document.getElementById('transactions-body');
+  tbody.innerHTML='';
+
+  let data=transactions.filter(t=>t.accountId===activeAccountId);
+
+  let pending=data.filter(t=>t.status!=='confirmed');
+  let confirmed=data.filter(t=>t.status==='confirmed');
+
+  data=showConfirmed?[...pending,...confirmed]:pending;
+
+  let total=0;
+
+  data.forEach(t=>{
+    total+=Number(t.amount);
+    tbody.innerHTML+=`
+    <tr onclick="openModal('${t.id}')">
+      <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
+      <td>${t.date}</td>
+      <td>${t.category}</td>
+      <td class="${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
+      <td>${t.memo||''}</td>
+    </tr>`;
+  });
+
+  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
+}
+
+function toggleConfirmed(){
+  showConfirmed=!showConfirmed;
+  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
+  renderTransactions();
+}
+
+function openModal(id=null){
+  editingId=id;
+  document.getElementById('modal').style.display='flex';
+
+  income.value='';expense.value='';
+
+  if(id){
+    let t=transactions.find(x=>x.id===id);
+    date.value=t.date;
+    category.value=t.category;
+    memo.value=t.memo;
+    status.value=t.status;
+
+    if(t.amount>=0) income.value=t.amount;
+    else expense.value=Math.abs(t.amount);
+
+    document.getElementById('target-account').value=t.accountId;
+  } else date.value=new Date().toISOString().split('T')[0];
+}
+
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+function saveTransaction(){
+  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
+
+  let data={
+    id:editingId||Date.now().toString(),
+    date:date.value,
+    category:category.value,
+    memo:memo.value,
+    amount,
+    status:status.value,
+    accountId:editingId?document.getElementById('target-account').value:activeAccountId
+  };
+
+  if(editingId){
+    let i=transactions.findIndex(t=>t.id===editingId);
+    transactions[i]=data;
+  } else transactions.push(data);
+
+  closeModal();
+  renderTransactions();
+}
+
+function duplicateTransaction(){
+  if(!editingId) return;
+  let t=transactions.find(x=>x.id===editingId);
+  transactions.push({...t,id:Date.now().toString()});
+  renderTransactions();
+}
+
+function deleteTransaction(){
+  if(editingId && confirm('Wissen?')){
+    transactions=transactions.filter(t=>t.id!==editingId);
+    renderTransactions();
+  }
+}
+
+function addAccount(){
+  let n=prompt("Naam rekening:");
+  if(n){accounts.push({id:Date.now().toString(),name:n});renderAccounts();}
+}
+
+function selectAccount(id){
+  activeAccountId=id;
+  renderAccounts();
+  renderTransactions();
+}
+
+/* INIT */
+renderAccounts();
+loadTransactions();
+
+</script>
+
+</body>
+</html>      background:#3f8cff;
       width:36px;
       height:36px;
       border-radius:10px;

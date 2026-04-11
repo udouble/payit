@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.5 (supabase)</title>
+  <title>Payit - v3.5 (supabase transactions)</title>
 
-  <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -112,10 +111,7 @@
     th:nth-child(1), td:nth-child(1){width:30px;}
     th:nth-child(2), td:nth-child(2){width:110px;}
     th:nth-child(3), td:nth-child(3){width:180px;}
-    th:nth-child(4), td:nth-child(4){
-      width:120px;
-      text-align:right;
-    }
+    th:nth-child(4), td:nth-child(4){width:120px;text-align:right;}
     th:nth-child(5), td:nth-child(5){width:auto;}
 
     .positive{color:#4caf50;}
@@ -147,10 +143,17 @@
       width:420px;
     }
 
+    label{
+      display:block;
+      margin-top:10px;
+      font-size:12px;
+      color:#aaa;
+    }
+
     input,select{
       width:100%;
       padding:10px;
-      margin-top:10px;
+      margin-top:4px;
       background:#1c1c1e;
       border:1px solid #3a3a3d;
       color:white;
@@ -246,20 +249,24 @@
 <div class="modal" id="modal">
 <div class="modal-content">
 
+<label>Datum</label>
 <input type="date" id="date">
 
+<label>Categorie</label>
 <div class="autocomplete-box">
-  <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
+  <input type="text" id="category" oninput="filterCategories()">
   <div id="category-list" class="autocomplete-list"></div>
 </div>
 
-<input type="text" id="memo" placeholder="Memo">
+<label>Memo</label>
+<input type="text" id="memo">
 
 <div class="amount-row">
   <input type="number" id="income" placeholder="Inkomsten">
   <input type="number" id="expense" placeholder="Uitgaven">
 </div>
 
+<label>Status</label>
 <select id="status">
   <option value="pending">Afwachtend</option>
   <option value="confirmed">Bevestigd</option>
@@ -280,33 +287,27 @@
 </div>
 </div>
 
-<div class="cat-modal" id="catModal">
-<div class="modal-content">
-  <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
-
-  <input type="text" id="newCat" placeholder="Nieuwe categorie">
-
-  <div class="btn-row">
-    <button class="btn save" onclick="addCategory()">Toevoegen</button>
-    <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
-  </div>
-</div>
-</div>
-
 <script>
 
-/* SUPABASE INIT */
+/* SUPABASE */
 const supabase = window.supabase.createClient(
   "https://oubutokvbhfifihjgiiy.supabase.co",
   "sb_publishable_duu2yC3c_-vwRMAam-LyXg_LLegwzo-"
 );
 
-/* IDENTIEK */
+/* DATA */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
-"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW","BMW - onderhoud en verzekering","Consensus","Correctie","Delhaize","Dienstencheques","Diversen","Eneco","Etentjes","Invecon","Kampen","Kapper-voeten","KBC","Lening","Maxem","NOG TE ONTVANGEN","Nutsvoorzieningen","Onderhoud","Opzij","Opzij voor liq.reserve 01/2027","Overige","Overschrijving","Paypal","Pensioen","Rekening courant","Reserve","Restant voor de maand","Straetus","Straetus-tweewekelijks","Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"
+"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW",
+"BMW - onderhoud en verzekering","Consensus","Correctie","Delhaize",
+"Dienstencheques","Diversen","Eneco","Etentjes","Invecon","Kampen",
+"Kapper-voeten","KBC","Lening","Maxem","NOG TE ONTVANGEN",
+"Nutsvoorzieningen","Onderhoud","Opzij","Opzij voor liq.reserve 01/2027",
+"Overige","Overschrijving","Paypal","Pensioen","Rekening courant",
+"Reserve","Restant voor de maand","Straetus","Straetus-tweewekelijks",
+"Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"
 ];
 
-let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
+let accounts = [{ id:'1',name:'Privé'}];
 let transactions = [];
 
 let activeAccountId = accounts[0].id;
@@ -319,77 +320,31 @@ async function loadTransactions(){
   transactions = data || [];
   renderTransactions();
 }
-loadTransactions();
 
-/* autocomplete blijft identiek */
-function filterCategories(){
-  const val=category.value.toLowerCase();
-  document.getElementById('category-list').innerHTML='';
-  categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
-    let d=document.createElement('div');
-    d.className='autocomplete-item';
-    d.innerText=c;
-    d.onclick=()=>{category.value=c;document.getElementById('category-list').innerHTML='';};
-    document.getElementById('category-list').appendChild(d);
-  });
-}
-
-document.addEventListener('click',e=>{
-  if(!document.getElementById('category').contains(e.target))
-    document.getElementById('category-list').innerHTML='';
-});
-
-/* save via supabase */
+/* SAVE */
 async function saveTransaction(){
   let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
 
   let data={
-    id:editingId||Date.now().toString(),
     date:date.value,
     category:category.value,
     memo:memo.value,
     amount,
     status:status.value,
-    accountId:editingId?document.getElementById('target-account').value:activeAccountId
+    accountId:activeAccountId
   };
 
-  await supabase.from('transactions').upsert(data);
+  if(editingId){
+    await supabase.from('transactions').update(data).eq('id', editingId);
+  } else {
+    await supabase.from('transactions').insert(data);
+  }
 
-  editingId=null;
   closeModal();
   loadTransactions();
 }
 
-/* rest 100% identiek */
-function openCatModal(){document.getElementById('catModal').style.display='flex';}
-function closeCatModal(){document.getElementById('catModal').style.display='none';}
-function addCategory(){
-  const val=document.getElementById('newCat').value.trim();
-  if(val && !categories.includes(val)){
-    categories.push(val);
-    localStorage.setItem('payit_categories',JSON.stringify(categories));
-    document.getElementById('newCat').value='';
-  }
-}
-
-function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
-
-function renderAccounts(){
-  const list=document.getElementById('accounts-list');
-  list.innerHTML='';
-  accounts.forEach(a=>{
-    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
-  });
-
-  const sel=document.getElementById('target-account');
-  sel.innerHTML='';
-  accounts.forEach(a=>{
-    let o=document.createElement('option');
-    o.value=a.id;o.innerText=a.name;
-    sel.appendChild(o);
-  });
-}
-
+/* RENDER */
 function renderTransactions(){
   const tbody=document.getElementById('transactions-body');
   tbody.innerHTML='';
@@ -410,68 +365,16 @@ function renderTransactions(){
       <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
       <td>${t.date}</td>
       <td>${t.category}</td>
-      <td class="${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
+      <td class="${t.amount<0?'negative':'positive'}">€ ${Number(t.amount).toFixed(2)}</td>
       <td>${t.memo||''}</td>
     </tr>`;
   });
 
-  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
+  document.getElementById('total').innerText="Totaal: € "+total.toFixed(2);
 }
 
-function toggleConfirmed(){
-  showConfirmed=!showConfirmed;
-  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
-  renderTransactions();
-}
-
-function openModal(id=null){
-  editingId=id;
-  document.getElementById('modal').style.display='flex';
-
-  income.value='';expense.value='';
-
-  if(id){
-    let t=transactions.find(x=>x.id===id);
-    date.value=t.date;
-    category.value=t.category;
-    memo.value=t.memo;
-    status.value=t.status;
-
-    if(t.amount>=0) income.value=t.amount;
-    else expense.value=Math.abs(t.amount);
-
-    document.getElementById('target-account').value=t.accountId;
-  } else date.value=new Date().toISOString().split('T')[0];
-}
-
-function closeModal(){document.getElementById('modal').style.display='none';}
-
-function duplicateTransaction(){
-  if(!editingId) return;
-  let t=transactions.find(x=>x.id===editingId);
-  transactions.push({...t,id:Date.now().toString()});
-  renderTransactions();
-}
-
-function deleteTransaction(){
-  if(editingId && confirm('Wissen?')){
-    supabase.from('transactions').delete().eq('id', editingId);
-    loadTransactions();
-  }
-}
-
-function addAccount(){
-  let n=prompt("Naam rekening:");
-  if(n){accounts.push({id:Date.now().toString(),name:n});renderAccounts();}
-}
-
-function selectAccount(id){
-  activeAccountId=id;
-  renderAccounts();
-  renderTransactions();
-}
-
-renderAccounts();
+/* INIT */
+loadTransactions();
 
 </script>
 

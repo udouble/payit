@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.5 (supabase transactions)</title>
+  <title>Payit - v3.5 (supabase read-only)</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -143,17 +143,10 @@
       width:420px;
     }
 
-    label{
-      display:block;
-      margin-top:10px;
-      font-size:12px;
-      color:#aaa;
-    }
-
     input,select{
       width:100%;
       padding:10px;
-      margin-top:4px;
+      margin-top:10px;
       background:#1c1c1e;
       border:1px solid #3a3a3d;
       color:white;
@@ -249,24 +242,20 @@
 <div class="modal" id="modal">
 <div class="modal-content">
 
-<label>Datum</label>
 <input type="date" id="date">
 
-<label>Categorie</label>
 <div class="autocomplete-box">
-  <input type="text" id="category" oninput="filterCategories()">
+  <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
   <div id="category-list" class="autocomplete-list"></div>
 </div>
 
-<label>Memo</label>
-<input type="text" id="memo">
+<input type="text" id="memo" placeholder="Memo">
 
 <div class="amount-row">
   <input type="number" id="income" placeholder="Inkomsten">
   <input type="number" id="expense" placeholder="Uitgaven">
 </div>
 
-<label>Status</label>
 <select id="status">
   <option value="pending">Afwachtend</option>
   <option value="confirmed">Bevestigd</option>
@@ -287,13 +276,29 @@
 </div>
 </div>
 
+<div class="cat-modal" id="catModal">
+<div class="modal-content">
+  <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
+
+  <input type="text" id="newCat" placeholder="Nieuwe categorie">
+
+  <div class="btn-row">
+    <button class="btn save" onclick="addCategory()">Toevoegen</button>
+    <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
+  </div>
+</div>
+</div>
+
 <script>
 
-/* SUPABASE */
-const supabase = window.supabase.createClient(
-  "https://oubutokvbhfifihjgiiy.supabase.co",
-  "sb_publishable_duu2yC3c_-vwRMAam-LyXg_LLegwzo-"
-);
+/* SUPABASE VEILIG */
+let supabase = null;
+try {
+  supabase = window.supabase.createClient(
+    "https://oubutokvbhfifihjgiiy.supabase.co",
+    "sb_publishable_duu2yC3c_-vwRMAam-LyXg_LLegwzo-"
+  );
+} catch(e){}
 
 /* DATA */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
@@ -307,44 +312,73 @@ let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
 "Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"
 ];
 
-let accounts = [{ id:'1',name:'Privé'}];
-let transactions = [];
+let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
+let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
 
 let activeAccountId = accounts[0].id;
 let editingId=null;
 let showConfirmed=false;
 
-/* LOAD FROM SUPABASE */
-async function loadTransactions(){
-  const { data } = await supabase.from('transactions').select('*');
-  transactions = data || [];
-  renderTransactions();
+/* SUPABASE LOAD */
+async function loadFromSupabase(){
+  if(!supabase) return;
+  try{
+    const { data } = await supabase.from('transactions').select('*');
+    if(data){
+      transactions = data;
+      renderTransactions();
+    }
+  }catch(e){}
 }
 
-/* SAVE */
-async function saveTransaction(){
-  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
+/* REST IDENTIEK */
 
-  let data={
-    date:date.value,
-    category:category.value,
-    memo:memo.value,
-    amount,
-    status:status.value,
-    accountId:activeAccountId
-  };
+function filterCategories(){
+  const val=category.value.toLowerCase();
+  document.getElementById('category-list').innerHTML='';
+  categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
+    let d=document.createElement('div');
+    d.className='autocomplete-item';
+    d.innerText=c;
+    d.onclick=()=>{category.value=c;document.getElementById('category-list').innerHTML='';};
+    document.getElementById('category-list').appendChild(d);
+  });
+}
 
-  if(editingId){
-    await supabase.from('transactions').update(data).eq('id', editingId);
-  } else {
-    await supabase.from('transactions').insert(data);
+document.addEventListener('click',e=>{
+  if(!document.getElementById('category').contains(e.target))
+    document.getElementById('category-list').innerHTML='';
+});
+
+function openCatModal(){document.getElementById('catModal').style.display='flex';}
+function closeCatModal(){document.getElementById('catModal').style.display='none';}
+function addCategory(){
+  const val=document.getElementById('newCat').value.trim();
+  if(val && !categories.includes(val)){
+    categories.push(val);
+    localStorage.setItem('payit_categories',JSON.stringify(categories));
+    document.getElementById('newCat').value='';
   }
-
-  closeModal();
-  loadTransactions();
 }
 
-/* RENDER */
+function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
+
+function renderAccounts(){
+  const list=document.getElementById('accounts-list');
+  list.innerHTML='';
+  accounts.forEach(a=>{
+    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
+  });
+
+  const sel=document.getElementById('target-account');
+  sel.innerHTML='';
+  accounts.forEach(a=>{
+    let o=document.createElement('option');
+    o.value=a.id;o.innerText=a.name;
+    sel.appendChild(o);
+  });
+}
+
 function renderTransactions(){
   const tbody=document.getElementById('transactions-body');
   tbody.innerHTML='';
@@ -365,16 +399,93 @@ function renderTransactions(){
       <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
       <td>${t.date}</td>
       <td>${t.category}</td>
-      <td class="${t.amount<0?'negative':'positive'}">€ ${Number(t.amount).toFixed(2)}</td>
+      <td class="${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
       <td>${t.memo||''}</td>
     </tr>`;
   });
 
-  document.getElementById('total').innerText="Totaal: € "+total.toFixed(2);
+  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
 }
 
-/* INIT */
-loadTransactions();
+function toggleConfirmed(){
+  showConfirmed=!showConfirmed;
+  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
+  renderTransactions();
+}
+
+function openModal(id=null){
+  editingId=id;
+  document.getElementById('modal').style.display='flex';
+
+  income.value='';expense.value='';
+
+  if(id){
+    let t=transactions.find(x=>x.id===id);
+    date.value=t.date;
+    category.value=t.category;
+    memo.value=t.memo;
+    status.value=t.status;
+
+    if(t.amount>=0) income.value=t.amount;
+    else expense.value=Math.abs(t.amount);
+
+    document.getElementById('target-account').value=t.accountId;
+  } else date.value=new Date().toISOString().split('T')[0];
+}
+
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+function saveTransaction(){
+  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
+
+  let data={
+    id:editingId||Date.now().toString(),
+    date:date.value,
+    category:category.value,
+    memo:memo.value,
+    amount,
+    status:status.value,
+    accountId:editingId?document.getElementById('target-account').value:activeAccountId
+  };
+
+  if(editingId){
+    let i=transactions.findIndex(t=>t.id===editingId);
+    transactions[i]=data;
+  } else transactions.push(data);
+
+  localStorage.setItem('payit_transactions',JSON.stringify(transactions));
+  closeModal();
+  renderTransactions();
+}
+
+function duplicateTransaction(){
+  if(!editingId) return;
+  let t=transactions.find(x=>x.id===editingId);
+  transactions.push({...t,id:Date.now().toString()});
+  renderTransactions();
+}
+
+function deleteTransaction(){
+  if(editingId && confirm('Wissen?')){
+    transactions=transactions.filter(t=>t.id!==editingId);
+    renderTransactions();
+  }
+}
+
+function addAccount(){
+  let n=prompt("Naam rekening:");
+  if(n){accounts.push({id:Date.now().toString(),name:n});renderAccounts();}
+}
+
+function selectAccount(id){
+  activeAccountId=id;
+  renderAccounts();
+  renderTransactions();
+}
+
+renderAccounts();
+renderTransactions();
+loadFromSupabase();
 
 </script>
 

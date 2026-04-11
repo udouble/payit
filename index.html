@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payit - v3.4 (categorieën correct)</title>
+  <title>Payit - v3.5 (supabase)</title>
+
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
@@ -292,58 +295,33 @@
 
 <script>
 
-/* ENIGE WIJZIGING = JOUW VOLLEDIGE LIJST */
+/* SUPABASE INIT */
+const supabase = window.supabase.createClient(
+  "https://oubutokvbhfifihjgiiy.supabase.co",
+  "sb_publishable_duu2yC3c_-vwRMAam-LyXg_LLegwzo-"
+);
+
+/* IDENTIEK */
 let categories = JSON.parse(localStorage.getItem('payit_categories')) || [
-"Apple Pay",
-"Bancontact",
-"Belastingen",
-"BTW",
-"BTW-voorzien",
-"BMW",
-"BMW - onderhoud en verzekering",
-"Consensus",
-"Correctie",
-"Delhaize",
-"Dienstencheques",
-"Diversen",
-"Eneco",
-"Etentjes",
-"Invecon",
-"Kampen",
-"Kapper-voeten",
-"KBC",
-"Lening",
-"Maxem",
-"NOG TE ONTVANGEN",
-"Nutsvoorzieningen",
-"Onderhoud",
-"Opzij",
-"Opzij voor liq.reserve 01/2027",
-"Overige",
-"Overschrijving",
-"Paypal",
-"Pensioen",
-"Rekening courant",
-"Reserve",
-"Restant voor de maand",
-"Straetus",
-"Straetus-tweewekelijks",
-"Terugbetaling",
-"TotalEnergies",
-"Tuin",
-"Vanalles",
-"Vergoeding laden"
+"Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW","BMW - onderhoud en verzekering","Consensus","Correctie","Delhaize","Dienstencheques","Diversen","Eneco","Etentjes","Invecon","Kampen","Kapper-voeten","KBC","Lening","Maxem","NOG TE ONTVANGEN","Nutsvoorzieningen","Onderhoud","Opzij","Opzij voor liq.reserve 01/2027","Overige","Overschrijving","Paypal","Pensioen","Rekening courant","Reserve","Restant voor de maand","Straetus","Straetus-tweewekelijks","Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"
 ];
 
 let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
-let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
+let transactions = [];
 
 let activeAccountId = accounts[0].id;
 let editingId=null;
 let showConfirmed=false;
 
-/* REST IDENTIEK */
+/* LOAD FROM SUPABASE */
+async function loadTransactions(){
+  const { data } = await supabase.from('transactions').select('*');
+  transactions = data || [];
+  renderTransactions();
+}
+loadTransactions();
 
+/* autocomplete blijft identiek */
 function filterCategories(){
   const val=category.value.toLowerCase();
   document.getElementById('category-list').innerHTML='';
@@ -361,8 +339,28 @@ document.addEventListener('click',e=>{
     document.getElementById('category-list').innerHTML='';
 });
 
-/* rest ongewijzigd */
+/* save via supabase */
+async function saveTransaction(){
+  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
 
+  let data={
+    id:editingId||Date.now().toString(),
+    date:date.value,
+    category:category.value,
+    memo:memo.value,
+    amount,
+    status:status.value,
+    accountId:editingId?document.getElementById('target-account').value:activeAccountId
+  };
+
+  await supabase.from('transactions').upsert(data);
+
+  editingId=null;
+  closeModal();
+  loadTransactions();
+}
+
+/* rest 100% identiek */
 function openCatModal(){document.getElementById('catModal').style.display='flex';}
 function closeCatModal(){document.getElementById('catModal').style.display='none';}
 function addCategory(){
@@ -448,29 +446,6 @@ function openModal(id=null){
 
 function closeModal(){document.getElementById('modal').style.display='none';}
 
-function saveTransaction(){
-  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
-
-  let data={
-    id:editingId||Date.now().toString(),
-    date:date.value,
-    category:category.value,
-    memo:memo.value,
-    amount,
-    status:status.value,
-    accountId:editingId?document.getElementById('target-account').value:activeAccountId
-  };
-
-  if(editingId){
-    let i=transactions.findIndex(t=>t.id===editingId);
-    transactions[i]=data;
-  } else transactions.push(data);
-
-  localStorage.setItem('payit_transactions',JSON.stringify(transactions));
-  closeModal();
-  renderTransactions();
-}
-
 function duplicateTransaction(){
   if(!editingId) return;
   let t=transactions.find(x=>x.id===editingId);
@@ -480,8 +455,8 @@ function duplicateTransaction(){
 
 function deleteTransaction(){
   if(editingId && confirm('Wissen?')){
-    transactions=transactions.filter(t=>t.id!==editingId);
-    renderTransactions();
+    supabase.from('transactions').delete().eq('id', editingId);
+    loadTransactions();
   }
 }
 
@@ -497,7 +472,6 @@ function selectAccount(id){
 }
 
 renderAccounts();
-renderTransactions();
 
 </script>
 

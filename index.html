@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v4.6</title>
+  <title>Payit v4.7</title>
   <style>
     :root {
-      --bg-body: #121214;
-      --bg-sidebar: #1a1a1e;
-      --bg-card: #1c1c1f;
-      --bg-input: #252529;
-      --primary: #5c7cff; /* Zachtblauw */
+      --bg-body: #1e1e22; /* Warm Slate Grey */
+      --bg-sidebar: #252529;
+      --bg-card: #2d2d33;
+      --bg-input: #38383f;
+      --primary: #5c7cff; /* Soft Blue */
       --text-main: #f0f0f2;
       --text-muted: #9898a1;
-      --border: #2d2d33;
+      --border: #38383f;
       --positive: #4ade80;
       --negative: #f87171;
-      --orange: #fb923c; /* Oranje */
+      --orange: #fb923c;
     }
 
     body {
@@ -25,19 +25,17 @@
       background-color: var(--bg-body);
       color: var(--text-main);
       -webkit-font-smoothing: antialiased;
-      overscroll-behavior-y: contain;
-    }
-
-    /* Layout Structure */
-    .app-container {
-      display: flex;
-      height: 100vh;
       overflow: hidden;
     }
 
-    /* Sidebar (Mac/iPad permanent, iPhone hidden) */
+    .app-container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* SIDEBAR */
     .sidebar {
-      width: 280px;
+      width: 300px;
       background: var(--bg-sidebar);
       border-right: 1px solid var(--border);
       display: flex;
@@ -56,21 +54,22 @@
     .sidebar-content {
       flex: 1;
       overflow-y: auto;
-      padding: 15px;
+      padding: 12px;
     }
 
-    /* Main Area */
+    /* MAIN VIEW */
     .main-view {
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      background-color: var(--bg-body);
       position: relative;
     }
 
     .navbar {
-      background: rgba(18, 18, 20, 0.8);
-      backdrop-filter: blur(10px);
+      background: rgba(30, 30, 34, 0.85);
+      backdrop-filter: blur(12px);
       height: 64px;
       display: flex;
       align-items: center;
@@ -81,45 +80,50 @@
       z-index: 90;
     }
 
-    /* Account Cards (Sidebar) */
-    .account-card {
-      background: var(--bg-card);
-      border-radius: 12px;
+    /* ACCOUNT ITEMS (Sidebar) */
+    .acc-item {
       padding: 16px;
-      margin-bottom: 10px;
+      border-radius: 12px;
+      margin-bottom: 8px;
       cursor: pointer;
-      border: 1px solid var(--border);
-      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      background: transparent;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: all 0.2s;
     }
-    .account-card:hover { border-color: var(--primary); }
-    .account-card.active { border-color: var(--primary); background: rgba(92, 124, 255, 0.1); }
+    .acc-item:hover { background: var(--bg-card); }
+    .acc-item.active { 
+      background: rgba(92, 124, 255, 0.12); 
+      border-color: var(--primary); 
+    }
     .acc-name { font-weight: 600; font-size: 15px; color: var(--text-main); }
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 14px; font-weight: 700; }
 
-    /* Transactions View */
+    /* TRANSACTIONS CONTENT */
     .content-wrapper {
-      padding: 25px;
-      max-width: 1200px;
+      padding: 30px;
+      max-width: 1300px;
       margin: 0 auto;
       width: 100%;
       box-sizing: border-box;
     }
 
     .summary-hero {
-      background: linear-gradient(135deg, #1c1c1f 0%, #252529 100%);
+      background: linear-gradient(145deg, var(--bg-card), #35353b);
       border-radius: 20px;
-      padding: 30px;
+      padding: 25px 40px;
       margin-bottom: 30px;
       border: 1px solid var(--border);
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .hero-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
-    .hero-total { font-size: 38px; font-weight: 800; color: var(--orange); margin-top: 5px; }
+    .hero-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .hero-total { font-size: 32px; font-weight: 800; color: var(--orange); }
 
-    /* Transaction Item Modern */
+    /* TRANSACTION ROW (Single Line) */
     .tr-row {
       background: var(--bg-card);
       margin-bottom: 8px;
@@ -135,43 +139,28 @@
     .tr-row:hover { background: var(--bg-input); }
     .tr-status { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     
-    .tr-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+    .tr-info { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
     .tr-cat { font-weight: 600; font-size: 15px; color: var(--text-main); white-space: nowrap; }
     .tr-sep { color: var(--border); font-size: 12px; }
     .tr-memo { color: var(--text-muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
-    .tr-right { text-align: right; display: flex; align-items: center; gap: 20px; }
-    .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 16px; min-width: 100px; }
+    .tr-right { text-align: right; display: flex; align-items: center; gap: 25px; }
+    .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 16px; min-width: 110px; }
     .tr-date { font-size: 12px; color: var(--text-muted); width: 85px; }
 
-    /* Shortcuts Bar (iPhone only) */
+    /* iOS BOTTOM BAR (Shortcuts) */
     .iphone-tabs {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 80px;
-      background: rgba(26, 26, 30, 0.95);
-      backdrop-filter: blur(15px);
-      border-top: 1px solid var(--border);
-      display: none;
-      justify-content: space-around;
-      align-items: center;
-      padding-bottom: 20px;
+      position: fixed; bottom: 0; left: 0; right: 0; height: 80px;
+      background: var(--bg-sidebar); border-top: 1px solid var(--border);
+      display: none; justify-content: space-around; align-items: center; padding-bottom: 20px;
       z-index: 500;
     }
-    .tab-item {
-      background: none; border: none; color: var(--text-muted);
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      font-size: 10px; font-weight: 600;
-    }
-    .tab-item.active { color: var(--primary); }
-    .tab-icon { font-size: 22px; }
+    .tab-item { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 600; }
 
-    /* Modals & Buttons */
+    /* MODALS */
     .modal {
       display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.8); z-index: 1000;
+      background: rgba(0,0,0,0.7); z-index: 1000;
       align-items: center; justify-content: center;
     }
     .modal-content {
@@ -183,17 +172,14 @@
       background: var(--bg-input); border: 1px solid var(--border);
       border-radius: 12px; color: white; font-size: 16px; box-sizing: border-box;
     }
-    .btn {
-      padding: 16px; border-radius: 14px; font-weight: 700; border: none;
-      cursor: pointer; flex: 1; transition: opacity 0.2s;
-    }
+    .btn { padding: 16px; border-radius: 14px; font-weight: 700; border: none; cursor: pointer; flex: 1; }
     .btn-save { background: var(--primary); color: white; }
     .btn-cancel { background: var(--bg-input); color: var(--text-muted); }
-    .btn-danger { background: rgba(248, 113, 113, 0.1); color: var(--negative); }
 
-    /* Statuses */
-    .green { background: var(--positive); box-shadow: 0 0 8px var(--positive); }
-    .red { background: var(--negative); box-shadow: 0 0 8px var(--negative); }
+    .sync-label { font-size: 11px; color: var(--text-muted); text-align: center; margin: 15px 0; }
+
+    .green { background: var(--positive); box-shadow: 0 0 8px rgba(74, 222, 128, 0.3); }
+    .red { background: var(--negative); box-shadow: 0 0 8px rgba(248, 113, 113, 0.3); }
     .pos-text { color: var(--positive); }
     .neg-text { color: var(--negative); }
 
@@ -203,15 +189,15 @@
       font-size: 12px; color: var(--text-muted); opacity: 0; z-index: 10;
     }
 
-    /* Responsive Logic */
     @media (max-width: 850px) {
       .sidebar { display: none; }
       .iphone-tabs { display: flex; }
-      .app-container { flex-direction: column; }
-      .content-wrapper { padding-bottom: 100px; }
+      .content-wrapper { padding: 15px; padding-bottom: 100px; }
       .tr-info { flex-direction: column; align-items: flex-start; gap: 2px; }
       .tr-sep { display: none; }
       .tr-memo { font-size: 12px; }
+      .tr-right { gap: 10px; }
+      .summary-hero { padding: 20px; flex-direction: column; gap: 10px; text-align: center; }
       .modal { align-items: flex-end; }
       .modal-content { border-radius: 24px 24px 0 0; width: 100%; max-width: 100%; }
     }
@@ -227,55 +213,40 @@
     </div>
     <div class="sidebar-content" id="sidebar-accounts">
       </div>
-    <div style="padding: 15px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); text-align: center;">
-      <span id="sync-label">Sync: OK</span>
-    </div>
+    <div class="sync-label" id="sync-label">Sync: OK</div>
   </aside>
 
   <main class="main-view" id="main-scroll">
     <div id="pull-indicator">Laat los om te verversen...</div>
     
     <nav class="navbar">
-      <div id="nav-title" style="font-weight: 700; font-size: 18px;">Dashboard</div>
+      <div id="nav-title" style="font-weight: 700; font-size: 18px;">Laden...</div>
       <div style="flex: 1;"></div>
-      <button onclick="openModal()" class="btn-save" style="padding: 8px 16px; border-radius: 10px; font-size: 14px; border: none; cursor:pointer;">+ Nieuw</button>
+      <button onclick="openModal()" class="btn-save" style="padding: 10px 20px; border-radius: 12px; font-size: 14px; border: none; cursor:pointer;">+ Nieuw</button>
     </nav>
 
     <div class="content-wrapper">
-      <div id="dashboard-view">
-        <h2 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Mijn Rekeningen</h2>
-        <div id="accounts-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-          </div>
-      </div>
-
-      <div id="transaction-view" style="display: none;">
+      <div id="transaction-view">
         <div class="summary-hero">
           <div class="hero-label">Huidig Saldo</div>
           <div id="total" class="hero-total">€ 0,00</div>
         </div>
         
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <span style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Transacties</span>
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px;">
+          <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Historie</span>
           <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 13px; font-weight: 600; cursor:pointer;">Toon bevestigd</button>
         </div>
         
-        <div id="transactions-container">
-          </div>
+        <div id="transactions-container"></div>
       </div>
     </div>
   </main>
 </div>
 
 <div class="iphone-tabs">
-  <button class="tab-item active" onclick="showDashboard()">
-    <span class="tab-icon">🏠</span><span>Home</span>
-  </button>
-  <button class="tab-item" onclick="openModal()">
-    <span class="tab-icon" style="color:var(--primary);">⊕</span><span>Nieuw</span>
-  </button>
-  <button class="tab-item" onclick="loadFromCloud()">
-    <span class="tab-icon">🔄</span><span>Sync</span>
-  </button>
+  <button class="tab-item" onclick="loadFromCloud()">🔄<br>Sync</button>
+  <button class="tab-item" onclick="openModal()" style="color:var(--primary);">⊕<br>Nieuw</button>
+  <button class="tab-item" onclick="openAccountModal()">⚙️<br>Rekeningen</button>
 </div>
 
 <div class="modal" id="modal">
@@ -296,28 +267,27 @@
       <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
     </div>
     <div class="btn-row" id="edit-btns" style="display:none;">
-        <button class="btn btn-danger" onclick="deleteTransaction()">Wissen</button>
-        <button class="btn" style="background:var(--bg-input); color:var(--primary);" onclick="duplicateTransaction()">Kopieer</button>
+        <button class="btn" style="background:rgba(248, 113, 113, 0.15); color:var(--negative);" onclick="deleteTransaction()">Wissen</button>
+        <button class="btn" style="background:var(--bg-input); color:var(--primary);" onclick="duplicateTransaction()">Kopie</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="accModal">
   <div class="modal-content">
-    <h3 id="accModalTitle" style="color:var(--primary);">Rekening</h3>
+    <h3 id="accModalTitle">Rekening Management</h3>
     <input type="text" id="newAccName" placeholder="Naam rekening">
     <div class="btn-row">
-      <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
+      <button class="btn btn-cancel" onclick="closeAccountModal()">Sluiten</button>
       <button class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
     </div>
     <div class="btn-row" id="acc-delete-row" style="display:none;">
-        <button class="btn btn-danger" onclick="deleteAccount()">Verwijderen</button>
+        <button class="btn" style="background:rgba(248, 113, 113, 0.15); color:var(--negative);" onclick="deleteAccount()">Verwijder Rekening</button>
     </div>
   </div>
 </div>
 
 <script>
-/** CONFIGURATIE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
@@ -330,56 +300,39 @@ let editingId = null;
 let editingAccountId = null;
 let showConfirmed = false;
 
-/** NAVIGATION **/
-function showDashboard() {
-    activeAccountId = null;
-    document.getElementById('dashboard-view').style.display = 'block';
-    document.getElementById('transaction-view').style.display = 'none';
-    document.getElementById('nav-title').innerText = "Dashboard";
-    document.querySelectorAll('.tab-item')[0].classList.add('active');
-    renderAccounts();
-}
+function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 
-function showTransactions(accId) {
+function selectAccount(accId) {
     activeAccountId = accId;
     const acc = accounts.find(a => a.id === accId);
-    document.getElementById('dashboard-view').style.display = 'none';
-    document.getElementById('transaction-view').style.display = 'block';
     document.getElementById('nav-title').innerText = acc.name;
-    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    renderAccounts();
     renderTransactions();
 }
 
-/** RENDER **/
 function renderAccounts() {
     const sidebar = document.getElementById('sidebar-accounts');
-    const grid = document.getElementById('accounts-grid');
-    sidebar.innerHTML = ''; grid.innerHTML = '';
-
+    sidebar.innerHTML = '';
     accounts.forEach(acc => {
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
-        const cardHTML = `
-            <div class="account-card ${activeAccountId === acc.id ? 'active' : ''}" onclick="showTransactions('${acc.id}')">
-                <div class="account-info">
-                    <span class="acc-name">${acc.name}</span>
-                    <span class="acc-bal">${formatCurrency(bal)}</span>
-                </div>
-                <div onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="color:var(--text-muted); padding:5px;">⚙️</div>
-            </div>
+        const div = document.createElement('div');
+        div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
+        div.onclick = () => selectAccount(acc.id);
+        div.innerHTML = `
+            <span class="acc-name">${acc.name}</span>
+            <span class="acc-bal">${formatCurrency(bal)}</span>
+            <span onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="margin-left:10px; opacity:0.5;">⚙️</span>
         `;
-        sidebar.innerHTML += cardHTML;
-        grid.innerHTML += cardHTML;
+        sidebar.appendChild(div);
     });
 }
 
 function renderTransactions() {
     const container = document.getElementById('transactions-container');
     container.innerHTML = '';
-    
     let filtered = transactions.filter(t => t.accountId === activeAccountId);
     let pending = filtered.filter(t => t.status !== 'confirmed');
     let confirmed = filtered.filter(t => t.status === 'confirmed');
-    
     let displayList = showConfirmed ? [...pending, ...confirmed] : pending;
     let total = displayList.reduce((sum, t) => sum + Number(t.amount), 0);
 
@@ -402,16 +355,13 @@ function renderTransactions() {
     document.getElementById('total').innerText = formatCurrency(total);
 }
 
-function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
-
-/** MODALS **/
+/** MODALS & ACTIONS (Zelfde logica als v4.6) **/
 function openModal(id = null) {
     editingId = id;
     document.getElementById('modal').style.display = 'flex';
     document.getElementById('edit-btns').style.display = id ? 'flex' : 'none';
     document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     document.getElementById('cat-list').innerHTML = categories.map(c => `<option value="${c}">`).join('');
-
     if (id) {
         let t = transactions.find(x => x.id === id);
         document.getElementById('date').value = t.date;
@@ -429,34 +379,23 @@ function openModal(id = null) {
     }
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-function openAccountModal(accId = null) {
-    editingAccountId = accId;
+function openAccountModal(id = null) {
+    editingAccountId = id;
     document.getElementById('accModal').style.display = 'flex';
-    document.getElementById('acc-delete-row').style.display = accId ? 'block' : 'none';
-    if(accId) document.getElementById('newAccName').value = accounts.find(a => a.id === accId).name;
-    else document.getElementById('newAccName').value = '';
+    document.getElementById('acc-delete-row').style.display = id ? 'block' : 'none';
+    document.getElementById('newAccName').value = id ? accounts.find(a => a.id === id).name : '';
 }
 function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }
 
-/** ACTIONS **/
 async function saveTransaction() {
     let amt = document.getElementById('income').value ? parseFloat(document.getElementById('income').value) : -parseFloat(document.getElementById('expense').value || 0);
-    let data = {
-        id: editingId || Date.now().toString(),
-        date: document.getElementById('date').value,
-        category: document.getElementById('category').value,
-        memo: document.getElementById('memo').value,
-        amount: amt, status: document.getElementById('status').value,
-        accountId: document.getElementById('target-account').value
-    };
+    let data = { id: editingId || Date.now().toString(), date: document.getElementById('date').value, category: document.getElementById('category').value, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
     if (editingId) transactions[transactions.findIndex(t => t.id === editingId)] = data;
     else transactions.push(data);
-    closeModal(); syncToCloud(); activeAccountId ? renderTransactions() : renderAccounts();
+    closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
 }
-
-function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); } }
-function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); }
+function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
+function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
 
 function handleAccountAction() {
     const name = document.getElementById('newAccName').value;
@@ -465,55 +404,42 @@ function handleAccountAction() {
     else accounts.push({ id: Date.now().toString(), name });
     closeAccountModal(); syncToCloud(); renderAccounts();
 }
-
 function deleteAccount() {
-    if(confirm('Ben je echt zeker? Alle transacties gaan verloren.')) {
-        if(confirm('LAATSTE BEVESTIGING: Weet je het 100% zeker?')) {
-            transactions = transactions.filter(t => t.accountId !== editingAccountId);
-            accounts = accounts.filter(a => a.id !== editingAccountId);
-            closeAccountModal(); syncToCloud(); renderAccounts(); showDashboard();
-        }
+    if(confirm('Echt zeker? Data gaat verloren.')) {
+        transactions = transactions.filter(t => t.accountId !== editingAccountId);
+        accounts = accounts.filter(a => a.id !== editingAccountId);
+        closeAccountModal(); syncToCloud(); renderAccounts();
+        if (accounts.length > 0) selectAccount(accounts[0].id);
     }
 }
+function toggleConfirmed() { showConfirmed = !showConfirmed; document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; renderTransactions(); }
 
-function toggleConfirmed() {
-    showConfirmed = !showConfirmed;
-    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
-    renderTransactions();
-}
-
-/** CLOUD SYNC **/
+/** CLOUD & SYNC **/
 async function syncToCloud() {
     document.getElementById('sync-label').innerText = "Sync: Opslaan...";
     try {
-        await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, {
-            method: 'PATCH',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: { categories, accounts, transactions } })
-        });
+        await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions } }) });
         document.getElementById('sync-label').innerText = "Sync: OK";
     } catch (e) { document.getElementById('sync-label').innerText = "Sync: Offline"; }
 }
-
 async function loadFromCloud() {
     document.getElementById('sync-label').innerText = "Sync: Laden...";
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
         const result = await response.json();
         if (result?.[0]?.data) {
             const d = result[0].data;
             if(d.categories) categories = d.categories;
             if(d.accounts) accounts = d.accounts;
             if(d.transactions) transactions = d.transactions;
-            activeAccountId ? renderTransactions() : renderAccounts();
+            if (!activeAccountId && accounts.length > 0) selectAccount(accounts[0].id);
+            else { renderAccounts(); renderTransactions(); }
             document.getElementById('sync-label').innerText = "Sync: OK";
         }
     } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }
 
-/** SHORTCUTS & KEYS **/
+/** KEYS & PULL **/
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         if (document.getElementById('modal').style.display === 'flex') saveTransaction();
@@ -522,19 +448,14 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { closeModal(); closeAccountModal(); }
 });
 
-/** PULL TO REFRESH **/
 let startY = 0; let pullDist = 0;
 const scrollArea = document.getElementById('main-scroll');
 const indicator = document.getElementById('pull-indicator');
-
 scrollArea.addEventListener('touchstart', (e) => { if (scrollArea.scrollTop === 0) startY = e.touches[0].pageY; else startY = 0; });
 scrollArea.addEventListener('touchmove', (e) => {
     if (startY === 0) return;
     pullDist = e.touches[0].pageY - startY;
-    if (pullDist > 0 && pullDist < 100) {
-        indicator.style.opacity = pullDist / 100;
-        indicator.style.transform = `translateY(${pullDist/2}px)`;
-    }
+    if (pullDist > 0 && pullDist < 100) { indicator.style.opacity = pullDist / 100; indicator.style.transform = `translateY(${pullDist/2}px)`; }
 });
 scrollArea.addEventListener('touchend', async () => {
     if (pullDist > 70) await loadFromCloud();
@@ -544,6 +465,5 @@ scrollArea.addEventListener('touchend', async () => {
 
 loadFromCloud();
 </script>
-
 </body>
 </html>

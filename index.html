@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.8 - STABILITY FIX</title>
+  <title>Payit v2.9 - HEADER BUTTON ALIGNMENT FIX</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -36,13 +36,21 @@
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 13px; font-weight: 700; }
 
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-    .header-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+    
+    /* HEADER FIX */
+    .header-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
     .header-card { flex: 1; background: var(--bg-card); border-radius: 16px; padding: 12px 20px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
     
+    .header-btns-aside { 
+        display: flex; 
+        flex-direction: row; /* Dwingt horizontale stand */
+        gap: 8px; 
+        align-items: center; 
+    }
+
     .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
 
-    /* COMPACTE TRANSACTIE RIJ */
     .tr-row { 
       background: var(--bg-card); margin-bottom: 4px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); 
       display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden;
@@ -55,9 +63,10 @@
     .tr-memo-list { font-size: 15px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; opacity: 0.8; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; text-align: right; min-width: 100px; }
 
-    .aside-btn { height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.2s; }
+    .aside-btn { height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
     .aside-theme { width: 32px; background: var(--theme-btn-bg); color: var(--theme-btn-text); font-size: 16px; }
     .aside-add { padding: 0 12px; background: var(--primary); color: white; font-size: 13px; font-weight: 700; }
+    .aside-btn:hover { opacity: 0.8; }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
@@ -84,8 +93,8 @@
       .sidebar.open { transform: translateX(0); }
       .iphone-tabs { display: flex; }
       .content-wrapper { padding: 8px; padding-bottom: 85px; }
-      .navbar { display: flex; background: var(--bg-sidebar); height: 50px; align-items: center; padding: 0 15px; border-bottom: 1px solid var(--border); justify-content: space-between; }
       .header-btns-aside { display: none; }
+      .header-card { flex-direction: column; align-items: center; padding: 12px; gap: 4px; }
       .modal { align-items: flex-end; }
       .modal-content { border-radius: 20px 20px 0 0; width: 100%; max-width: 100%; padding-bottom: 40px; }
       .tr-row { height: auto; padding: 12px 14px; }
@@ -106,7 +115,7 @@
           <button class="aside-btn" style="background:var(--bg-card); border:1px solid var(--border); color:var(--primary); width:32px; font-size:18px;" onclick="openAccountModal()">+</button>
       </div>
     </div>
-    <div class="sidebar-content" id="sidebar-accounts">Laden...</div>
+    <div class="sidebar-content" id="sidebar-accounts"></div>
     <div style="padding: 10px; text-align: center; font-size: 10px; color: var(--text-muted); border-top: 1px solid var(--border);" id="sync-label">Sync: OK</div>
   </aside>
 
@@ -129,7 +138,7 @@
 
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 5px;">
             <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span>
-            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Filter...</button>
+            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Laden...</button>
         </div>
         <div id="transactions-container"></div>
       </div>
@@ -181,7 +190,7 @@ const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
 
-let categories = ["Apple Pay","BTW","Delhaize","Huur","Loon","Opzij"];
+let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Kampen","Kapper","Lening","Pensioen","Tuin","Opzij"];
 let accounts = [];
 let transactions = [];
 let activeAccountId = null;
@@ -228,9 +237,7 @@ function renderTransactions() {
     let list = transactions.filter(t => t.accountId === activeAccountId);
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
     let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
-    
     displayList.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.date) - new Date(a.date));
-    
     displayList.forEach(t => {
         container.innerHTML += `
         <div class="tr-row" onclick="openModal('${t.id}')">

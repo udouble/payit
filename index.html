@@ -3,22 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v5.5 - FINAL NAVIGATION & PERSISTENT STATE</title>
+  <title>Payit v5.6 - THEME ENGINE (DUAL TONE DARK)</title>
   <style>
+    /* 1. HET DEFINIËREN VAN DE THEMA'S (CSS VARIABELEN) */
+    
+    /* STANDAARD: LICHT THEMA */
     :root {
       --bg-body: #f1f5f9; 
       --bg-sidebar: #ffffff; 
       --bg-card: #ffffff;
       --bg-input: #f8fafc;
-      --primary: #3f8cff; 
+      --primary: #3f8cff; /* Helderblauw */
       --text-main: #1e293b; 
       --text-muted: #64748b; 
       --border: #e2e8f0; 
       --positive: #10b981; 
       --negative: #ef4444; 
-      --orange: #f97316; 
+      --orange: #f97316; /* Actief oranje */
+      
+      /* Specifiek voor de theme switch */
+      --theme-btn-bg: #e2e8f0;
+      --theme-btn-text: #64748b;
     }
 
+    /* DONKER THEMA (Deep Navy & Slate, geen zwart) */
+    [data-theme="dark"] {
+      --bg-body: #0f172a; /* Deep Navy */
+      --bg-sidebar: #1e293b; /* Slate Navy */
+      --bg-card: #1e293b;
+      --bg-input: #334155;
+      --primary: #60a5fa; /* Zachtblauw */
+      --text-main: #f1f5f9; 
+      --text-muted: #94a3b8; 
+      --border: #334155; 
+      --positive: #34d399; 
+      --negative: #f87171; 
+      --orange: #fb923c; /* Levendig oranje */
+      
+      --theme-btn-bg: #334155;
+      --theme-btn-text: #f1f5f9;
+    }
+
+    /* 2. BASIS STYLING */
     body {
       margin: 0;
       font-family: -apple-system, system-ui, sans-serif;
@@ -27,6 +53,7 @@
       -webkit-font-smoothing: antialiased;
       overflow: hidden;
       overscroll-behavior-y: contain;
+      transition: background-color 0.3s ease, color 0.3s ease; /* Zachte overgang */
     }
 
     .app-container {
@@ -42,7 +69,7 @@
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
       z-index: 1000;
     }
 
@@ -67,10 +94,11 @@
       flex-direction: column;
       background-color: var(--bg-body);
       position: relative;
+      transition: background-color 0.3s ease;
     }
 
     .navbar {
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.9);
       backdrop-filter: blur(12px);
       height: 64px;
       display: flex;
@@ -80,7 +108,11 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
+    /* RGB helper voor navbar blur effect */
+    body:not([data-theme="dark"]) .navbar { --bg-card-rgb: 255, 255, 255; }
+    body[data-theme="dark"] .navbar { --bg-card-rgb: 30, 41, 59; }
 
     /* ACCOUNT ITEMS */
     .acc-item {
@@ -97,13 +129,15 @@
     }
     .acc-item:hover { background: var(--bg-body); }
     .acc-item.active { 
-      background: #f8fafc;
+      background: rgba(63, 140, 255, 0.1);
       border-color: var(--primary); 
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
+    body[data-theme="dark"] .acc-item.active { background: rgba(96, 165, 250, 0.15); }
+
     .acc-name { font-weight: 700; font-size: 14px; color: var(--text-main); line-height: 1.2; padding-right: 25px; }
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 13px; font-weight: 700; }
-    .acc-settings { position: absolute; right: 12px; top: 18px; opacity: 0.3; font-size: 14px; }
+    .acc-settings { position: absolute; right: 12px; top: 18px; opacity: 0.3; font-size: 14px; color: var(--text-main); }
 
     .content-wrapper {
       padding: 20px;
@@ -123,6 +157,7 @@
       flex-direction: column;
       align-items: center;
       box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
     .hero-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
     .hero-total { font-size: 32px; font-weight: 800; color: var(--orange); margin-top: 5px; }
@@ -139,9 +174,9 @@
       cursor: pointer;
       position: relative;
       overflow: hidden;
-      transition: background 0.2s ease;
+      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
     }
-    .tr-row:hover { background: var(--bg-input); }
+    .tr-row:hover { background: var(--bg-input); transform: translateY(-1px); }
 
     .tr-status-line {
         position: absolute;
@@ -162,17 +197,19 @@
     /* MODALS & BUTTON GRID */
     .modal {
       display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4); z-index: 2000;
+      background: rgba(0,0,0,0.5); z-index: 2000;
       align-items: center; justify-content: center;
     }
     .modal-content {
       background: var(--bg-card); width: 90%; max-width: 480px;
       padding: 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
     }
     input, select {
       width: 100%; padding: 14px; margin-top: 10px;
       background: var(--bg-input); border: 1px solid var(--border);
       border-radius: 12px; color: var(--text-main); font-size: 16px; box-sizing: border-box;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     }
     .btn-grid { 
       display: grid; 
@@ -182,9 +219,25 @@
     }
     .btn { padding: 16px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 15px; text-align: center; }
     .btn-save { background: var(--primary); color: white; }
-    .btn-cancel { background: #f1f5f9; color: var(--text-muted); }
-    .btn-danger { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
-    .btn-dup { background: #e2e8f0; color: var(--text-main); }
+    .btn-cancel { background: var(--bg-input); color: var(--text-muted); }
+    .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--negative); border: 1px solid rgba(239, 68, 68, 0.2); }
+    .btn-dup { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); }
+
+    /* THEME SWITCH BUTTON */
+    .theme-switch {
+        background: var(--theme-btn-bg);
+        color: var(--theme-btn-text);
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
 
     /* PULL TO REFRESH */
     #pull-indicator { 
@@ -212,7 +265,7 @@
       left: 0; 
       right: 0; 
       height: 85px;
-      background: rgba(255, 255, 255, 0.95); 
+      background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.95); 
       backdrop-filter: blur(20px);
       border-top: 1px solid var(--border);
       display: none; 
@@ -221,6 +274,7 @@
       padding-top: 12px;
       z-index: 1100;
       box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
     .tab-item { 
       background: none; 
@@ -250,6 +304,13 @@
       .navbar { padding: 0 15px; }
       .modal { align-items: flex-end; }
       .modal-content { border-radius: 24px 24px 0 0; width: 100%; max-width: 100%; padding: 25px;}
+      
+      /* Theme switch verhuizen naar sidebar header op mobiel */
+      .navbar .theme-switch { display: none; }
+      .sidebar-header .theme-switch { display: flex; }
+    }
+    @media (min-width: 851px) {
+        .sidebar-header .theme-switch { display: none; }
     }
   </style>
 </head>
@@ -261,7 +322,10 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <span style="font-weight: 800; color: var(--primary); font-size: 22px;">Payit</span>
-      <button onclick="openAccountModal()" style="background:var(--bg-card); border:1px solid var(--border); color:var(--primary); width:36px; height:36px; border-radius:10px; cursor:pointer; font-size: 20px;">+</button>
+      <div style="display:flex; gap:8px;">
+          <button class="theme-switch" onclick="toggleTheme()" id="theme-icon-mobile">☀️</button>
+          <button onclick="openAccountModal()" style="background:var(--bg-card); border:1px solid var(--border); color:var(--primary); width:36px; height:36px; border-radius:10px; cursor:pointer; font-size: 20px;">+</button>
+      </div>
     </div>
     <div class="sidebar-content" id="sidebar-accounts"></div>
     <div style="padding: 15px; text-align: center; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border);" id="sync-label">Sync: OK</div>
@@ -270,7 +334,10 @@
   <main class="main-view" id="main-scroll">
     <nav class="navbar">
       <div id="nav-title" style="font-weight: 800; font-size: 17px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Laden...</div>
-      <button onclick="openModal()" style="background: var(--primary); color: white; padding: 10px 18px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor:pointer;">+ Nieuw</button>
+      <div style="display:flex; gap:10px; align-items:center;">
+          <button class="theme-switch" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
+          <button onclick="openModal()" style="background: var(--primary); color: white; padding: 10px 18px; border-radius: 12px; font-size: 14px; font-weight: 700; border: none; cursor:pointer;">+ Nieuw</button>
+      </div>
     </nav>
 
     <div class="content-wrapper">
@@ -340,6 +407,7 @@
 </div>
 
 <script>
+/** CONFIGURATIE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
@@ -353,6 +421,26 @@ let showConfirmed = false;
 
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+/* 3. THEME ENGINE LOGICA (Nieuw) */
+function applyTheme(theme) {
+    document.body.setAttribute('data-theme', theme);
+    const icon = theme === 'dark' ? '🌙' : '☀️';
+    document.getElementById('theme-icon-desktop').innerText = icon;
+    document.getElementById('theme-icon-mobile').innerText = icon;
+    localStorage.setItem('payit-theme', theme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.body.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    applyTheme(newTheme);
+}
+
+// Initialiseer thema
+const savedTheme = localStorage.getItem('payit-theme') || 'light';
+applyTheme(savedTheme);
+
 
 function selectAccount(accId) {
     activeAccountId = accId;
@@ -433,7 +521,6 @@ function openModal(id = null) {
     }
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
 function openAccountModal(id = null) {
     editingAccountId = id;
     document.getElementById('accModal').style.display = 'flex';

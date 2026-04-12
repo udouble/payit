@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v1.5 - COMPACTE KLIKBARE KNOPPEN</title>
+  <title>Payit v1.6 - STATUS FILTER FIX</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -80,12 +80,11 @@
     .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--negative); grid-column: 1; grid-row: 2; }
     .btn-dup    { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); grid-column: 2; grid-row: 2; }
 
-    /* KNOP STYLING NAAST HEADER - FIXED AREA */
     .aside-btn { 
         height: 42px; padding: 0 16px; border-radius: 12px; border: none; cursor: pointer; 
         font-weight: 700; display: flex; align-items: center; justify-content: center;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: opacity 0.2s;
-        pointer-events: auto; /* Zorgt dat de knop klikbaar is */
+        pointer-events: auto;
     }
     .aside-btn:hover { opacity: 0.9; }
     .aside-theme { background: var(--theme-btn-bg); color: var(--text-main); font-size: 18px; min-width: 42px; }
@@ -259,7 +258,7 @@ function parseNumericValue(str) { if (!str) return 0; let clean = str.toString()
 function applyTheme(theme) { 
     document.body.setAttribute('data-theme', theme); 
     const icon = theme === 'dark' ? '🌙' : '☀️';
-    ['theme-icon-mobile','theme-icon-iphone','theme-icon-fab'].forEach(id => {
+    ['theme-icon-mobile','theme-icon-desktop','theme-icon-iphone','theme-icon-fab'].forEach(id => {
         let el = document.getElementById(id); if(el) el.innerText = icon;
     });
     localStorage.setItem('payit-theme', theme); 
@@ -322,10 +321,15 @@ function renderAccounts() {
 function renderTransactions() {
     const container = document.getElementById('transactions-container'); container.innerHTML = '';
     let allAccT = transactions.filter(t => t.accountId === activeAccountId);
+    
+    // De filter status ophalen uit localStorage of default op false
     const savedFilter = localStorage.getItem('payit-filter-showConfirmed');
     if (savedFilter !== null) showConfirmed = (savedFilter === 'true');
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
+
+    // Filtering toepassen
     let displayList = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
+    
     displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
         container.innerHTML += `<div class="tr-row" onclick="openModal('${t.id}')"><div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div class="tr-left-side"><div class="tr-header"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span></div><span class="tr-memo">${t.memo || '-'}</span></div><div class="tr-right-side"><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span></div></div>`;
     });
@@ -358,7 +362,7 @@ function closeAccountModal() { document.getElementById('accModal').style.display
 
 async function saveTransaction() {
     const catInput = document.getElementById('category').value.trim(); if (!catInput) return;
-    if (!categories.includes(catInput)) { if (confirm(`Toevoegen?`)) { categories.push(catInput); updateCategoryDatalist(); } else return; }
+    if (!categories.includes(catInput)) { if (confirm(`Categorie "${catInput}" toevoegen?`)) { categories.push(catInput); updateCategoryDatalist(); } else return; }
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
     let data = { id: editingId || Date.now().toString(), date: document.getElementById('date').value, category: catInput, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
     if (editingId) transactions[transactions.findIndex(t => t.id === editingId)] = data; else transactions.push(data);

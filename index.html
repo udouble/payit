@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v1.6 - STATUS FILTER FIX</title>
+  <title>Payit v1.6 - BUTTON TEMPLATE FIX</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -80,15 +80,19 @@
     .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--negative); grid-column: 1; grid-row: 2; }
     .btn-dup    { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); grid-column: 2; grid-row: 2; }
 
+    /* KNOP STYLING GEBASEERD OP SIDEBAR SJABLOON */
     .aside-btn { 
-        height: 42px; padding: 0 16px; border-radius: 12px; border: none; cursor: pointer; 
-        font-weight: 700; display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: opacity 0.2s;
-        pointer-events: auto;
+        height: 32px; border-radius: 8px; border: none; cursor: pointer; 
+        display: flex; align-items: center; justify-content: center;
+        transition: opacity 0.2s; box-shadow: none;
     }
-    .aside-btn:hover { opacity: 0.9; }
-    .aside-theme { background: var(--theme-btn-bg); color: var(--text-main); font-size: 18px; min-width: 42px; }
-    .aside-add { background: var(--primary); color: white; font-size: 13px; }
+    .aside-theme { 
+        width: 32px; background: var(--theme-btn-bg); color: var(--theme-btn-text); font-size: 16px; 
+    }
+    .aside-add { 
+        padding: 0 12px; background: var(--primary); color: white; font-size: 13px; font-weight: 700;
+    }
+    .aside-btn:hover { opacity: 0.8; }
 
     .iphone-tabs { 
         position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); 
@@ -157,7 +161,7 @@
             </div>
 
             <div class="header-btns-aside">
-                <button class="aside-btn aside-theme" onclick="toggleTheme()" id="theme-icon-fab" title="Thema wijzigen">☀️</button>
+                <button class="aside-btn aside-theme" onclick="toggleTheme()" id="theme-icon-fab">☀️</button>
                 <button class="aside-btn aside-add" onclick="openModal()">+ Nieuw</button>
             </div>
         </div>
@@ -322,12 +326,10 @@ function renderTransactions() {
     const container = document.getElementById('transactions-container'); container.innerHTML = '';
     let allAccT = transactions.filter(t => t.accountId === activeAccountId);
     
-    // De filter status ophalen uit localStorage of default op false
     const savedFilter = localStorage.getItem('payit-filter-showConfirmed');
     if (savedFilter !== null) showConfirmed = (savedFilter === 'true');
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
 
-    // Filtering toepassen
     let displayList = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
     
     displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {

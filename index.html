@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.9 - HEADER BUTTON ALIGNMENT FIX</title>
+  <title>Payit v3.0 - IPAD HORIZONTAL FIX</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -36,34 +36,36 @@
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 13px; font-weight: 700; }
 
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-    
-    /* HEADER FIX */
     .header-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
     .header-card { flex: 1; background: var(--bg-card); border-radius: 16px; padding: 12px 20px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
     
-    .header-btns-aside { 
-        display: flex; 
-        flex-direction: row; /* Dwingt horizontale stand */
-        gap: 8px; 
-        align-items: center; 
-    }
+    .header-btns-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; }
 
     .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
 
+    /* COMPACTE TRANSACTIE RIJ - IPAD/MAC */
     .tr-row { 
       background: var(--bg-card); margin-bottom: 4px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); 
       display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden;
       height: 50px; box-sizing: border-box;
     }
     .tr-status-line { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-    .tr-main-content { display: flex; flex: 1; align-items: center; gap: 20px; overflow: hidden; }
+    
+    .tr-main-content { 
+      display: flex; flex: 1; align-items: center; gap: 20px; overflow: hidden; 
+    }
     .tr-date { font-size: 11px; color: var(--text-muted); font-weight: 700; font-family: "SF Mono", monospace; min-width: 85px; }
-    .tr-cat { font-weight: 700; font-size: 14px; color: var(--text-main); min-width: 140px; white-space: nowrap; }
-    .tr-memo-list { font-size: 15px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; opacity: 0.8; }
+    .tr-cat { font-weight: 700; font-size: 14px; color: var(--text-main); min-width: 150px; white-space: nowrap; }
+    
+    /* MEMO TEKST NAAST CATEGORIE */
+    .tr-memo-list { 
+      font-size: 15px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+      flex: 1; opacity: 0.8; 
+    }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; text-align: right; min-width: 100px; }
 
-    .aside-btn { height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
+    .aside-btn { height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.2s; }
     .aside-theme { width: 32px; background: var(--theme-btn-bg); color: var(--theme-btn-text); font-size: 16px; }
     .aside-add { padding: 0 12px; background: var(--primary); color: white; font-size: 13px; font-weight: 700; }
     .aside-btn:hover { opacity: 0.8; }
@@ -88,15 +90,16 @@
     .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
     .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
 
+    /* MEDIA QUERIES AANGEPAST VOOR IPAD */
     @media (max-width: 850px) {
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
       .iphone-tabs { display: flex; }
-      .content-wrapper { padding: 8px; padding-bottom: 85px; }
       .header-btns-aside { display: none; }
-      .header-card { flex-direction: column; align-items: center; padding: 12px; gap: 4px; }
-      .modal { align-items: flex-end; }
-      .modal-content { border-radius: 20px 20px 0 0; width: 100%; max-width: 100%; padding-bottom: 40px; }
+    }
+
+    /* Alleen op hele smalle schermen (smalle smartphone staand) memo onder categorie */
+    @media (max-width: 600px) {
       .tr-row { height: auto; padding: 12px 14px; }
       .tr-main-content { flex-direction: column; align-items: flex-start; gap: 2px; }
       .tr-memo-list { white-space: normal; }
@@ -237,7 +240,9 @@ function renderTransactions() {
     let list = transactions.filter(t => t.accountId === activeAccountId);
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
     let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
+    
     displayList.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.date) - new Date(a.date));
+    
     displayList.forEach(t => {
         container.innerHTML += `
         <div class="tr-row" onclick="openModal('${t.id}')">
@@ -297,12 +302,7 @@ function deleteTransaction() { if(confirm('Wissen?')) { transactions = transacti
 async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
 async function deleteAccount() { if(confirm('Rekening wissen?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); await syncToCloud(); if (accounts.length > 0) selectAccount(accounts[0].id); else location.reload(); } }
 
-async function syncToCloud() {
-    try {
-        await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) });
-        document.getElementById('sync-label').innerText = "Sync: OK";
-    } catch (e) { document.getElementById('sync-label').innerText = "Sync: FOUT"; }
-}
+async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label').innerText = "Sync: OK"; } catch (e) { document.getElementById('sync-label').innerText = "Sync: FOUT"; } }
 
 async function loadFromCloud() {
     try {
@@ -317,7 +317,7 @@ async function loadFromCloud() {
             else if (accounts.length > 0) selectAccount(accounts[0].id);
             renderAccounts(); renderTransactions();
         }
-    } catch (e) { document.getElementById('sidebar-accounts').innerText = 'Fout bij laden cloud'; }
+    } catch (e) { console.error(e); }
 }
 loadFromCloud();
 </script>

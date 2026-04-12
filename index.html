@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v7.3 - DATA BACKUP & RESTORE</title>
+  <title>Payit v7.4 - PERSISTENT FILTER STATE</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -153,7 +153,7 @@
     <span class="tab-text">Rekeningen</span>
   </button>
   <button class="tab-item" onclick="openModal()" style="color:var(--primary);">
-    <span class="tab-icon" style="font-size: 28px; margin-top: -3px;">⊕</span>
+    <span class="tab-icon" style="font-size: 28px; margin-top: -4px;">⊕</span>
     <span class="tab-text">Nieuw</span>
   </button>
 </div>
@@ -199,7 +199,6 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3 id="accModalTitle" style="font-weight: 800; color: var(--primary);">Rekening Management</h3>
     <input type="text" id="newAccName" placeholder="Naam rekening">
-    
     <div style="margin-top: 20px; padding: 15px; border: 1px dashed var(--border); border-radius: 12px;">
         <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">Backup & Herstel</div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -208,7 +207,6 @@
             <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
         </div>
     </div>
-
     <div class="btn-grid">
       <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
       <button class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
@@ -237,57 +235,34 @@ function applyTheme(theme) {
     document.body.setAttribute('data-theme', theme); 
     const icon = theme === 'dark' ? '🌙' : '☀️';
     ['theme-icon-mobile','theme-icon-desktop','theme-icon-iphone'].forEach(id => {
-        let el = document.getElementById(id);
-        if(el) el.innerText = icon;
+        let el = document.getElementById(id); if(el) el.innerText = icon;
     });
     localStorage.setItem('payit-theme', theme); 
 }
 function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
 applyTheme(localStorage.getItem('payit-theme') || 'light');
 
-function closeOnOverlay(e, modalEl) {
-    if (e.target === modalEl) {
-        if (modalEl.id === 'modal') closeModal();
-        if (modalEl.id === 'catManagerModal') closeCategoryManager();
-        if (modalEl.id === 'accModal') closeAccountModal();
-    }
-}
+function closeOnOverlay(e, modalEl) { if (e.target === modalEl) { if (modalEl.id === 'modal') closeModal(); if (modalEl.id === 'catManagerModal') closeCategoryManager(); if (modalEl.id === 'accModal') closeAccountModal(); } }
 
-/* BACKUP LOGICA v7.3 */
 function exportData() {
     const data = { categories, accounts, transactions, exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `payit_backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement('a'); a.href = url; a.download = `payit_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url);
 }
-
 function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader(); reader.onload = async (e) => {
         try {
             const imported = JSON.parse(e.target.result);
             if (imported.transactions && imported.accounts) {
-                if (confirm("Weet je het zeker? Dit overschrijft al je huidige gegevens in de cloud.")) {
-                    categories = imported.categories || categories;
-                    accounts = imported.accounts;
-                    transactions = imported.transactions;
-                    await syncToCloud();
-                    location.reload(); // Herlaad om alles fris te tonen
+                if (confirm("Dit overschrijft huidige cloud-data. Doorgaan?")) {
+                    categories = imported.categories || categories; accounts = imported.accounts; transactions = imported.transactions;
+                    await syncToCloud(); location.reload();
                 }
-            } else {
-                alert("Ongeldig backup bestand.");
             }
-        } catch (err) {
-            alert("Fout bij het lezen van het bestand.");
-        }
-    };
-    reader.readAsText(file);
+        } catch (err) { alert("Fout bij lezen bestand."); }
+    }; reader.readAsText(file);
 }
 
 function openCategoryManager() { document.getElementById('catManagerModal').style.display = 'flex'; renderCategoryManagerList(); }
@@ -301,23 +276,17 @@ function removeCategoryUI(cat) { if (confirm(`Categorie "${cat}" verwijderen?`))
 function updateCategoryDatalist() { document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join(''); }
 
 function selectAccount(accId) { 
-    activeAccountId = accId; 
-    localStorage.setItem('lastActiveAccountId', accId); 
-    const acc = accounts.find(a => a.id === accId); 
-    const name = acc ? acc.name : "Laden...";
-    document.getElementById('nav-title').innerText = name; 
-    document.getElementById('acc-title-text').innerText = name; 
-    document.getElementById('sidebar').classList.remove('open'); 
-    renderAccounts(); renderTransactions(); 
+    activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); 
+    const acc = accounts.find(a => a.id === accId); const name = acc ? acc.name : "Laden...";
+    document.getElementById('nav-title').innerText = name; document.getElementById('acc-title-text').innerText = name; 
+    document.getElementById('sidebar').classList.remove('open'); renderAccounts(); renderTransactions(); 
 }
 
 function renderAccounts() {
-    const sidebar = document.getElementById('sidebar-accounts');
-    sidebar.innerHTML = '';
+    const sidebar = document.getElementById('sidebar-accounts'); sidebar.innerHTML = '';
     accounts.forEach(acc => {
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
-        const div = document.createElement('div');
-        div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
+        const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
         div.onclick = () => selectAccount(acc.id);
         div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span><span onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="position:absolute; right:12px; top:12px; opacity:0.3; font-size:12px;">⚙️</span>`;
         sidebar.appendChild(div);
@@ -325,10 +294,15 @@ function renderAccounts() {
 }
 
 function renderTransactions() {
-    const container = document.getElementById('transactions-container');
-    container.innerHTML = '';
+    const container = document.getElementById('transactions-container'); container.innerHTML = '';
     let allAccT = transactions.filter(t => t.accountId === activeAccountId);
     let totalBal = allAccT.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    // PERSISTENT FILTER STATE v7.4
+    const savedFilter = localStorage.getItem('payit-filter-showConfirmed');
+    if (savedFilter !== null) showConfirmed = (savedFilter === 'true');
+    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
+
     let displayList = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
     displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
         container.innerHTML += `<div class="tr-row" onclick="openModal('${t.id}')"><div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div class="tr-left-side"><div class="tr-header"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span></div><span class="tr-memo">${t.memo || '-'}</span></div><div class="tr-right-side"><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span></div></div>`;
@@ -375,7 +349,13 @@ function deleteTransaction() { if(confirm('Wissen?')) { transactions = transacti
 function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
 function handleAccountAction() { const name = document.getElementById('newAccName').value; if(!name) return; if(editingAccountId) accounts.find(a => a.id === editingAccountId).name = name; else accounts.push({ id: Date.now().toString(), name }); closeAccountModal(); syncToCloud(); renderAccounts(); }
 function deleteAccount() { if(confirm('Echt zeker?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); syncToCloud(); renderAccounts(); if (accounts.length > 0) selectAccount(accounts[0].id); } }
-function toggleConfirmed() { showConfirmed = !showConfirmed; document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; renderTransactions(); }
+
+function toggleConfirmed() { 
+    showConfirmed = !showConfirmed; 
+    localStorage.setItem('payit-filter-showConfirmed', showConfirmed); // SAVE FILTER STATE v7.4
+    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; 
+    renderTransactions(); 
+}
 
 async function syncToCloud() {
     document.getElementById('sync-label').innerText = "Sync: Opslaan...";
@@ -393,7 +373,7 @@ async function loadFromCloud() {
             const d = result[0].data; if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions;
             const lastId = localStorage.getItem('lastActiveAccountId');
             if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); else if (accounts.length > 0) selectAccount(accounts[0].id);
-            renderAccounts(); document.getElementById('sync-label').innerText = "Sync: OK";
+            renderAccounts(); renderTransactions(); document.getElementById('sync-label').innerText = "Sync: OK";
         }
     } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v4.4</title>
+  <title>Payit v4.5</title>
   <style>
     :root {
       --bg-body: #f0f2f5;
@@ -24,7 +24,6 @@
       background-color: var(--bg-body);
       color: var(--text-main);
       -webkit-font-smoothing: antialiased;
-      /* Voorkom standaard browser refresh bij overscroll */
       overscroll-behavior-y: contain;
     }
 
@@ -76,7 +75,7 @@
       padding: 16px; 
       max-width: 600px; 
       margin: 0 auto;
-      transition: transform 0.2s; /* Voor pull-to-refresh animatie */
+      transition: transform 0.2s;
     }
 
     /* Account Cards */
@@ -259,7 +258,7 @@
     <select id="target-account"></select>
     <div class="btn-row">
       <button class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
-      <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
+      <button id="btnSaveTransaction" class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
     </div>
     <div class="btn-row" id="edit-btns" style="display:none;">
         <button class="btn btn-danger" onclick="deleteTransaction()">Verwijderen</button>
@@ -274,7 +273,7 @@
     <input type="text" id="newAccName" placeholder="Bijv. Spaarrekening">
     <div class="btn-row">
       <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
-      <button class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
+      <button id="btnSaveAccount" class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
     </div>
     <div class="btn-row" id="acc-delete-row" style="display:none; margin-top:10px;">
         <button class="btn btn-danger" onclick="deleteAccount()">Rekening Verwijderen</button>
@@ -371,7 +370,7 @@ function formatCurrency(n) {
     return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n);
 }
 
-/** TRANSACTION MODAL **/
+/** MODAL HELPERS **/
 function openModal(id = null) {
     editingId = id;
     document.getElementById('modal').style.display = 'flex';
@@ -403,7 +402,6 @@ function openModal(id = null) {
 
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-/** ACCOUNT MODAL **/
 function openAccountModal(accId = null) {
     editingAccountId = accId;
     document.getElementById('accModal').style.display = 'flex';
@@ -424,6 +422,26 @@ function openAccountModal(accId = null) {
 }
 
 function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }
+
+/** KEYBOARD LISTENERS **/
+window.addEventListener('keydown', (e) => {
+    // Check of modal open is
+    const transModal = document.getElementById('modal');
+    const accModal = document.getElementById('accModal');
+
+    if (e.key === 'Enter') {
+        if (transModal.style.display === 'flex') {
+            saveTransaction();
+        } else if (accModal.style.display === 'flex') {
+            handleAccountAction();
+        }
+    }
+
+    if (e.key === 'Escape') {
+        if (transModal.style.display === 'flex') closeModal();
+        if (accModal.style.display === 'flex') closeAccountModal();
+    }
+});
 
 /** ACTIONS **/
 async function saveTransaction() {
@@ -529,7 +547,7 @@ async function loadFromCloud() {
     } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }
 
-/** PULL TO REFRESH LOGICA **/
+/** PULL TO REFRESH **/
 let startY = 0;
 let pullDistance = 0;
 const appBody = document.getElementById('app-body');
@@ -537,41 +555,26 @@ const mainContent = document.getElementById('main-content');
 const pullIndicator = document.getElementById('pull-indicator');
 
 appBody.addEventListener('touchstart', (e) => {
-    // Alleen pull-to-refresh toestaan als we bovenaan de pagina zijn
-    if (window.scrollY === 0) {
-        startY = e.touches[0].pageY;
-    } else {
-        startY = 0;
-    }
+    if (window.scrollY === 0) startY = e.touches[0].pageY;
+    else startY = 0;
 });
 
 appBody.addEventListener('touchmove', (e) => {
     if (startY === 0) return;
-    
     const currentY = e.touches[0].pageY;
     pullDistance = currentY - startY;
-
     if (pullDistance > 0 && pullDistance < 150) {
-        // Visuele feedback tijdens het trekken
         mainContent.style.transform = `translateY(${pullDistance / 2}px)`;
         pullIndicator.style.transform = `translateY(${pullDistance / 2}px)`;
-        
-        if (pullDistance > 80) {
-            pullIndicator.innerText = "Laat los om te vernieuwen...";
-        } else {
-            pullIndicator.innerText = "Trek omlaag om te vernieuwen";
-        }
+        pullIndicator.innerText = pullDistance > 80 ? "Laat los om te vernieuwen..." : "Trek omlaag om te vernieuwen";
     }
 });
 
 appBody.addEventListener('touchend', async () => {
     if (pullDistance > 80) {
-        // Start verversen
         pullIndicator.innerText = "Bezig met vernieuwen...";
         await loadFromCloud();
     }
-    
-    // Reset posities
     mainContent.style.transform = `translateY(0)`;
     pullIndicator.style.transform = `translateY(0)`;
     pullDistance = 0;

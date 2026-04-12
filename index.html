@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v6.2 - FIXED NUMERIC INPUT LOGIC</title>
+  <title>Payit v6.3 - TAG-BASED CATEGORY MANAGEMENT</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -46,18 +46,25 @@
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 20px; border-radius: 20px; }
     input, select { width: 100%; padding: 10px; margin-top: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; -webkit-appearance: none; }
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-    .btn { padding: 12px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; }
+    .btn { padding: 12px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; text-align: center; }
     .btn-save { background: var(--primary); color: white; }
     .btn-cancel { background: var(--bg-input); color: var(--text-muted); }
     .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--negative); }
+    
+    /* CATEGORY LIST STYLING */
+    .cat-manager-list { max-height: 250px; overflow-y: auto; margin: 15px 0; border: 1px solid var(--border); border-radius: 12px; padding: 5px; }
+    .cat-tag { display: flex; justify-content: space-between; align-items: center; background: var(--bg-input); padding: 8px 12px; border-radius: 8px; margin: 4px; font-size: 14px; }
+    .cat-del { color: var(--negative); font-weight: 800; cursor: pointer; padding: 0 5px; }
+
     .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: none; justify-content: space-around; align-items: flex-start; padding-top: 8px; z-index: 1100; }
-    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 80px; cursor: pointer; }
+    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 80px; }
     .tab-icon { font-size: 20px; }
     .tab-text { font-size: 9px; font-weight: 700; text-transform: uppercase; }
     .green-bg { background-color: var(--positive); }
     .red-bg { background-color: var(--negative); }
     .pos-text { color: var(--positive); }
     .neg-text { color: var(--negative); }
+
     @media (max-width: 850px) {
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
@@ -117,7 +124,7 @@
     <div style="position:relative; display:flex; align-items:center; gap:5px;">
         <input type="text" id="category" placeholder="Categorie" list="cat-list" style="flex:1;">
         <datalist id="cat-list"></datalist>
-        <button onclick="manageCategories()" style="background:none; border:none; font-size:18px; cursor:pointer; margin-top:5px;">⚙️</button>
+        <button onclick="openCategoryManager()" style="background:none; border:none; font-size:18px; cursor:pointer; margin-top:5px;">⚙️</button>
     </div>
     <input type="text" id="memo" placeholder="Memo / Omschrijving">
     <div style="display:flex; gap:10px;">
@@ -131,6 +138,20 @@
         <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
         <button id="btnDeleteTransaction" class="btn btn-danger" style="display:none;" onclick="deleteTransaction()">Wissen</button>
         <button id="btnDupTransaction" class="btn" style="display:none; background:var(--bg-input); grid-column: 1/-1;" onclick="duplicateTransaction()">Dupliceren</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="catManagerModal">
+  <div class="modal-content">
+    <h3 style="margin:0; color:var(--primary); font-weight: 800;">Beheer Categorieën</h3>
+    <div class="cat-manager-list" id="catManagerList"></div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+        <input type="text" id="newCatInput" placeholder="Nieuwe categorie..." style="flex:1; margin-top:0;">
+        <button class="btn btn-save" onclick="addCategoryUI()" style="padding:10px 15px;">+</button>
+    </div>
+    <div class="btn-grid">
+        <button class="btn btn-cancel" style="grid-column: 1/-1;" onclick="closeCategoryManager()">Klaar</button>
     </div>
   </div>
 </div>
@@ -161,35 +182,49 @@ let showConfirmed = false;
 
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-
-/* OPSCHONING LOGICA v6.2 */
-function parseNumericValue(str) {
-    if (!str) return 0;
-    // Verwijder alle punten (duizendtallen) en vervang de komma door een punt
-    let clean = str.toString().replace(/\./g, "").replace(",", ".");
-    return parseFloat(clean) || 0;
-}
-
-function applyTheme(theme) {
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('payit-theme', theme);
-}
-function toggleTheme() {
-    applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
-}
+function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/\./g, "").replace(",", "."); return parseFloat(clean) || 0; }
+function applyTheme(theme) { document.body.setAttribute('data-theme', theme); localStorage.setItem('payit-theme', theme); }
+function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
 applyTheme(localStorage.getItem('payit-theme') || 'light');
 
-function manageCategories() {
-    const newCats = prompt("Beheer categorieën (gescheiden door komma's):", categories.join(", "));
-    if (newCats !== null) {
-        categories = newCats.split(",").map(c => c.trim()).filter(c => c !== "");
-        syncToCloud();
+// CATEGORY MANAGER LOGICA v6.3
+function openCategoryManager() {
+    document.getElementById('catManagerModal').style.display = 'flex';
+    renderCategoryManagerList();
+}
+function closeCategoryManager() {
+    document.getElementById('catManagerModal').style.display = 'none';
+}
+function renderCategoryManagerList() {
+    const list = document.getElementById('catManagerList');
+    list.innerHTML = categories.sort().map(cat => `
+        <div class="cat-tag">
+            <span>${cat}</span>
+            <span class="cat-del" onclick="removeCategoryUI('${cat}')">✕</span>
+        </div>
+    `).join('');
+}
+function addCategoryUI() {
+    const input = document.getElementById('newCatInput');
+    const val = input.value.trim();
+    if (val && !categories.includes(val)) {
+        categories.push(val);
+        input.value = '';
+        renderCategoryManagerList();
         updateCategoryDatalist();
+        syncToCloud();
     }
 }
-
+function removeCategoryUI(cat) {
+    if (confirm(`Categorie "${cat}" verwijderen?`)) {
+        categories = categories.filter(c => c !== cat);
+        renderCategoryManagerList();
+        updateCategoryDatalist();
+        syncToCloud();
+    }
+}
 function updateCategoryDatalist() {
-    document.getElementById('cat-list').innerHTML = categories.map(c => `<option value="${c}">`).join('');
+    document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join('');
 }
 
 function selectAccount(accId) {
@@ -237,14 +272,8 @@ function openModal(id = null) {
         document.getElementById('date').value = t.date; document.getElementById('category').value = t.category;
         document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
         document.getElementById('target-account').value = t.accountId;
-        if(t.amount >= 0) { 
-            // Toon getal met komma voor bewerken
-            document.getElementById('income').value = t.amount.toString().replace(".", ","); 
-            document.getElementById('expense').value = ''; 
-        } else { 
-            document.getElementById('expense').value = Math.abs(t.amount).toString().replace(".", ","); 
-            document.getElementById('income').value = ''; 
-        }
+        if(t.amount >= 0) { document.getElementById('income').value = t.amount.toString().replace(".", ","); document.getElementById('expense').value = ''; }
+        else { document.getElementById('expense').value = Math.abs(t.amount).toString().replace(".", ","); document.getElementById('income').value = ''; }
     } else {
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         document.getElementById('category').value = ''; document.getElementById('memo').value = '';
@@ -267,13 +296,9 @@ async function saveTransaction() {
         } else { return; }
     }
 
-    let incValue = document.getElementById('income').value;
-    let expValue = document.getElementById('expense').value;
-    
-    let inc = parseNumericValue(incValue);
-    let exp = parseNumericValue(expValue);
+    let inc = parseNumericValue(document.getElementById('income').value);
+    let exp = parseNumericValue(document.getElementById('expense').value);
     let amt = inc > 0 ? inc : -exp;
-
     let data = { id: editingId || Date.now().toString(), date: document.getElementById('date').value, category: catInput, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
     if (editingId) transactions[transactions.findIndex(t => t.id === editingId)] = data; else transactions.push(data);
     closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
@@ -306,8 +331,12 @@ async function loadFromCloud() {
 }
 
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { if (document.getElementById('modal').style.display === 'flex') saveTransaction(); else if (document.getElementById('accModal').style.display === 'flex') handleAccountAction(); }
-    if (e.key === 'Escape') { closeModal(); closeAccountModal(); }
+    if (e.key === 'Enter') { 
+        if (document.getElementById('modal').style.display === 'flex') saveTransaction(); 
+        else if (document.getElementById('accModal').style.display === 'flex') handleAccountAction();
+        else if (document.getElementById('catManagerModal').style.display === 'flex') addCategoryUI();
+    }
+    if (e.key === 'Escape') { closeModal(); closeAccountModal(); closeCategoryManager(); }
 });
 
 let startY = 0; let pullDist = 0;

@@ -5,23 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Payit v4.7</title>
   <style>
+    /* 1. Vernieuwd Kleurenpalet (Lichter & Frisser) */
     :root {
-      --bg-body: #1e1e22; /* Warm Slate Grey */
-      --bg-sidebar: #252529;
-      --bg-card: #2d2d33;
-      --bg-input: #38383f;
-      --primary: #5c7cff; /* Soft Blue */
-      --text-main: #f0f0f2;
-      --text-muted: #9898a1;
-      --border: #38383f;
-      --positive: #4ade80;
-      --negative: #f87171;
-      --orange: #fb923c;
+      --bg-body: #e2e8f0; /* Light Slate Grey */
+      --bg-sidebar: #f1f5f9; /* Zeer licht Slate */
+      --bg-card: #ffffff;
+      --bg-input: #f8fafc;
+      --primary: #3f8cff; /* Helderblauw */
+      --text-main: #1e293b; /* Deep Slate (bijna zwart) */
+      --text-muted: #64748b; /* Medium Slate */
+      --border: #cbd5e1; /* Slate Border */
+      --positive: #10b981; /* Emerald Green */
+      --negative: #ef4444; /* Red */
+      --orange: #f97316; /* Bright Orange */
     }
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, system-ui, sans-serif;
       background-color: var(--bg-body);
       color: var(--text-main);
       -webkit-font-smoothing: antialiased;
@@ -68,7 +69,7 @@
     }
 
     .navbar {
-      background: rgba(30, 30, 34, 0.85);
+      background: rgba(241, 245, 249, 0.8);
       backdrop-filter: blur(12px);
       height: 64px;
       display: flex;
@@ -93,10 +94,11 @@
       align-items: center;
       transition: all 0.2s;
     }
-    .acc-item:hover { background: var(--bg-card); }
+    .acc-item:hover { background: var(--bg-card); border-color: var(--border); }
     .acc-item.active { 
-      background: rgba(92, 124, 255, 0.12); 
+      background: #ffffff;
       border-color: var(--primary); 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
     .acc-name { font-weight: 600; font-size: 15px; color: var(--text-main); }
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 14px; font-weight: 700; }
@@ -111,7 +113,7 @@
     }
 
     .summary-hero {
-      background: linear-gradient(145deg, var(--bg-card), #35353b);
+      background: var(--bg-card);
       border-radius: 20px;
       padding: 25px 40px;
       margin-bottom: 30px;
@@ -119,6 +121,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03);
     }
     .hero-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
     .hero-total { font-size: 32px; font-weight: 800; color: var(--orange); }
@@ -134,9 +137,9 @@
       align-items: center;
       gap: 15px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
     }
-    .tr-row:hover { background: var(--bg-input); }
+    .tr-row:hover { background: var(--bg-input); transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     .tr-status { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     
     .tr-info { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -148,40 +151,37 @@
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 16px; min-width: 110px; }
     .tr-date { font-size: 12px; color: var(--text-muted); width: 85px; }
 
-    /* iOS BOTTOM BAR (Shortcuts) */
-    .iphone-tabs {
-      position: fixed; bottom: 0; left: 0; right: 0; height: 80px;
-      background: var(--bg-sidebar); border-top: 1px solid var(--border);
-      display: none; justify-content: space-around; align-items: center; padding-bottom: 20px;
-      z-index: 500;
-    }
-    .tab-item { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 600; }
-
-    /* MODALS */
+    /* MODALS & BUTTONS (Verbeterde Layout) */
     .modal {
       display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7); z-index: 1000;
+      background: rgba(0,0,0,0.3); z-index: 1000;
       align-items: center; justify-content: center;
     }
     .modal-content {
-      background: var(--bg-card); width: 90%; max-width: 450px;
-      padding: 30px; border-radius: 24px; border: 1px solid var(--border);
+      background: var(--bg-card); width: 90%; max-width: 480px;
+      padding: 35px; border-radius: 24px; border: 1px solid var(--border);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
     }
     input, select {
       width: 100%; padding: 14px; margin-top: 12px;
       background: var(--bg-input); border: 1px solid var(--border);
-      border-radius: 12px; color: white; font-size: 16px; box-sizing: border-box;
+      border-radius: 12px; color: var(--text-main); font-size: 16px; box-sizing: border-box;
+      -webkit-appearance: none;
     }
-    .btn { padding: 16px; border-radius: 14px; font-weight: 700; border: none; cursor: pointer; flex: 1; }
-    .btn-save { background: var(--primary); color: white; }
-    .btn-cancel { background: var(--bg-input); color: var(--text-muted); }
 
-    .sync-label { font-size: 11px; color: var(--text-muted); text-align: center; margin: 15px 0; }
+    /* Knoppen Grid */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 25px;
+    }
 
-    .green { background: var(--positive); box-shadow: 0 0 8px rgba(74, 222, 128, 0.3); }
-    .red { background: var(--negative); box-shadow: 0 0 8px rgba(248, 113, 113, 0.3); }
-    .pos-text { color: var(--positive); }
-    .neg-text { color: var(--negative); }
+    .btn { padding: 16px; border-radius: 14px; font-weight: 700; border: none; cursor: pointer; text-align: center; font-size: 15px;}
+    .btn-save { background: var(--primary); color: white; grid-column: 2; }
+    .btn-cancel { background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border); grid-column: 1; }
+    .btn-danger { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+    .btn-dup { background: #e0e7ff; color: #4f46e5; border: 1px solid #c7d2fe; }
 
     /* Pull indicator */
     #pull-indicator {
@@ -189,9 +189,15 @@
       font-size: 12px; color: var(--text-muted); opacity: 0; z-index: 10;
     }
 
+    /* Helpers */
+    .green { background: var(--positive); box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
+    .red { background: var(--negative); box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+    .pos-text { color: var(--positive); }
+    .neg-text { color: var(--negative); }
+    .sync-label { font-size: 11px; color: var(--text-muted); text-align: center; margin: 15px 0; }
+
     @media (max-width: 850px) {
       .sidebar { display: none; }
-      .iphone-tabs { display: flex; }
       .content-wrapper { padding: 15px; padding-bottom: 100px; }
       .tr-info { flex-direction: column; align-items: flex-start; gap: 2px; }
       .tr-sep { display: none; }
@@ -199,7 +205,10 @@
       .tr-right { gap: 10px; }
       .summary-hero { padding: 20px; flex-direction: column; gap: 10px; text-align: center; }
       .modal { align-items: flex-end; }
-      .modal-content { border-radius: 24px 24px 0 0; width: 100%; max-width: 100%; }
+      .modal-content { border-radius: 24px 24px 0 0; width: 100%; max-width: 100%; padding: 25px;}
+      .btn-grid { grid-template-columns: 1fr; }
+      .btn-save { grid-column: 1; }
+      .btn-cancel { grid-column: 1; order: 2;}
     }
   </style>
 </head>
@@ -209,7 +218,7 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <span style="font-weight: 800; color: var(--primary); font-size: 20px;">Payit</span>
-      <button onclick="openAccountModal()" style="background:var(--bg-input); border:1px solid var(--border); color:var(--primary); width:32px; height:32px; border-radius:8px; cursor:pointer;">+</button>
+      <button onclick="openAccountModal()" style="background:var(--bg-card); border:1px solid var(--border); color:var(--primary); width:32px; height:32px; border-radius:8px; cursor:pointer;">+</button>
     </div>
     <div class="sidebar-content" id="sidebar-accounts">
       </div>
@@ -243,12 +252,6 @@
   </main>
 </div>
 
-<div class="iphone-tabs">
-  <button class="tab-item" onclick="loadFromCloud()">🔄<br>Sync</button>
-  <button class="tab-item" onclick="openModal()" style="color:var(--primary);">⊕<br>Nieuw</button>
-  <button class="tab-item" onclick="openAccountModal()">⚙️<br>Rekeningen</button>
-</div>
-
 <div class="modal" id="modal">
   <div class="modal-content">
     <h3 id="modalTitle" style="margin:0 0 20px 0; color:var(--primary);">Transactie</h3>
@@ -262,32 +265,31 @@
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
     <select id="target-account"></select>
-    <div class="btn-row">
-      <button class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
-      <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
-    </div>
-    <div class="btn-row" id="edit-btns" style="display:none;">
-        <button class="btn" style="background:rgba(248, 113, 113, 0.15); color:var(--negative);" onclick="deleteTransaction()">Wissen</button>
-        <button class="btn" style="background:var(--bg-input); color:var(--primary);" onclick="duplicateTransaction()">Kopie</button>
+    
+    <div class="btn-grid">
+        <button id="btnCancelTransaction" class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
+        <button id="btnSaveTransaction" class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
+        
+        <button id="btnDeleteTransaction" class="btn btn-danger" onclick="deleteTransaction()" style="display:none; grid-column: 1 / -1;">Wissen</button>
+        <button id="btnDupTransaction" class="btn btn-dup" onclick="duplicateTransaction()" style="display:none; grid-column: 1 / -1; margin-top:-8px;">Dupliceren</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="accModal">
   <div class="modal-content">
-    <h3 id="accModalTitle">Rekening Management</h3>
+    <h3 id="accModalTitle" style="color:var(--primary);">Rekening Management</h3>
     <input type="text" id="newAccName" placeholder="Naam rekening">
-    <div class="btn-row">
-      <button class="btn btn-cancel" onclick="closeAccountModal()">Sluiten</button>
+    <div class="btn-grid">
+      <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
       <button class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
-    </div>
-    <div class="btn-row" id="acc-delete-row" style="display:none;">
-        <button class="btn" style="background:rgba(248, 113, 113, 0.15); color:var(--negative);" onclick="deleteAccount()">Verwijder Rekening</button>
+      <button id="acc-delete-btn" class="btn btn-danger" onclick="deleteAccount()" style="display:none; grid-column: 1 / -1;">Verwijder Rekening</button>
     </div>
   </div>
 </div>
 
 <script>
+/** CONFIGURATIE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
@@ -321,7 +323,7 @@ function renderAccounts() {
         div.innerHTML = `
             <span class="acc-name">${acc.name}</span>
             <span class="acc-bal">${formatCurrency(bal)}</span>
-            <span onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="margin-left:10px; opacity:0.5;">⚙️</span>
+            <span onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="margin-left:10px; opacity:0.5; font-size:12px;">⚙️</span>
         `;
         sidebar.appendChild(div);
     });
@@ -355,11 +357,15 @@ function renderTransactions() {
     document.getElementById('total').innerText = formatCurrency(total);
 }
 
-/** MODALS & ACTIONS (Zelfde logica als v4.6) **/
+/** MODALS & ACTIONS (Verbeterde Knoppen Logica) **/
 function openModal(id = null) {
     editingId = id;
     document.getElementById('modal').style.display = 'flex';
-    document.getElementById('edit-btns').style.display = id ? 'flex' : 'none';
+    
+    // Knoppen tonen/verbergen op basis van bewerken/nieuw
+    document.getElementById('btnDeleteTransaction').style.display = id ? 'block' : 'none';
+    document.getElementById('btnDupTransaction').style.display = id ? 'block' : 'none';
+    
     document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     document.getElementById('cat-list').innerHTML = categories.map(c => `<option value="${c}">`).join('');
     if (id) {
@@ -382,7 +388,7 @@ function closeModal() { document.getElementById('modal').style.display = 'none';
 function openAccountModal(id = null) {
     editingAccountId = id;
     document.getElementById('accModal').style.display = 'flex';
-    document.getElementById('acc-delete-row').style.display = id ? 'block' : 'none';
+    document.getElementById('acc-delete-btn').style.display = id ? 'block' : 'none';
     document.getElementById('newAccName').value = id ? accounts.find(a => a.id === id).name : '';
 }
 function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }

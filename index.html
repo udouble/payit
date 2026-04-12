@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v7.2 - NAVIGATION OVERHAUL</title>
+  <title>Payit v7.3 - DATA BACKUP & RESTORE</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -29,8 +29,8 @@
     .sidebar-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
     .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; }
     .main-view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background-color: var(--bg-body); position: relative; }
+    .navbar { display: none; } 
 
-    /* ACCOUNT ITEMS */
     .acc-item { padding: 12px 16px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; border: 1px solid transparent; display: flex; flex-direction: column; gap: 2px; transition: all 0.2s; position: relative; }
     .acc-item:hover { background: var(--bg-body); }
     .acc-item.active { background: rgba(63, 140, 255, 0.1); border-color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -39,7 +39,6 @@
 
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     
-    /* HEADER CARD IPAD v7.2 (Unified) */
     .header-card { 
         background: var(--bg-card); border-radius: 16px; padding: 12px 20px; margin-bottom: 15px; border: 1px solid var(--border); 
         display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
@@ -50,7 +49,6 @@
     .hero-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
 
-    /* TRANSACTIE RIJ */
     .tr-row { 
       background: var(--bg-card); margin-bottom: 6px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); 
       display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; 
@@ -65,7 +63,7 @@
 
     /* MODALS & BUTTONS */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
-    .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 20px; border-radius: 20px; }
+    .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 20px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     input, select { width: 100%; padding: 10px; margin-top: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; -webkit-appearance: none; appearance: none;}
     select { background-image: var(--chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px; }
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
@@ -74,8 +72,8 @@
     .btn-cancel { background: var(--bg-input); color: var(--text-muted); }
     .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--negative); grid-column: 1 / -1; }
     .btn-dup { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); grid-column: 1 / -1;}
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text-muted); font-size: 12px; padding: 8px; }
 
-    /* IPHONE TABS - MINIMALIST v7.2 */
     .iphone-tabs { 
         position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); 
         border-top: 1px solid var(--border); display: none; justify-content: space-around; 
@@ -90,25 +88,13 @@
     .pos-text { color: var(--positive); }
     .neg-text { color: var(--negative); }
 
-    /* NAVBAR IPHONE v7.2 FIX */
-    .navbar { 
-        display: none; 
-        background: var(--bg-sidebar); 
-        height: 50px; 
-        align-items: center; 
-        padding: 0 15px; 
-        border-bottom: 1px solid var(--border); 
-        position: sticky; top: 0; z-index: 100; 
-        justify-content: space-between;
-    }
-    .nav-title-text { font-weight: 800; font-size: 15px; color: var(--text-main); flex: 1; text-align: left; }
-
     @media (max-width: 850px) {
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
       .iphone-tabs { display: flex; }
       .content-wrapper { padding: 8px; padding-bottom: 85px; }
-      .navbar { display: flex; } /* Toon de gefixte iPhone navbar */
+      .navbar { display: flex; background: var(--bg-sidebar); height: 50px; align-items: center; padding: 0 15px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; justify-content: space-between;}
+      .nav-title-text { font-weight: 800; font-size: 15px; color: var(--text-main); flex: 1; text-align: left; }
       .header-card { flex-direction: column; align-items: center; padding: 12px; gap: 4px; }
       .header-left-group { flex-direction: column; align-items: center; gap: 2px; }
       .header-right-group, .acc-title-text { display: none; }
@@ -213,6 +199,16 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3 id="accModalTitle" style="font-weight: 800; color: var(--primary);">Rekening Management</h3>
     <input type="text" id="newAccName" placeholder="Naam rekening">
+    
+    <div style="margin-top: 20px; padding: 15px; border: 1px dashed var(--border); border-radius: 12px;">
+        <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">Backup & Herstel</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-outline" style="flex: 1;" onclick="exportData()">Download Backup</button>
+            <button class="btn btn-outline" style="flex: 1;" onclick="document.getElementById('importFile').click()">Importeer Backup</button>
+            <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+        </div>
+    </div>
+
     <div class="btn-grid">
       <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
       <button class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
@@ -240,9 +236,10 @@ function parseNumericValue(str) { if (!str) return 0; let clean = str.toString()
 function applyTheme(theme) { 
     document.body.setAttribute('data-theme', theme); 
     const icon = theme === 'dark' ? '🌙' : '☀️';
-    if(document.getElementById('theme-icon-mobile')) document.getElementById('theme-icon-mobile').innerText = icon;
-    if(document.getElementById('theme-icon-desktop')) document.getElementById('theme-icon-desktop').innerText = icon;
-    if(document.getElementById('theme-icon-iphone')) document.getElementById('theme-icon-iphone').innerText = icon;
+    ['theme-icon-mobile','theme-icon-desktop','theme-icon-iphone'].forEach(id => {
+        let el = document.getElementById(id);
+        if(el) el.innerText = icon;
+    });
     localStorage.setItem('payit-theme', theme); 
 }
 function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
@@ -254,6 +251,43 @@ function closeOnOverlay(e, modalEl) {
         if (modalEl.id === 'catManagerModal') closeCategoryManager();
         if (modalEl.id === 'accModal') closeAccountModal();
     }
+}
+
+/* BACKUP LOGICA v7.3 */
+function exportData() {
+    const data = { categories, accounts, transactions, exportDate: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payit_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (imported.transactions && imported.accounts) {
+                if (confirm("Weet je het zeker? Dit overschrijft al je huidige gegevens in de cloud.")) {
+                    categories = imported.categories || categories;
+                    accounts = imported.accounts;
+                    transactions = imported.transactions;
+                    await syncToCloud();
+                    location.reload(); // Herlaad om alles fris te tonen
+                }
+            } else {
+                alert("Ongeldig backup bestand.");
+            }
+        } catch (err) {
+            alert("Fout bij het lezen van het bestand.");
+        }
+    };
+    reader.readAsText(file);
 }
 
 function openCategoryManager() { document.getElementById('catManagerModal').style.display = 'flex'; renderCategoryManagerList(); }
@@ -296,22 +330,8 @@ function renderTransactions() {
     let allAccT = transactions.filter(t => t.accountId === activeAccountId);
     let totalBal = allAccT.reduce((sum, t) => sum + Number(t.amount), 0);
     let displayList = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
-    
     displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
-        container.innerHTML += `
-            <div class="tr-row" onclick="openModal('${t.id}')">
-                <div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
-                <div class="tr-left-side">
-                    <div class="tr-header">
-                        <span class="tr-date">${t.date}</span>
-                        <span class="tr-cat">${t.category}</span>
-                    </div>
-                    <span class="tr-memo">${t.memo || '-'}</span>
-                </div>
-                <div class="tr-right-side">
-                    <span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>
-                </div>
-            </div>`;
+        container.innerHTML += `<div class="tr-row" onclick="openModal('${t.id}')"><div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div class="tr-left-side"><div class="tr-header"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span></div><span class="tr-memo">${t.memo || '-'}</span></div><div class="tr-right-side"><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span></div></div>`;
     });
     document.getElementById('total').innerText = formatCurrency(totalBal);
 }
@@ -349,7 +369,7 @@ async function saveTransaction() {
     let amt = inc > 0 ? inc : -exp;
     let data = { id: editingId || Date.now().toString(), date: document.getElementById('date').value, category: catInput, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
     if (editingId) transactions[transactions.findIndex(t => t.id === editingId)] = data; else transactions.push(data);
-    closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
+    closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
 function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }

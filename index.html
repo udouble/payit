@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v5.9 - SMART CURRENCY INPUT</title>
+  <title>Payit v6.0 - KEYBOARD & DECIMAL OPTIMIZATION</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -114,14 +114,14 @@
     }
     .tr-status-line { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
     .tr-main-info { flex: 1; min-width: 0; } 
-    .tr-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0px; }
+    .tr-header { display: flex; justify-content: space-between; align-items: baseline; }
     .tr-cat { font-weight: 700; font-size: 14px; color: var(--text-main); }
     .tr-date { font-size: 10px; color: var(--text-muted); }
     .tr-memo { color: var(--text-muted); font-size: 11px; line-height: 1.2; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tr-right-info { text-align: right; flex-shrink: 0; display: flex; align-items: center; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 14px; }
 
-    /* MODALS & BUTTONS */
+    /* MODALS */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 20px; border-radius: 20px; }
     input, select { width: 100%; padding: 10px; margin-top: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; -webkit-appearance: none; }
@@ -216,8 +216,8 @@
     <datalist id="cat-list"></datalist>
     <input type="text" id="memo" placeholder="Memo / Omschrijving">
     <div style="display:flex; gap:10px;">
-        <input type="text" id="income" placeholder="In" oninput="formatInput(this)" style="color:var(--positive)">
-        <input type="text" id="expense" placeholder="Uit" oninput="formatInput(this)" style="color:var(--negative)">
+        <input type="text" id="income" placeholder="In" inputmode="decimal" oninput="formatCurrencyInput(this)" style="color:var(--positive)">
+        <input type="text" id="expense" placeholder="Uit" inputmode="decimal" oninput="formatCurrencyInput(this)" style="color:var(--negative)">
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
     <select id="target-account"></select>
@@ -257,16 +257,40 @@ let showConfirmed = false;
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-/* SMART INPUT FORMATTING */
-function formatInput(el) {
-    let val = el.value.replace(/\D/g, "");
-    if (!val) { el.value = ""; return; }
-    el.value = new Intl.NumberFormat('nl-BE').format(val);
+/* SLIMME VALUTA INPUT LOGICA v6.0 */
+function formatCurrencyInput(el) {
+    // Vervang komma door punt voor interne logica, maar toon komma aan gebruiker
+    let cursorPosition = el.selectionStart;
+    let originalValue = el.value;
+    
+    // Alleen cijfers en één scheidingsteken toestaan
+    let cleanValue = el.value.replace(/[^0-9.,]/g, "").replace(",", ".");
+    
+    if (!cleanValue) { el.value = ""; return; }
+
+    // Splits op de punt om duizendtallen te doen zonder de decimalen te slopen
+    let parts = cleanValue.split(".");
+    let integerPart = parts[0];
+    let decimalPart = parts.length > 1 ? parts[1] : null;
+
+    // Formatteer het gehele getal met punten
+    let formattedInt = new Intl.NumberFormat('nl-BE').format(integerPart);
+
+    // Zet het weer in het veld (met de komma als de gebruiker die typte)
+    if (decimalPart !== null) {
+        el.value = formattedInt + "," + decimalPart.substring(0, 2);
+    } else if (originalValue.endsWith(",") || originalValue.endsWith(".")) {
+        el.value = formattedInt + ",";
+    } else {
+        el.value = formattedInt;
+    }
 }
 
 function parseFormattedValue(str) {
     if (!str) return 0;
-    return parseFloat(str.replace(/\./g, "").replace(",", ".")) || 0;
+    // Verwijder de duizendtal-punten en vervang de komma door een punt voor parseFloat
+    let clean = str.replace(/\./g, "").replace(",", ".");
+    return parseFloat(clean) || 0;
 }
 
 function applyTheme(theme) {
@@ -335,8 +359,13 @@ function openModal(id = null) {
         document.getElementById('date').value = t.date; document.getElementById('category').value = t.category;
         document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
         document.getElementById('target-account').value = t.accountId;
-        if(t.amount >= 0) { document.getElementById('income').value = new Intl.NumberFormat('nl-BE').format(t.amount); document.getElementById('expense').value = ''; }
-        else { document.getElementById('expense').value = new Intl.NumberFormat('nl-BE').format(Math.abs(t.amount)); document.getElementById('income').value = ''; }
+        if(t.amount >= 0) { 
+            document.getElementById('income').value = new Intl.NumberFormat('nl-BE').format(t.amount); 
+            document.getElementById('expense').value = ''; 
+        } else { 
+            document.getElementById('expense').value = new Intl.NumberFormat('nl-BE').format(Math.abs(t.amount)); 
+            document.getElementById('income').value = ''; 
+        }
     } else {
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         document.getElementById('category').value = ''; document.getElementById('memo').value = '';

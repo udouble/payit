@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0 - GOLDEN MASTER</title>
+  <title>Payit v3.1 - IPHONE UI STABILITY SHIELD</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -38,26 +38,36 @@
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     .header-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
     .header-card { flex: 1; background: var(--bg-card); border-radius: 16px; padding: 12px 20px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+    
     .header-btns-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; }
 
     .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
 
+    /* COMPACTE TRANSACTIE RIJ - IPAD/MAC */
     .tr-row { 
       background: var(--bg-card); margin-bottom: 4px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); 
       display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden;
       height: 50px; box-sizing: border-box;
     }
     .tr-status-line { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-    .tr-main-content { display: flex; flex: 1; align-items: center; gap: 20px; overflow: hidden; }
+    
+    .tr-main-content { 
+      display: flex; flex: 1; align-items: center; gap: 20px; overflow: hidden; 
+    }
     .tr-date { font-size: 11px; color: var(--text-muted); font-weight: 700; font-family: "SF Mono", monospace; min-width: 85px; }
     .tr-cat { font-weight: 700; font-size: 14px; color: var(--text-main); min-width: 150px; white-space: nowrap; }
-    .tr-memo-list { font-size: 15px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; opacity: 0.8; }
+    
+    .tr-memo-list { 
+      font-size: 15px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+      flex: 1; opacity: 0.8; 
+    }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; text-align: right; min-width: 100px; }
 
     .aside-btn { height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.2s; }
     .aside-theme { width: 32px; background: var(--theme-btn-bg); color: var(--theme-btn-text); font-size: 16px; }
     .aside-add { padding: 0 12px; background: var(--primary); color: white; font-size: 13px; font-weight: 700; }
+    .aside-btn:hover { opacity: 0.8; }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
@@ -79,6 +89,7 @@
     .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
     .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
 
+    /* MEDIA QUERIES AANGEPAST VOOR IPAD */
     @media (max-width: 850px) {
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
@@ -86,11 +97,44 @@
       .header-btns-aside { display: none; }
     }
 
+    /* IPHONE-SPECIFIEKE FIX (< 600px) - Dwingt data onder elkaar, auto hoogte, geen overlap */
     @media (max-width: 600px) {
-      .tr-row { height: auto; padding: 12px 14px; }
-      .tr-main-content { flex-direction: column; align-items: flex-start; gap: 2px; }
-      .tr-memo-list { white-space: normal; }
-      .tr-amount { text-align: left; min-width: 0; margin-top: 5px; font-size: 16px; }
+      .tr-row { 
+          height: auto !important; /* Dwingt auto hoogte op iPhone */
+          padding: 12px 14px !important; 
+          flex-direction: column !important; /* Stapel datum groep en bedrag groep */
+          align-items: stretch !important;
+          gap: 5px !important;
+      }
+      .tr-main-content { 
+          flex-direction: column !important; /* Stapel datum en categorie/memo groep */
+          align-items: flex-start !important; 
+          gap: 2px !important;
+      }
+      /* Groep voor categorie en memo op iPhone */
+      .tr-mobile-catmemo-group {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          overflow: hidden;
+          width: 100%;
+      }
+      .tr-memo-list { 
+          white-space: normal !important; /* Laat memo wrappen op iPhone */
+          overflow: visible !important;
+          text-overflow: unset !important;
+          flex: none !important;
+          max-width: 100% !important;
+      }
+      .tr-date { min-width: 0 !important; font-size: 10px !important; }
+      .tr-cat { min-width: 0 !important; white-space: normal !important; max-width: 100% !important; }
+      .tr-amount { 
+          text-align: left !important; 
+          min-width: 0 !important; 
+          margin-top: 5px !important; 
+          font-size: 16px !important;
+          width: 100% !important;
+      }
     }
   </style>
 </head>
@@ -125,9 +169,10 @@
                 <button class="aside-btn aside-add" onclick="openModal()">+ Nieuw</button>
             </div>
         </div>
+
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 5px;">
             <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span>
-            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Filter...</button>
+            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Laden...</button>
         </div>
         <div id="transactions-container"></div>
       </div>
@@ -179,7 +224,7 @@ const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
 
-let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Kampen","Lening","Pensioen","Tuin","Opzij"];
+let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Kampen","Kapper","Lening","Pensioen","Tuin","Opzij"];
 let accounts = [];
 let transactions = [];
 let activeAccountId = null;
@@ -211,6 +256,7 @@ function selectAccount(accId) {
 
 function renderAccounts() {
     const sidebar = document.getElementById('sidebar-accounts'); sidebar.innerHTML = '';
+    if(accounts.length === 0) { sidebar.innerHTML = 'Geen rekeningen'; return; }
     accounts.forEach(acc => {
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
         const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
@@ -225,15 +271,19 @@ function renderTransactions() {
     let list = transactions.filter(t => t.accountId === activeAccountId);
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
     let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
+    
     displayList.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.date) - new Date(a.date));
+    
     displayList.forEach(t => {
         container.innerHTML += `
         <div class="tr-row" onclick="openModal('${t.id}')">
             <div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
             <div class="tr-main-content">
                 <span class="tr-date">${t.date}</span>
-                <span class="tr-cat">${t.category}</span>
-                <span class="tr-memo-list">${t.memo || ''}</span>
+                <div class="tr-mobile-catmemo-group">
+                    <span class="tr-cat">${t.category}</span>
+                    <span class="tr-memo-list">${t.memo || ''}</span>
+                </div>
                 <span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>
             </div>
         </div>`;
@@ -285,8 +335,28 @@ function deleteTransaction() { if(confirm('Wissen?')) { transactions = transacti
 async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
 async function deleteAccount() { if(confirm('Rekening wissen?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); await syncToCloud(); if (accounts.length > 0) selectAccount(accounts[0].id); else location.reload(); } }
 
-async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label').innerText = "Sync: OK"; } catch (e) { document.getElementById('sync-label').innerText = "Sync: FOUT"; } }
-async function loadFromCloud() { try { const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }); const result = await response.json(); if (result?.[0]?.data) { const d = result[0].data; if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions; showConfirmed = d.showConfirmed === true; const lastId = localStorage.getItem('lastActiveAccountId'); if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); else if (accounts.length > 0) selectAccount(accounts[0].id); renderAccounts(); renderTransactions(); } } catch (e) { } }
+async function syncToCloud() {
+    try {
+        await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) });
+        document.getElementById('sync-label').innerText = "Sync: OK";
+    } catch (e) { document.getElementById('sync-label').innerText = "Sync: FOUT"; }
+}
+
+async function loadFromCloud() {
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+        const result = await response.json();
+        if (result?.[0]?.data) {
+            const d = result[0].data; 
+            if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions;
+            showConfirmed = d.showConfirmed === true; 
+            const lastId = localStorage.getItem('lastActiveAccountId');
+            if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); 
+            else if (accounts.length > 0) selectAccount(accounts[0].id);
+            renderAccounts(); renderTransactions();
+        }
+    } catch (e) { }
+}
 loadFromCloud();
 </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v1.3 - KNOPPEN RECHTSBOVEN FIXED</title>
+  <title>Payit v1.0 - DEFINITIVE RELEASE</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -42,15 +42,12 @@
 
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     
-    /* HEADER STYLING */
     .header-card { 
         background: var(--bg-card); border-radius: 16px; padding: 12px 20px; margin-bottom: 15px; border: 1px solid var(--border); 
         display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
     }
-    .header-left-group { flex: 1; display: flex; align-items: baseline; gap: 12px; }
-    .header-center-group { flex: 2; text-align: center; }
-    .header-right-group { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
-    
+    .header-left-group { display: flex; align-items: baseline; gap: 12px; }
+    .header-right-group { display: flex; align-items: center; gap: 12px; }
     .acc-title-text { font-weight: 800; font-size: 15px; color: var(--text-main); }
     .hero-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
@@ -87,6 +84,19 @@
     .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; cursor: pointer; }
     .tab-text { font-size: 9px; font-weight: 700; text-transform: uppercase; }
 
+    /* NIEUWE KNOPPEN ONDERAAN VOOR DESKTOP/IPAD */
+    .fixed-action-bar {
+      position: fixed; bottom: 20px; right: 20px; display: flex; gap: 12px; z-index: 1500;
+    }
+    .fab-btn {
+      width: 56px; height: 56px; border-radius: 28px; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s;
+    }
+    .fab-btn:active { transform: scale(0.95); }
+    .fab-theme { background: var(--theme-btn-bg); color: var(--text-main); }
+    .fab-add { background: var(--primary); color: white; }
+
     .green-bg { background-color: var(--positive); }
     .red-bg { background-color: var(--negative); }
     .pos-text { color: var(--positive); }
@@ -100,11 +110,12 @@
       .navbar { display: flex; background: var(--bg-sidebar); height: 50px; align-items: center; padding: 0 15px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; justify-content: space-between;}
       .nav-title-text { font-weight: 800; font-size: 15px; color: var(--text-main); flex: 1; text-align: left; }
       .header-card { flex-direction: column; align-items: center; padding: 12px; gap: 4px; }
-      .header-left-group, .header-center-group, .header-right-group { flex: none; width: 100%; text-align: center; justify-content: center; }
-      .header-right-group { display: none; }
+      .header-left-group { flex-direction: column; align-items: center; gap: 2px; }
+      .header-right-group, .acc-title-text { display: none; }
       .saldo-text { font-size: 24px; }
       .modal { align-items: flex-end; }
       .modal-content { border-radius: 20px 20px 0 0; width: 100%; max-width: 100%; }
+      .fixed-action-bar { display: none; }
     }
   </style>
 </head>
@@ -135,17 +146,11 @@
       <div id="transaction-view">
         <div class="header-card">
             <div class="header-left-group">
-                <span class="hero-label">Saldo</span>
+                <span class="hero-label">Totaal Saldo</span>
                 <span id="total" class="saldo-text">€ 0,00</span>
             </div>
-            
-            <div class="header-center-group">
-                <div id="acc-title-text" class="acc-title-text">Laden...</div>
-            </div>
-
             <div class="header-right-group">
-                <button onclick="toggleTheme()" id="theme-icon-desktop" style="background:var(--theme-btn-bg); color:var(--theme-btn-text); border:none; width:36px; height:36px; border-radius:10px; cursor:pointer; font-size:18px;">☀️</button>
-                <button onclick="openModal()" style="background: var(--primary); color: white; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none; cursor:pointer;">+ Nieuw</button>
+                <div id="acc-title-text" class="acc-title-text">Laden...</div>
             </div>
         </div>
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px;"><span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span><button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Toon bevestigd</button></div>
@@ -153,6 +158,11 @@
       </div>
     </div>
   </main>
+</div>
+
+<div class="fixed-action-bar">
+  <button class="fab-btn fab-theme" onclick="toggleTheme()" id="theme-icon-fab">☀️</button>
+  <button class="fab-btn fab-add" onclick="openModal()">⊕</button>
 </div>
 
 <div class="iphone-tabs">
@@ -244,7 +254,7 @@ function parseNumericValue(str) { if (!str) return 0; let clean = str.toString()
 function applyTheme(theme) { 
     document.body.setAttribute('data-theme', theme); 
     const icon = theme === 'dark' ? '🌙' : '☀️';
-    ['theme-icon-mobile','theme-icon-desktop','theme-icon-iphone'].forEach(id => {
+    ['theme-icon-mobile','theme-icon-iphone','theme-icon-fab'].forEach(id => {
         let el = document.getElementById(id); if(el) el.innerText = icon;
     });
     localStorage.setItem('payit-theme', theme); 

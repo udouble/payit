@@ -2,143 +2,392 @@
 <html>
 <head>
   <title>Payit - v3.5 (Sync Edition)</title>
+
   <style>
-    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto; background:#1c1c1e; color:#e5e5e7; font-size:15px; }
+    body {
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+      background:#1c1c1e;
+      color:#e5e5e7;
+      font-size:15px;
+    }
+
     .container{display:flex;height:100vh;}
-    .sidebar{ width:260px; background:#2a2a2d; padding:18px; border-right:1px solid #3a3a3d; }
-    .account{ padding:10px 12px; border-radius:6px; margin-bottom:6px; cursor:pointer; font-size:14px; }
+
+    .sidebar{
+      width:260px;
+      background:#2a2a2d;
+      padding:18px;
+      border-right:1px solid #3a3a3d;
+    }
+
+    .account{
+      padding:10px 12px;
+      border-radius:6px;
+      margin-bottom:6px;
+      cursor:pointer;
+      font-size:14px;
+    }
+
     .account:hover{background:#3a3a3d;}
     .account.active{background:#3f8cff;color:white;}
-    .add-account-btn,.cat-btn{ width:100%; padding:10px; margin-top:8px; background:#3a3a3d; border:none; color:#ccc; border-radius:6px; font-size:13px; cursor:pointer; }
+
+    .add-account-btn,.cat-btn{
+      width:100%;
+      padding:10px;
+      margin-top:8px;
+      background:#3a3a3d;
+      border:none;
+      color:#ccc;
+      border-radius:6px;
+      font-size:13px;
+      cursor:pointer;
+    }
+
     .main{flex:1;padding:24px;overflow-y:auto;}
-    .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-    .total-box{ background:#ff9f43; color:#000; padding:6px 12px; border-radius:6px; font-size:13px; font-weight:600; }
-    .filter-btn{ background:#3a3a3d; padding:8px 12px; border:none; border-radius:6px; font-size:12px; color:#ccc; cursor:pointer; }
-    .add-btn{ background:#3f8cff; width:36px; height:36px; border-radius:10px; font-size:20px; border:none; color:white; cursor:pointer; }
-    table{ width:100%; border-collapse:collapse; table-layout:fixed; }
-    th{ text-align:left; font-size:12px; color:#888; padding:8px; border-bottom:1px solid #333; }
-    td{ padding:10px 8px; border-bottom:1px solid #2a2a2d; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:18px;
+    }
+
+    .total-box{
+      background:#ff9f43;
+      color:#000;
+      padding:6px 12px;
+      border-radius:6px;
+      font-size:13px;
+      font-weight:600;
+    }
+
+    .filter-btn{
+      background:#3a3a3d;
+      padding:8px 12px;
+      border:none;
+      border-radius:6px;
+      font-size:12px;
+      color:#ccc;
+      cursor:pointer;
+    }
+
+    .add-btn{
+      background:#3f8cff;
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      font-size:20px;
+      border:none;
+      color:white;
+      cursor:pointer;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
+
+    th{
+      text-align:left;
+      font-size:12px;
+      color:#888;
+      padding:8px;
+      border-bottom:1px solid #333;
+    }
+
+    td{
+      padding:10px 8px;
+      border-bottom:1px solid #2a2a2d;
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
     th:nth-child(1), td:nth-child(1){width:30px;}
     th:nth-child(2), td:nth-child(2){width:110px;}
     th:nth-child(3), td:nth-child(3){width:180px;}
-    th:nth-child(4), td:nth-child(4){ width:120px; text-align:right; }
+    th:nth-child(4), td:nth-child(4){
+      width:120px;
+      text-align:right;
+    }
     th:nth-child(5), td:nth-child(5){width:auto;}
+
     .positive{color:#4caf50;}
     .negative{color:#ff5e57;}
-    .status-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; }
+
+    .status-dot{
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      display:inline-block;
+    }
+
     .green{background:#4caf50;}
     .red{background:#ff5e57;}
-    .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); justify-content:center; align-items:center; z-index:100; }
-    .modal-content{ background:#2a2a2d; padding:20px; border-radius:10px; width:420px; }
-    input,select{ width:100%; padding:10px; margin-top:10px; background:#1c1c1e; border:1px solid #3a3a3d; color:white; border-radius:6px; font-size:14px; box-sizing: border-box; }
+
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.75);
+      justify-content:center;
+      align-items:center;
+      z-index:100;
+    }
+
+    .modal-content{
+      background:#2a2a2d;
+      padding:20px;
+      border-radius:10px;
+      width:420px;
+    }
+
+    input,select{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      background:#1c1c1e;
+      border:1px solid #3a3a3d;
+      color:white;
+      border-radius:6px;
+      font-size:14px;
+      box-sizing: border-box;
+    }
+
+    select{height:40px;}
+
     .amount-row{display:flex;gap:8px;}
+
     .btn-row{display:flex;gap:8px;margin-top:16px;}
-    .btn{ flex:1; padding:10px; border:none; border-radius:6px; font-size:13px; cursor:pointer; color: white; }
+
+    .btn{
+      flex:1;
+      padding:10px;
+      border:none;
+      border-radius:6px;
+      font-size:13px;
+      cursor:pointer;
+      color:white;
+    }
+
     .save{background:#4caf50;}
     .cancel{background:#555;}
     .dup{background:#3f8cff;}
     .del{background:#ff5e57;}
+
     .autocomplete-box{position:relative;}
-    .autocomplete-list{ position:absolute; width:100%; background:#1c1c1e; border:1px solid #333; max-height:160px; overflow-y:auto; z-index:10; }
-    .autocomplete-item{ padding:8px; cursor:pointer; font-size:13px; }
+    .autocomplete-list{
+      position:absolute;
+      width:100%;
+      background:#1c1c1e;
+      border:1px solid #333;
+      max-height:160px;
+      overflow-y:auto;
+      z-index:10;
+    }
+
+    .autocomplete-item{
+      padding:8px;
+      cursor:pointer;
+      font-size:13px;
+    }
+
     .autocomplete-item:hover{background:#333;}
-    .cat-modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); justify-content:center; align-items:center; z-index: 100; }
-    #sync-label { display: block; margin-top: 10px; font-size: 11px; color: #888; }
+
+    .cat-modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.75);
+      justify-content:center;
+      align-items:center;
+      z-index: 100;
+    }
+
+    #sync-label { 
+      display: block; 
+      margin-top: 10px; 
+      font-size: 11px; 
+      color: #888; 
+    }
   </style>
 </head>
+
 <body>
 
 <div class="container">
-  <div class="sidebar">
-    <div id="accounts-list"></div>
-    <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
-    <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
-    <span id="sync-label">Sync: Laden...</span>
-  </div>
 
-  <div class="main">
-    <div class="topbar">
-      <div style="display:flex;gap:8px;">
-        <div id="total" class="total-box"></div>
-        <button class="filter-btn" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
-      </div>
-      <button class="add-btn" onclick="openModal()">＋</button>
-    </div>
-    <table>
-      <thead><tr><th>ST</th><th>Datum</th><th>Categorie</th><th>Bedrag</th><th>Memo</th></tr></thead>
-      <tbody id="transactions-body"></tbody>
-    </table>
+<div class="sidebar">
+  <div id="accounts-list"></div>
+  <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
+  <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
+  <span id="sync-label">Sync: Laden...</span>
+</div>
+
+<div class="main">
+
+<div class="topbar">
+  <div style="display:flex;gap:8px;">
+    <div id="total" class="total-box"></div>
+    <button class="filter-btn" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
   </div>
+  <button class="add-btn" onclick="openModal()">＋</button>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>ST</th>
+  <th>Datum</th>
+  <th>Categorie</th>
+  <th>Bedrag</th>
+  <th>Memo</th>
+</tr>
+</thead>
+<tbody id="transactions-body"></tbody>
+</table>
+
+</div>
 </div>
 
 <div class="modal" id="modal">
-  <div class="modal-content">
-    <input type="date" id="date">
-    <div class="autocomplete-box">
-      <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
-      <div id="category-list" class="autocomplete-list"></div>
-    </div>
-    <input type="text" id="memo" placeholder="Memo">
-    <div class="amount-row">
-      <input type="number" id="income" placeholder="Inkomsten" step="0.01">
-      <input type="number" id="expense" placeholder="Uitgaven" step="0.01">
-    </div>
-    <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
-    <select id="target-account"></select>
-    <div class="btn-row">
-      <button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
-      <button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
-    </div>
-    <div class="btn-row">
-      <button class="btn cancel" onclick="closeModal()">Annuleren</button>
-      <button class="btn save" onclick="saveTransaction()">Opslaan</button>
-    </div>
-  </div>
+<div class="modal-content">
+
+<input type="date" id="date">
+
+<div class="autocomplete-box">
+  <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
+  <div id="category-list" class="autocomplete-list"></div>
+</div>
+
+<input type="text" id="memo" placeholder="Memo">
+
+<div class="amount-row">
+  <input type="number" id="income" placeholder="Inkomsten" step="0.01">
+  <input type="number" id="expense" placeholder="Uitgaven" step="0.01">
+</div>
+
+<select id="status">
+  <option value="pending">Afwachtend</option>
+  <option value="confirmed">Bevestigd</option>
+</select>
+
+<select id="target-account"></select>
+
+<div class="btn-row">
+  <button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
+  <button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
+</div>
+
+<div class="btn-row">
+  <button class="btn cancel" onclick="closeModal()">Annuleren</button>
+  <button class="btn save" onclick="saveTransaction()">Opslaan</button>
+</div>
+
+</div>
 </div>
 
 <div class="cat-modal" id="catModal">
-  <div class="modal-content">
-    <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
-    <input type="text" id="newCat" placeholder="Nieuwe categorie">
-    <div class="btn-row">
-      <button class="btn save" onclick="addCategory()">Toevoegen</button>
-      <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
-    </div>
+<div class="modal-content">
+  <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
+
+  <input type="text" id="newCat" placeholder="Nieuwe categorie">
+
+  <div class="btn-row">
+    <button class="btn save" onclick="addCategory()">Toevoegen</button>
+    <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
   </div>
+</div>
 </div>
 
 <script>
-/** CONFIGURATIE **/
+
+/** CONFIGURATIE - SUPABASE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
 
-let categories = JSON.parse(localStorage.getItem('payit_categories')) || ["Apple Pay","Bancontact","Belastingen","BTW","BMW","Delhaize","Dienstencheques","Diversen","Eneco","Etentjes","KBC","Lening","Nutsvoorzieningen","Onderhoud","Overschrijving","Paypal","Pensioen","Rekening courant","Reserve","Terugbetaling","Tuin"];
-let accounts = JSON.parse(localStorage.getItem('payit_accounts')) || [{ id:'1',name:'Privé'}];
-let transactions = JSON.parse(localStorage.getItem('payit_transactions')) || [];
+/** STATE **/
+let categories = [
+"Apple Pay",
+"Bancontact",
+"Belastingen",
+"BTW",
+"BTW-voorzien",
+"BMW",
+"BMW - onderhoud en verzekering",
+"Consensus",
+"Correctie",
+"Delhaize",
+"Dienstencheques",
+"Diversen",
+"Eneco",
+"Etentjes",
+"Invecon",
+"Kampen",
+"Kapper-voeten",
+"KBC",
+"Lening",
+"Maxem",
+"NOG TE ONTVANGEN",
+"Nutsvoorzieningen",
+"Onderhoud",
+"Opzij",
+"Opzij voor liq.reserve 01/2027",
+"Overige",
+"Overschrijving",
+"Paypal",
+"Pensioen",
+"Rekening courant",
+"Reserve",
+"Restant voor de maand",
+"Straetus",
+"Straetus-tweewekelijks",
+"Terugbetaling",
+"TotalEnergies",
+"Tuin",
+"Vanalles",
+"Vergoeding laden"
+];
+
+let accounts = [{ id:'1',name:'Privé'}];
+let transactions = [];
+
 let activeAccountId = accounts[0].id;
-let editingId = null;
-let showConfirmed = false;
+let editingId=null;
+let showConfirmed=false;
+
+// DOM Helpers
+const income = document.getElementById('income');
+const expense = document.getElementById('expense');
+const dateInput = document.getElementById('date');
+const categoryInput = document.getElementById('category');
+const memoInput = document.getElementById('memo');
+const statusSelect = document.getElementById('status');
+
+/** SYNC FUNCTIES **/
 
 async function syncToCloud() {
     document.getElementById('sync-label').innerText = "Sync: Opslaan...";
     const payload = { categories, accounts, transactions };
     try {
-        const check = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-        const res = await check.json();
-        
-        const method = res.length > 0 ? 'PATCH' : 'POST';
-        const url = res.length > 0 ? `${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}` : `${SUPABASE_URL}/rest/v1/payit`;
-
-        await fetch(url, {
-            method: method,
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(method === 'POST' ? { id: DB_RECORD_ID, data: payload } : { data: payload })
+        await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, {
+            method: 'PATCH',
+            headers: { 
+                'apikey': SUPABASE_KEY, 
+                'Authorization': `Bearer ${SUPABASE_KEY}`, 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({ data: payload })
         });
         document.getElementById('sync-label').innerText = "Sync: OK";
-    } catch (e) { document.getElementById('sync-label').innerText = "Sync: Offline"; }
+    } catch (e) { 
+        console.error(e);
+        document.getElementById('sync-label').innerText = "Sync: Offline"; 
+    }
 }
 
 async function loadFromCloud() {
@@ -148,42 +397,54 @@ async function loadFromCloud() {
         });
         const result = await response.json();
         if (result && result[0] && result[0].data) {
-            categories = result[0].data.categories;
-            accounts = result[0].data.accounts;
-            transactions = result[0].data.transactions;
-            saveToLocal();
+            const cloudData = result[0].data;
+            if (cloudData.categories) categories = cloudData.categories;
+            if (cloudData.accounts) accounts = cloudData.accounts;
+            if (cloudData.transactions) transactions = cloudData.transactions;
             renderAccounts();
             renderTransactions();
             document.getElementById('sync-label').innerText = "Sync: OK";
         }
-    } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout bij laden"; }
+    } catch (e) { 
+        console.error(e);
+        document.getElementById('sync-label').innerText = "Sync: Fout"; 
+    }
 }
 
-function saveToLocal() {
-    localStorage.setItem('payit_categories', JSON.stringify(categories));
-    localStorage.setItem('payit_accounts', JSON.stringify(accounts));
-    localStorage.setItem('payit_transactions', JSON.stringify(transactions));
+function dataChanged() {
+    syncToCloud();
 }
 
-function dataChanged() { saveToLocal(); syncToCloud(); }
+/** APP FUNCTIES (v3.4) **/
 
 function filterCategories(){
-  const val=category.value.toLowerCase();
-  const list = document.getElementById('category-list');
-  list.innerHTML='';
+  const val=categoryInput.value.toLowerCase();
+  document.getElementById('category-list').innerHTML='';
   categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
     let d=document.createElement('div');
-    d.className='autocomplete-item'; d.innerText=c;
-    d.onclick=()=>{category.value=c; list.innerHTML='';};
-    list.appendChild(d);
+    d.className='autocomplete-item';
+    d.innerText=c;
+    d.onclick=()=>{categoryInput.value=c;document.getElementById('category-list').innerHTML='';};
+    document.getElementById('category-list').appendChild(d);
   });
 }
 
+document.addEventListener('click',e=>{
+  if(!document.getElementById('category').contains(e.target))
+    document.getElementById('category-list').innerHTML='';
+});
+
 function openCatModal(){document.getElementById('catModal').style.display='flex';}
 function closeCatModal(){document.getElementById('catModal').style.display='none';}
+
 function addCategory(){
   const val=document.getElementById('newCat').value.trim();
-  if(val && !categories.includes(val)){ categories.push(val); dataChanged(); document.getElementById('newCat').value=''; closeCatModal(); }
+  if(val && !categories.includes(val)){
+    categories.push(val);
+    dataChanged();
+    document.getElementById('newCat').value='';
+    closeCatModal();
+  }
 }
 
 function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
@@ -191,84 +452,143 @@ function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minim
 function renderAccounts(){
   const list=document.getElementById('accounts-list');
   list.innerHTML='';
-  accounts.forEach(a=>{ list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`; });
+  accounts.forEach(a=>{
+    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
+  });
+
   const sel=document.getElementById('target-account');
   sel.innerHTML='';
-  accounts.forEach(a=>{ let o=document.createElement('option'); o.value=a.id; o.innerText=a.name; sel.appendChild(o); });
+  accounts.forEach(a=>{
+    let o=document.createElement('option');
+    o.value=a.id;o.innerText=a.name;
+    sel.appendChild(o);
+  });
 }
 
 function renderTransactions(){
   const tbody=document.getElementById('transactions-body');
   tbody.innerHTML='';
+
   let data=transactions.filter(t=>t.accountId===activeAccountId);
+
   let pending=data.filter(t=>t.status!=='confirmed');
   let confirmed=data.filter(t=>t.status==='confirmed');
+
   data=showConfirmed?[...pending,...confirmed]:pending;
+
   let total=0;
+
   data.forEach(t=>{
     total+=Number(t.amount);
-    tbody.innerHTML+=`<tr onclick="openModal('${t.id}')"><td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td><td>${t.date}</td><td>${t.category}</td><td class="${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td><td>${t.memo||''}</td></tr>`;
+    tbody.innerHTML+=`
+    <tr onclick="openModal('${t.id}')">
+      <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
+      <td>${t.date}</td>
+      <td>${t.category}</td>
+      <td class="${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
+      <td>${t.memo||''}</td>
+    </tr>`;
   });
+
   document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
 }
 
-function toggleConfirmed(){ showConfirmed=!showConfirmed; document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd"; renderTransactions(); }
+function toggleConfirmed(){
+  showConfirmed=!showConfirmed;
+  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
+  renderTransactions();
+}
 
 function openModal(id=null){
-  editingId=id; document.getElementById('modal').style.display='flex';
-  document.getElementById('income').value=''; document.getElementById('expense').value='';
+  editingId=id;
+  document.getElementById('modal').style.display='flex';
+
+  income.value='';expense.value='';
+
   if(id){
     let t=transactions.find(x=>x.id===id);
-    document.getElementById('date').value=t.date; document.getElementById('category').value=t.category;
-    document.getElementById('memo').value=t.memo; document.getElementById('status').value=t.status;
-    if(t.amount>=0) document.getElementById('income').value=t.amount; else document.getElementById('expense').value=Math.abs(t.amount);
+    dateInput.value=t.date;
+    categoryInput.value=t.category;
+    memoInput.value=t.memo;
+    statusSelect.value=t.status;
+
+    if(t.amount>=0) income.value=t.amount;
+    else expense.value=Math.abs(t.amount);
+
     document.getElementById('target-account').value=t.accountId;
   } else {
-    document.getElementById('date').value=new Date().toISOString().split('T')[0];
-    document.getElementById('category').value=''; document.getElementById('memo').value='';
+      dateInput.value=new Date().toISOString().split('T')[0];
+      categoryInput.value='';
+      memoInput.value='';
+      statusSelect.value='pending';
+      document.getElementById('target-account').value=activeAccountId;
   }
 }
 
 function closeModal(){document.getElementById('modal').style.display='none';}
 
 function saveTransaction(){
-  let inc = document.getElementById('income').value;
-  let exp = document.getElementById('expense').value;
-  let amt = inc ? parseFloat(inc) : -parseFloat(exp || 0);
+  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
+
   let data={
     id:editingId||Date.now().toString(),
-    date:document.getElementById('date').value,
-    category:document.getElementById('category').value,
-    memo:document.getElementById('memo').value,
-    amount:amt, status:document.getElementById('status').value,
+    date:dateInput.value,
+    category:categoryInput.value,
+    memo:memoInput.value,
+    amount,
+    status:statusSelect.value,
     accountId:document.getElementById('target-account').value
   };
-  if(editingId){ let i=transactions.findIndex(t=>t.id===editingId); transactions[i]=data; } 
-  else transactions.push(data);
-  dataChanged(); closeModal(); renderTransactions();
+
+  if(editingId){
+    let i=transactions.findIndex(t=>t.id===editingId);
+    transactions[i]=data;
+  } else transactions.push(data);
+
+  dataChanged();
+  closeModal();
+  renderTransactions();
 }
 
 function duplicateTransaction(){
   if(!editingId) return;
   let t=transactions.find(x=>x.id===editingId);
-  transactions.push({...t, id:Date.now().toString(), status:'pending'});
-  dataChanged(); closeModal(); renderTransactions();
+  transactions.push({...t,id:Date.now().toString(), status: 'pending'});
+  dataChanged();
+  closeModal();
+  renderTransactions();
 }
 
 function deleteTransaction(){
-  if(editingId && confirm('Wissen?')){ transactions=transactions.filter(t=>t.id!==editingId); dataChanged(); closeModal(); renderTransactions(); }
+  if(editingId && confirm('Wissen?')){
+    transactions=transactions.filter(t=>t.id!==editingId);
+    dataChanged();
+    closeModal();
+    renderTransactions();
+  }
 }
 
 function addAccount(){
   let n=prompt("Naam rekening:");
-  if(n){ accounts.push({id:Date.now().toString(),name:n}); dataChanged(); renderAccounts(); }
+  if(n){
+      accounts.push({id:Date.now().toString(),name:n});
+      dataChanged();
+      renderAccounts();
+  }
 }
 
-function selectAccount(id){ activeAccountId=id; renderAccounts(); renderTransactions(); }
+function selectAccount(id){
+  activeAccountId=id;
+  renderAccounts();
+  renderTransactions();
+}
 
+// Start de App
 renderAccounts();
 renderTransactions();
 loadFromCloud();
+
 </script>
+
 </body>
 </html>

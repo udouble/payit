@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0.6 - IPHONE ONLY HEADER FIX</title>
+  <title>Payit v2.0.4 - RESTORED</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -41,10 +41,9 @@
     
     .header-btns-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; }
 
-    .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); }
+    .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); text-align: right; }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
 
-    /* TRANSACTIE RIJ - v2.0 BASIS */
     .tr-row { 
       background: var(--bg-card); margin-bottom: 4px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); 
       display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden;
@@ -78,37 +77,15 @@
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
       .iphone-tabs { display: flex; }
+      .header-btns-aside { display: flex !important; }
     }
 
-    /* IPHONE ONLY FIX - BASIS v2.0.4 */
     @media (max-width: 600px) {
-      .header-card { 
-          flex-direction: column !important; 
-          align-items: stretch !important; 
-          padding: 12px 15px !important;
-          min-height: 0 !important;
-      }
+      .header-wrapper { align-items: flex-start; }
+      .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 12px !important; gap: 4px; }
+      .acc-title-text { text-align: left !important; width: 100%; font-size: 14px; }
+      .header-btns-aside { position: absolute; right: 20px; top: 20px; }
       
-      /* Forceert rekeningnaam en knoppen op regel 1 */
-      .header-wrapper-mobile-top {
-          display: flex !important;
-          justify-content: space-between !important;
-          align-items: center !important;
-          width: 100% !important;
-          margin-bottom: 8px;
-      }
-      .acc-title-text { font-size: 14px !important; flex: 1; text-align: left !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      
-      /* Forceert saldo gecentreerd op regel 2 */
-      .saldo-container-mobile {
-          display: flex !important;
-          flex-direction: column !important;
-          align-items: center !important;
-          width: 100% !important;
-      }
-      .saldo-text { font-size: 30px !important; text-align: center !important; }
-
-      /* Transactie lijst fix voor iPhone */
       .tr-row { 
           height: auto !important; padding: 12px 14px !important; 
           display: flex !important; flex-direction: row !important; 
@@ -138,25 +115,22 @@
   <main class="main-view">
     <div class="content-wrapper">
       <div id="transaction-view">
-        <div class="header-wrapper">
+        <div class="header-wrapper" style="position: relative;">
             <div class="header-card">
-                <div class="header-wrapper-mobile-top">
-                    <div id="acc-title-text" class="acc-title-text">Laden...</div>
-                    <div class="header-btns-aside">
-                        <button class="aside-btn aside-theme" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
-                        <button class="aside-btn aside-add" onclick="openModal()">+ Nieuw</button>
-                    </div>
-                </div>
-                
-                <div class="saldo-container-mobile">
+                <div style="display:flex; align-items:baseline; gap:12px;">
+                    <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Saldo</span>
                     <span id="total" class="saldo-text">€ 0,00</span>
                 </div>
+                <div id="acc-title-text" class="acc-title-text">Laden...</div>
+            </div>
+            <div class="header-btns-aside">
+                <button class="aside-btn aside-theme" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
+                <button class="aside-btn aside-add" onclick="openModal()">+ Nieuw</button>
             </div>
         </div>
-
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 5px;">
             <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span>
-            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Laden...</button>
+            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Filter...</button>
         </div>
         <div id="transactions-container"></div>
       </div>

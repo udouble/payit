@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0.4 - IPHONE FULL FIX</title>
+  <title>Payit v2.0.5 - IPHONE HEADER RECONSTRUCT</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -39,10 +39,9 @@
     .header-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
     .header-card { flex: 1; background: var(--bg-card); border-radius: 16px; padding: 12px 20px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); min-height: 80px; }
     
-    /* KNOPPEN RECHTSBOVEN ALIGNMENT */
     .header-btns-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; }
 
-    .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); text-align: right; }
+    .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
 
     /* TRANSACTIE RIJ - v2.0 BASIS */
@@ -79,17 +78,34 @@
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
       .iphone-tabs { display: flex; }
-      /* Zorg dat knoppen zichtbaar blijven op iPad/Mobiel */
       .header-btns-aside { display: flex !important; }
     }
 
-    /* IPHONE SPECIFIEKE HEADER & LIST FIX */
+    /* IPHONE HEADER & LIST RECONSTRUCTION */
     @media (max-width: 600px) {
-      .header-wrapper { align-items: flex-start; }
-      .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 12px !important; gap: 4px; }
-      .acc-title-text { text-align: left !important; width: 100%; font-size: 14px; }
-      .header-btns-aside { position: absolute; right: 20px; top: 20px; }
+      .header-wrapper { flex-direction: column !important; align-items: stretch !important; gap: 0 !important; }
       
+      /* Container voor Rekeningnaam + Knoppen */
+      .header-top-row { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; margin-bottom: 10px; }
+      
+      .header-card { 
+          display: block !important; 
+          height: auto !important; 
+          min-height: 0 !important; 
+          padding: 15px !important; 
+          background: var(--bg-card) !important;
+      }
+
+      /* Verplaats knoppen IN de card bovenin */
+      .header-btns-aside { position: static !important; }
+      
+      .acc-title-text { text-align: left !important; flex: 1; font-size: 15px !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      
+      /* Saldo gecentreerd eronder */
+      .saldo-container-mobile { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; margin-top: 5px; }
+      .saldo-text { font-size: 32px !important; text-align: center !important; }
+
+      /* Transactie lijst fix */
       .tr-row { 
           height: auto !important; padding: 12px 14px !important; 
           display: flex !important; flex-direction: row !important; 
@@ -112,29 +128,33 @@
           <button class="aside-btn" style="background:var(--bg-card); border:1px solid var(--border); color:var(--primary); width:32px; font-size:18px;" onclick="openAccountModal()">+</button>
       </div>
     </div>
-    <div class="sidebar-content" id="sidebar-accounts">Laden...</div>
+    <div class="sidebar-content" id="sidebar-accounts"></div>
     <div style="padding: 10px; text-align: center; font-size: 10px; color: var(--text-muted); border-top: 1px solid var(--border);" id="sync-label">Sync: OK</div>
   </aside>
 
   <main class="main-view">
     <div class="content-wrapper">
       <div id="transaction-view">
-        <div class="header-wrapper" style="position: relative;">
+        <div class="header-wrapper">
             <div class="header-card">
-                <div style="display:flex; align-items:baseline; gap:12px;">
-                    <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Saldo</span>
+                <div class="header-top-row">
+                    <div id="acc-title-text" class="acc-title-text">Laden...</div>
+                    <div class="header-btns-aside">
+                        <button class="aside-btn aside-theme" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
+                        <button class="aside-btn aside-add" onclick="openModal()">+ Nieuw</button>
+                    </div>
+                </div>
+                
+                <div class="saldo-container-mobile">
+                    <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Saldo</div>
                     <span id="total" class="saldo-text">€ 0,00</span>
                 </div>
-                <div id="acc-title-text" class="acc-title-text">Laden...</div>
-            </div>
-            <div class="header-btns-aside">
-                <button class="aside-btn aside-theme" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
-                <button class="aside-btn aside-add" onclick="openModal()">+ Nieuw</button>
             </div>
         </div>
+
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 5px;">
             <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span>
-            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Filter...</button>
+            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Laden...</button>
         </div>
         <div id="transactions-container"></div>
       </div>
@@ -307,7 +327,7 @@ async function loadFromCloud() {
             else if (accounts.length > 0) selectAccount(accounts[0].id);
             renderAccounts(); renderTransactions();
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { }
 }
 loadFromCloud();
 </script>

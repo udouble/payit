@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v4.9</title>
+  <title>Payit v5.0</title>
   <style>
     :root {
       --bg-body: #f1f5f9; 
@@ -26,6 +26,7 @@
       color: var(--text-main);
       -webkit-font-smoothing: antialiased;
       overflow: hidden;
+      overscroll-behavior-y: contain;
     }
 
     .app-container {
@@ -33,7 +34,7 @@
       height: 100vh;
     }
 
-    /* SIDEBAR LOGICA */
+    /* SIDEBAR */
     .sidebar {
       width: 300px;
       background: var(--bg-sidebar);
@@ -81,7 +82,7 @@
       z-index: 90;
     }
 
-    /* ACCOUNT ITEMS (Verbeterd voor Mac) */
+    /* ACCOUNT ITEMS */
     .acc-item {
       padding: 16px;
       border-radius: 12px;
@@ -89,7 +90,7 @@
       cursor: pointer;
       border: 1px solid transparent;
       display: flex;
-      flex-direction: column; /* Saldo onder naam */
+      flex-direction: column;
       gap: 4px;
       transition: all 0.2s;
       position: relative;
@@ -126,7 +127,7 @@
     .hero-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
     .hero-total { font-size: 32px; font-weight: 800; color: var(--orange); margin-top: 5px; }
 
-    /* TRANSACTIE RIJ (Fix voor overlap) */
+    /* TRANSACTIE RIJ */
     .tr-row {
       background: var(--bg-card);
       margin-bottom: 8px;
@@ -139,11 +140,9 @@
       cursor: pointer;
     }
     .tr-status { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
-    
-    .tr-info { flex: 1; min-width: 0; } /* min-width zorgt dat tekst niet uitbreekt */
+    .tr-info { flex: 1; min-width: 0; } 
     .tr-cat { font-weight: 700; font-size: 15px; color: var(--text-main); display: block; margin-bottom: 2px; }
     .tr-memo { color: var(--text-muted); font-size: 13px; display: block; overflow-wrap: break-word; line-height: 1.4; }
-    
     .tr-right { text-align: right; flex-shrink: 0; margin-left: 10px; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 16px; display: block; margin-bottom: 4px; }
     .tr-date { font-size: 11px; color: var(--text-muted); display: block; }
@@ -157,7 +156,7 @@
     }
     .tab-item { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 600; cursor: pointer; }
 
-    /* MODALS */
+    /* MODALS & BUTTON GRID */
     .modal {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.4); z-index: 2000;
@@ -172,11 +171,19 @@
       background: var(--bg-input); border: 1px solid var(--border);
       border-radius: 12px; color: var(--text-main); font-size: 16px; box-sizing: border-box;
     }
-    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-    .btn { padding: 16px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; }
+
+    /* Het cruciale 2x2 grid voor de knoppen */
+    .btn-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 12px; 
+      margin-top: 20px; 
+    }
+    .btn { padding: 16px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 15px; text-align: center; }
     .btn-save { background: var(--primary); color: white; }
     .btn-cancel { background: #f1f5f9; color: var(--text-muted); }
-    .btn-danger { background: #fee2e2; color: #ef4444; grid-column: 1/-1; margin-top: 10px;}
+    .btn-danger { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+    .btn-dup { background: #e2e8f0; color: var(--text-main); }
 
     #pull-indicator { position: absolute; top: 64px; left: 0; right: 0; text-align: center; font-size: 12px; opacity: 0; }
 
@@ -192,7 +199,7 @@
       .content-wrapper { padding: 15px; padding-bottom: 100px; }
       .navbar { padding: 0 15px; }
       .modal { align-items: flex-end; }
-      .modal-content { border-radius: 24px 24px 0 0; width: 100%; max-width: 100%; }
+      .modal-content { border-radius: 24px 24px 0 0; width: 100%; max-width: 100%; padding: 25px;}
     }
   </style>
 </head>
@@ -239,7 +246,7 @@
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h3 id="modalTitle" style="margin:0; color:var(--primary);">Transactie</h3>
+    <h3 id="modalTitle" style="margin:0; color:var(--primary); margin-bottom: 10px;">Transactie</h3>
     <input type="date" id="date">
     <input type="text" id="category" placeholder="Categorie" list="cat-list">
     <datalist id="cat-list"></datalist>
@@ -250,28 +257,31 @@
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
     <select id="target-account"></select>
+    
     <div class="btn-grid">
         <button class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
         <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
+        
         <button id="btnDeleteTransaction" class="btn btn-danger" style="display:none;" onclick="deleteTransaction()">Wissen</button>
-        <button id="btnDupTransaction" class="btn btn" style="display:none; background:#e2e8f0; grid-column: 1/-1;" onclick="duplicateTransaction()">Dupliceren</button>
+        <button id="btnDupTransaction" class="btn btn-dup" style="display:none;" onclick="duplicateTransaction()">Dupliceren</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="accModal">
   <div class="modal-content">
-    <h3 id="accModalTitle">Rekening</h3>
+    <h3 id="accModalTitle" style="color:var(--primary);">Rekening</h3>
     <input type="text" id="newAccName" placeholder="Naam rekening">
     <div class="btn-grid">
       <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
       <button class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
-      <button id="acc-delete-btn" class="btn btn-danger" style="display:none;" onclick="deleteAccount()">Verwijder Rekening</button>
+      <button id="acc-delete-btn" class="btn btn-danger" style="display:none; grid-column: 1/-1;" onclick="deleteAccount()">Verwijder Rekening</button>
     </div>
   </div>
 </div>
 
 <script>
+/** CONFIGURATIE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
@@ -345,6 +355,7 @@ function openModal(id = null) {
     document.getElementById('btnDeleteTransaction').style.display = id ? 'block' : 'none';
     document.getElementById('btnDupTransaction').style.display = id ? 'block' : 'none';
     document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    document.getElementById('cat-list').innerHTML = categories.map(c => `<option value="${c}">`).join('');
     if (id) {
         let t = transactions.find(x => x.id === id);
         document.getElementById('date').value = t.date;
@@ -362,6 +373,7 @@ function openModal(id = null) {
     }
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
 function openAccountModal(id = null) {
     editingAccountId = id;
     document.getElementById('accModal').style.display = 'flex';

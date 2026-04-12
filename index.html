@@ -3,21 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit - v4.1 Stable Layout</title>
+  <title>Payit v5.1</title>
   <style>
-    /* 1. Kleurenpalet & Basis */
     :root {
-      --bg-body: #141417; /* Diep Slate Grey */
-      --bg-sidebar: #1a1a1e;
-      --bg-card: #222226;
-      --bg-input: #2a2a2f;
-      --primary: #5c7cff; /* Zachtblauw */
-      --text-main: #f0f0f2;
-      --text-muted: #94949e;
-      --border: #2d2d33;
-      --positive: #4ade80; /* Emerald */
-      --negative: #f87171; /* Koraalrood */
-      --orange: #fb923c;
+      --bg-body: #f1f5f9; 
+      --bg-sidebar: #ffffff; 
+      --bg-card: #ffffff;
+      --bg-input: #f8fafc;
+      --primary: #3f8cff; 
+      --text-main: #1e293b; 
+      --text-muted: #64748b; 
+      --border: #e2e8f0; 
+      --positive: #10b981; 
+      --negative: #ef4444; 
+      --orange: #f97316; 
     }
 
     body {
@@ -30,11 +29,14 @@
       overscroll-behavior-y: contain;
     }
 
-    .app-container { display: flex; height: 100vh; }
+    .app-container {
+      display: flex;
+      height: 100vh;
+    }
 
     /* SIDEBAR */
     .sidebar {
-      width: 280px;
+      width: 300px;
       background: var(--bg-sidebar);
       border-right: 1px solid var(--border);
       display: flex;
@@ -63,23 +65,24 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      background-color: var(--bg-body);
       position: relative;
     }
 
     .navbar {
-      background: rgba(20, 20, 23, 0.85);
+      background: rgba(255, 255, 255, 0.8);
       backdrop-filter: blur(12px);
       height: 64px;
       display: flex;
       align-items: center;
-      padding: 0 20px;
+      padding: 0 25px;
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 90;
     }
 
-    /* REKENINGEN */
+    /* ACCOUNT ITEMS */
     .acc-item {
       padding: 16px;
       border-radius: 12px;
@@ -89,14 +92,18 @@
       display: flex;
       flex-direction: column;
       gap: 3px;
+      transition: all 0.2s;
+      position: relative;
     }
-    .acc-item:hover { background: var(--bg-input); }
+    .acc-item:hover { background: var(--bg-body); }
     .acc-item.active { 
-      background: rgba(92, 124, 255, 0.1);
+      background: #f8fafc;
       border-color: var(--primary); 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
-    .acc-name { font-weight: 700; font-size: 14px; color: var(--text-main); }
+    .acc-name { font-weight: 700; font-size: 14px; color: var(--text-main); line-height: 1.2; padding-right: 25px; }
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 13px; font-weight: 700; }
+    .acc-settings { position: absolute; right: 12px; top: 18px; opacity: 0.3; font-size: 14px; }
 
     .content-wrapper {
       padding: 20px;
@@ -109,17 +116,18 @@
     .summary-hero {
       background: var(--bg-card);
       border-radius: 20px;
-      padding: 30px;
+      padding: 25px 30px;
       margin-bottom: 25px;
       border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       align-items: center;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03);
     }
     .hero-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
     .hero-total { font-size: 32px; font-weight: 800; color: var(--orange); margin-top: 5px; }
 
-    /* 2. STABIELE TRANSACTIE LAYOUT (Nieuw) */
+    /* STABIELE TRANSACTIE LAYOUT */
     .tr-row {
       background: var(--bg-card);
       margin-bottom: 8px;
@@ -132,37 +140,16 @@
       transition: all 0.15s;
     }
     .tr-row:hover { background: var(--bg-input); transform: translateY(-1px); }
-    
-    .tr-main-info { flex: 1; min-width: 0; } /* min-width voor afbreken */
-
-    /* Regel 1: Categorie & Datum */
+    .tr-main-info { flex: 1; min-width: 0; } 
     .tr-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
     .tr-cat { font-weight: 700; font-size: 15px; color: var(--text-main); }
     .tr-date { font-size: 11px; color: var(--text-muted); }
-
-    /* Regel 2: Memo */
-    .tr-memo { 
-        color: var(--text-muted); 
-        font-size: 13px; 
-        line-height: 1.4;
-        display: block;
-        overflow-wrap: break-word; /* Voorkom springerigheid */
-    }
-    
-    /* Rechterkolom: Bedrag & Status */
-    .tr-right-info { 
-        text-align: right; 
-        flex-shrink: 0; 
-        display: flex; 
-        flex-direction: column; 
-        align-items: flex-end; 
-        gap: 6px;
-        margin-left: 10px;
-    }
+    .tr-memo { color: var(--text-muted); font-size: 13px; line-height: 1.4; display: block; overflow-wrap: break-word; }
+    .tr-right-info { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin-left: 10px; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 16px; display: block; }
     .tr-status { width: 8px; height: 8px; border-radius: 50%; display: block; }
 
-    /* 3. MODALS */
+    /* MODALS & BUTTON GRID */
     .modal {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.4); z-index: 2000;
@@ -178,16 +165,24 @@
       border-radius: 12px; color: var(--text-main); font-size: 16px; box-sizing: border-box;
       -webkit-appearance: none;
     }
-    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-    .btn { padding: 16px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; text-align: center;}
+
+    /* Strak 2x2 grid voor de knoppen */
+    .btn-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 12px; 
+      margin-top: 20px; 
+    }
+    .btn { padding: 16px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 15px; text-align: center; }
     .btn-save { background: var(--primary); color: white; }
-    .btn-cancel { background: var(--bg-input); color: var(--text-muted); }
-    .btn-danger { background: rgba(248, 113, 113, 0.15); color: var(--negative); grid-column: 1/-1; margin-top: 8px; }
+    .btn-cancel { background: #f1f5f9; color: var(--text-muted); }
+    .btn-danger { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+    .btn-dup { background: #e2e8f0; color: var(--text-main); border: 1px solid var(--border); }
 
     /* IPHONE SHORTCUTS */
     .iphone-tabs {
       position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
-      background: var(--bg-sidebar); border-top: 1px solid var(--border);
+      background: #ffffff; border-top: 1px solid var(--border);
       display: none; justify-content: space-around; align-items: center; padding-bottom: 15px;
       z-index: 1100;
     }
@@ -195,7 +190,6 @@
 
     #pull-indicator { position: absolute; top: 64px; left: 0; right: 0; text-align: center; font-size: 12px; opacity: 0; color: var(--text-muted);}
 
-    /* Helpers */
     .green-dot { background: var(--positive); }
     .red-dot { background: var(--negative); }
     .pos-text { color: var(--positive); }
@@ -237,7 +231,7 @@
           <div class="hero-label">Totaal Saldo</div>
           <div id="total" class="hero-total">€ 0,00</div>
         </div>
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px;">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
           <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Historie</span>
           <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 12px; font-weight: 600;">Toon bevestigd</button>
         </div>
@@ -266,10 +260,13 @@
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
     <select id="target-account"></select>
+    
     <div class="btn-grid">
         <button class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
         <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
+        
         <button id="btnDeleteTransaction" class="btn btn-danger" style="display:none;" onclick="deleteTransaction()">Wissen</button>
+        <button id="btnDupTransaction" class="btn btn-dup" style="display:none;" onclick="duplicateTransaction()">Dupliceren</button>
     </div>
   </div>
 </div>
@@ -281,12 +278,13 @@
     <div class="btn-grid">
       <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
       <button class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
-      <button id="acc-delete-btn" class="btn btn-danger" style="display:none; grid-column: 1/-1; margin-top:10px;" onclick="deleteAccount()">Verwijder Rekening</button>
+      <button id="acc-delete-btn" class="btn btn-danger" style="display:none; grid-column: 1/-1;" onclick="deleteAccount()">Verwijder Rekening</button>
     </div>
   </div>
 </div>
 
 <script>
+/** CONFIGURATIE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
@@ -300,7 +298,6 @@ let editingAccountId = null;
 let showConfirmed = false;
 
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
-
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
 function selectAccount(accId) {
@@ -316,7 +313,6 @@ function renderAccounts() {
     const sidebar = document.getElementById('sidebar-accounts');
     sidebar.innerHTML = '';
     accounts.forEach(acc => {
-        // Bereken totaal van alle transacties voor sidebar-balans
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
         const div = document.createElement('div');
         div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
@@ -324,28 +320,20 @@ function renderAccounts() {
         div.innerHTML = `
             <span class="acc-name">${acc.name}</span>
             <span class="acc-bal">${formatCurrency(bal)}</span>
+            <span class="acc-settings" onclick="event.stopPropagation(); openAccountModal('${acc.id}')">⚙️</span>
         `;
         sidebar.appendChild(div);
     });
 }
 
-/** 4. GESTABILISEERDE RENDER FUNCTIE (Nieuw) **/
 function renderTransactions() {
     const container = document.getElementById('transactions-container');
     container.innerHTML = '';
-    
-    // De stabiele saldo-logica (v4.8) behouden: bereken het totaal op basis van ALLE transacties
-    let allAccountTransactions = transactions.filter(t => t.accountId === activeAccountId);
-    let totalBalance = allAccountTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
-    
-    // Pas daarna de visuele filtering toe voor de lijst
-    let pending = allAccountTransactions.filter(t => t.status !== 'confirmed');
-    let confirmed = allAccountTransactions.filter(t => t.status === 'confirmed');
-    let displayList = showConfirmed ? [...pending, ...confirmed] : pending;
+    let allAccT = transactions.filter(t => t.accountId === activeAccountId);
+    let totalBal = allAccT.reduce((sum, t) => sum + Number(t.amount), 0);
+    let displayList = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
 
-    // Sorteren op datum, nieuwste eerst
     displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
-        // Nieuwe, stabiele verticale structuur
         container.innerHTML += `
             <div class="tr-row" onclick="openModal('${t.id}')">
                 <div class="tr-main-info">
@@ -362,15 +350,14 @@ function renderTransactions() {
             </div>
         `;
     });
-    
-    // Het stabiele totaalbedrag
-    document.getElementById('total').innerText = formatCurrency(totalBalance);
+    document.getElementById('total').innerText = formatCurrency(totalBal);
 }
 
 function openModal(id = null) {
     editingId = id;
     document.getElementById('modal').style.display = 'flex';
     document.getElementById('btnDeleteTransaction').style.display = id ? 'block' : 'none';
+    document.getElementById('btnDupTransaction').style.display = id ? 'block' : 'none';
     document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     document.getElementById('cat-list').innerHTML = categories.map(c => `<option value="${c}">`).join('');
     if (id) {
@@ -407,6 +394,7 @@ async function saveTransaction() {
     closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
 }
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
+function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
 
 function handleAccountAction() {
     const name = document.getElementById('newAccName').value;

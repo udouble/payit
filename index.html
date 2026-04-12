@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.5 - UI PRECISION FIX</title>
+  <title>Payit v2.7 - COMPACT HORIZONTAL LAYOUT</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -33,9 +33,7 @@
     .acc-item:hover { background: var(--bg-body); }
     .acc-item.active { background: rgba(63, 140, 255, 0.1); border-color: var(--primary); }
     .acc-name { font-weight: 700; font-size: 14px; }
-    
-    /* SALDO FONT (Sidebar) */
-    .acc-bal { font-family: "SF Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace; color: var(--orange); font-size: 13px; font-weight: 700; }
+    .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 13px; font-weight: 700; }
 
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     .header-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
@@ -44,14 +42,46 @@
     .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
 
-    .tr-row { background: var(--bg-card); margin-bottom: 6px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; }
+    /* COMPACTE TRANSACTIE RIJ */
+    .tr-row { 
+      background: var(--bg-card); 
+      margin-bottom: 4px; 
+      padding: 0 14px; 
+      border-radius: 10px; 
+      border: 1px solid var(--border); 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      cursor: pointer; 
+      position: relative; 
+      overflow: hidden;
+      height: 50px; /* Veel compacter */
+      box-sizing: border-box;
+    }
     .tr-status-line { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
     
-    /* TRANSACTIE LIJST FONTS */
-    .tr-date { font-size: 11px; color: var(--text-muted); font-weight: 700; font-family: "SF Mono", monospace; }
-    .tr-cat { font-weight: 700; font-size: 14px; color: var(--text-main); }
-    .tr-memo-list { font-size: 14px; color: var(--text-muted); margin-top: 2px; } /* Memo tekst groter */
-    .tr-amount { font-family: "SF Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-weight: 700; font-size: 15px; }
+    .tr-main-content {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      gap: 20px;
+      overflow: hidden;
+    }
+
+    .tr-date { font-size: 11px; color: var(--text-muted); font-weight: 700; font-family: "SF Mono", monospace; min-width: 85px; }
+    .tr-cat { font-weight: 700; font-size: 14px; color: var(--text-main); min-width: 140px; white-space: nowrap; }
+    
+    /* HORIZONTALE MEMO */
+    .tr-memo-list { 
+      font-size: 14px; 
+      color: var(--text-muted); 
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      opacity: 0.8;
+    }
+    .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; text-align: right; min-width: 100px; }
 
     .aside-btn { height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.2s; }
     .aside-theme { width: 32px; background: var(--theme-btn-bg); color: var(--theme-btn-text); font-size: 16px; }
@@ -60,29 +90,13 @@
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     
-    /* DROPDOWN & INPUT HARMONISATIE */
     input, select { 
-      width: 100%; 
-      height: 44px; /* Vaste hoogte voor consistentie */
-      padding: 0 12px; 
-      margin-top: 10px; 
-      background: var(--bg-input); 
-      border: 1px solid var(--border); 
-      border-radius: 10px; 
-      color: var(--text-main); 
-      font-size: 15px; 
-      box-sizing: border-box; 
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
+      width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; 
+      background: var(--bg-input); border: 1px solid var(--border); 
+      border-radius: 10px; color: var(--text-main); font-size: 15px; 
+      box-sizing: border-box; outline: none; -webkit-appearance: none; appearance: none;
     }
-    select {
-      background-image: var(--chevron);
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      background-size: 14px;
-      padding-right: 36px;
-    }
+    select { background-image: var(--chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; padding-right: 36px; }
     
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
     .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 15px; }
@@ -102,6 +116,12 @@
       .header-btns-aside { display: none; }
       .modal { align-items: flex-end; }
       .modal-content { border-radius: 20px 20px 0 0; width: 100%; max-width: 100%; padding-bottom: 40px; }
+      
+      /* Mobiel terug naar gestapelde weergave */
+      .tr-row { height: auto; padding: 12px 14px; }
+      .tr-main-content { flex-direction: column; align-items: flex-start; gap: 2px; }
+      .tr-memo-list { white-space: normal; }
+      .tr-amount { text-align: left; min-width: 0; margin-top: 5px; font-size: 16px; }
     }
   </style>
 </head>
@@ -121,10 +141,6 @@
   </aside>
 
   <main class="main-view">
-    <nav class="navbar" style="display: none;">
-      <div id="nav-title" style="font-weight: 800;">Laden...</div>
-      <button class="aside-btn aside-theme" onclick="toggleTheme()" id="theme-icon-iphone">☀️</button>
-    </nav>
     <div class="content-wrapper">
       <div id="transaction-view">
         <div class="header-wrapper">
@@ -141,7 +157,7 @@
             </div>
         </div>
 
-        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 5px;">
             <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span>
             <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Laden...</button>
         </div>
@@ -242,9 +258,20 @@ function renderTransactions() {
     let list = transactions.filter(t => t.accountId === activeAccountId);
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
     let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
+    
     displayList.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.date) - new Date(a.date));
+    
     displayList.forEach(t => {
-        container.innerHTML += `<div class="tr-row" onclick="openModal('${t.id}')"><div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div style="flex:1;"><div style="display:flex; justify-content:space-between;"><span class="tr-date">${t.date}</span><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span></div><div class="tr-cat">${t.category}</div><div class="tr-memo-list">${t.memo || ''}</div></div></div>`;
+        container.innerHTML += `
+        <div class="tr-row" onclick="openModal('${t.id}')">
+            <div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
+            <div class="tr-main-content">
+                <span class="tr-date">${t.date}</span>
+                <span class="tr-cat">${t.category}</span>
+                <span class="tr-memo-list">${t.memo || ''}</span>
+                <span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>
+            </div>
+        </div>`;
     });
     document.getElementById('total').innerText = formatCurrency(list.reduce((sum, t) => sum + Number(t.amount), 0));
 }
@@ -270,12 +297,7 @@ function openModal(id = null) {
     }
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-function openAccountModal(id = null) { 
-    editingAccountId = id; document.getElementById('accModal').style.display = 'flex'; 
-    document.getElementById('newAccName').value = id ? accounts.find(a => a.id === id).name : ''; 
-    document.getElementById('btnDeleteAcc').style.display = id ? 'block' : 'none';
-}
+function openAccountModal(id = null) { editingAccountId = id; document.getElementById('accModal').style.display = 'flex'; document.getElementById('newAccName').value = id ? accounts.find(a => a.id === id).name : ''; document.getElementById('btnDeleteAcc').style.display = id ? 'block' : 'none'; }
 function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }
 
 async function handleAccountAction() { 
@@ -287,50 +309,19 @@ async function handleAccountAction() {
 
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
-    if(!categories.includes(catVal)) {
-        if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return;
-        categories.push(catVal);
-    }
+    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
     let data = { id: editingId || Date.now().toString(), date: document.getElementById('date').value, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
     if (editingId) transactions[transactions.findIndex(t => t.id === editingId)] = data; else transactions.push(data);
     closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
-function duplicateTransaction() {
-    let t = transactions.find(x => x.id === editingId);
-    let newData = {...t, id: Date.now().toString(), status: 'pending'};
-    transactions.push(newData);
-    closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
-}
+function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
-
 async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
+async function deleteAccount() { if(confirm('Rekening en data wissen?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); await syncToCloud(); if (accounts.length > 0) selectAccount(accounts[0].id); else location.reload(); } }
 
-async function syncToCloud() {
-    try {
-        await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { 
-            method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) 
-        });
-        document.getElementById('sync-label').innerText = "Sync: OK";
-    } catch (e) { document.getElementById('sync-label').innerText = "Sync: FOUT"; }
-}
-
-async function loadFromCloud() {
-    try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-        const result = await response.json();
-        if (result?.[0]?.data) {
-            const d = result[0].data; 
-            if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions;
-            showConfirmed = d.showConfirmed === true; 
-            const lastId = localStorage.getItem('lastActiveAccountId');
-            if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); 
-            else if (accounts.length > 0) selectAccount(accounts[0].id);
-            renderAccounts(); renderTransactions();
-        }
-    } catch (e) { console.error(e); }
-}
+async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label').innerText = "Sync: OK"; } catch (e) { document.getElementById('sync-label').innerText = "Sync: FOUT"; } }
+async function loadFromCloud() { try { const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }); const result = await response.json(); if (result?.[0]?.data) { const d = result[0].data; if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions; showConfirmed = d.showConfirmed === true; const lastId = localStorage.getItem('lastActiveAccountId'); if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); else if (accounts.length > 0) selectAccount(accounts[0].id); renderAccounts(); renderTransactions(); } } catch (e) { } }
 loadFromCloud();
 </script>
 </body>

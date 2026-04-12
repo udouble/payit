@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v6.4 - CLEAN TRANSACTION LAYOUT</title>
+  <title>Payit v6.6 - DATE PROMINENCE & CHRONO-LAYOUT</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -11,13 +11,16 @@
       --primary: #3f8cff; --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
       --positive: #10b981; --negative: #ef4444; --orange: #f97316;
       --theme-btn-bg: #e2e8f0; --theme-btn-text: #64748b;
+      --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     }
     [data-theme="dark"] {
       --bg-body: #0f172a; --bg-sidebar: #1e293b; --bg-card: #1e293b; --bg-input: #334155;
       --primary: #60a5fa; --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
       --positive: #4ade80; --negative: #f87171; --orange: #fb923c;
       --theme-btn-bg: #334155; --theme-btn-text: #f1f5f9;
+      --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f1f5f9'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     }
+    
     body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); -webkit-font-smoothing: antialiased; overflow: hidden; overscroll-behavior-y: contain; transition: background-color 0.3s, color 0.3s; }
     .app-container { display: flex; height: 100vh; }
     .sidebar { width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s ease; z-index: 1000; }
@@ -28,22 +31,20 @@
     body:not([data-theme="dark"]) .navbar { --bg-card-rgb: 255, 255, 255; }
     body[data-theme="dark"] .navbar { --bg-card-rgb: 30, 41, 59; }
     
-    /* ACCOUNT ITEMS */
     .acc-item { padding: 12px 16px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; border: 1px solid transparent; display: flex; flex-direction: column; gap: 2px; transition: all 0.2s; position: relative; }
     .acc-item:hover { background: var(--bg-body); }
     .acc-item.active { background: rgba(63, 140, 255, 0.1); border-color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .acc-name { font-weight: 700; font-size: 14px; }
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 13px; font-weight: 700; }
 
-    /* SUMMARY HERO */
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     .summary-hero { background: var(--bg-card); border-radius: 14px; padding: 12px 15px; margin-bottom: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; }
     .hero-total { font-size: 26px; font-weight: 800; color: var(--orange); }
 
-    /* TRANSACTIE RIJ - VERBETERD v6.4 */
+    /* TRANSACTIE RIJ - VERBETERD v6.6 */
     .tr-row { 
       background: var(--bg-card); 
-      margin-bottom: 6px; 
+      margin-bottom: 5px; 
       padding: 10px 14px; 
       border-radius: 10px; 
       border: 1px solid var(--border); 
@@ -56,10 +57,14 @@
       overflow: hidden; 
     }
     .tr-status-line { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-    .tr-left-side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-    .tr-cat { font-weight: 700; font-size: 14px; color: var(--text-main); display: block; }
-    .tr-date { font-size: 10px; color: var(--text-muted); font-weight: 500; }
-    .tr-memo { color: var(--text-muted); font-size: 11px; line-height: 1.3; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .tr-left-side { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    
+    /* Datum en Categorie op één regel, datum eerst */
+    .tr-header { display: flex; align-items: baseline; gap: 8px; }
+    .tr-date { font-size: 12px; color: var(--text-muted); font-weight: 700; font-family: "SF Mono", monospace; white-space: nowrap; }
+    .tr-cat { font-weight: 700; font-size: 14px; color: var(--text-main); }
+    
+    .tr-memo { color: var(--text-muted); font-size: 11px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
     
     .tr-right-side { text-align: right; flex-shrink: 0; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; white-space: nowrap; }
@@ -67,14 +72,14 @@
     /* MODALS */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 20px; border-radius: 20px; }
-    input, select { width: 100%; padding: 10px; margin-top: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; -webkit-appearance: none; }
+    input, select { width: 100%; padding: 10px; margin-top: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; -webkit-appearance: none; appearance: none;}
+    select { background-image: var(--chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px; }
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
     .btn { padding: 12px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; text-align: center; }
     .btn-save { background: var(--primary); color: white; }
     .btn-cancel { background: var(--bg-input); color: var(--text-muted); }
     .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--negative); }
 
-    /* TAB BAR */
     .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: none; justify-content: space-around; align-items: flex-start; padding-top: 8px; z-index: 1100; }
     .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 80px; }
     .tab-icon { font-size: 20px; }
@@ -133,7 +138,7 @@
 
 <div class="iphone-tabs">
   <button class="tab-item" onclick="loadFromCloud()"><span class="tab-icon">🔄</span><span class="tab-text">Sync</span></button>
-  <button class="tab-item" onclick="openModal()" style="color:var(--primary);"><span class="tab-icon" style="font-size: 28px; margin-top: -3px;">⊕</span><span class="tab-text">Nieuw</span></button>
+  <button class="tab-item" onclick="openModal()" style="color:var(--primary);"><span class="tab-icon" style="font-size: 28px; margin-top: -4px;">⊕</span><span class="tab-text">Nieuw</span></button>
   <button class="tab-item" onclick="toggleSidebar()"><span class="tab-icon">🏦</span><span class="tab-text">Rekeningen</span></button>
 </div>
 
@@ -151,8 +156,8 @@
         <input type="text" id="income" placeholder="In" inputmode="decimal" style="color:var(--positive)">
         <input type="text" id="expense" placeholder="Uit" inputmode="decimal" style="color:var(--negative)">
     </div>
-    <select id="status" style="background-image:none; padding-right:10px;"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
-    <select id="target-account" style="background-image:none; padding-right:10px;"></select>
+    <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
+    <select id="target-account"></select>
     <div class="btn-grid">
         <button class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
         <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
@@ -241,8 +246,10 @@ function renderTransactions() {
             <div class="tr-row" onclick="openModal('${t.id}')">
                 <div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
                 <div class="tr-left-side">
-                    <span class="tr-cat">${t.category}</span>
-                    <span class="tr-date">${t.date}</span>
+                    <div class="tr-header">
+                        <span class="tr-date">${t.date}</span>
+                        <span class="tr-cat">${t.category}</span>
+                    </div>
                     <span class="tr-memo">${t.memo || '-'}</span>
                 </div>
                 <div class="tr-right-side">

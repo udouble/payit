@@ -3,48 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v5.6 - THEME ENGINE (DUAL TONE DARK)</title>
+  <title>Payit v5.7 - MODAL SELECT BOX FIX</title>
   <style>
-    /* 1. HET DEFINIËREN VAN DE THEMA'S (CSS VARIABELEN) */
-    
-    /* STANDAARD: LICHT THEMA */
+    /* 1. THEMA DEFINITIES */
     :root {
       --bg-body: #f1f5f9; 
       --bg-sidebar: #ffffff; 
       --bg-card: #ffffff;
       --bg-input: #f8fafc;
-      --primary: #3f8cff; /* Helderblauw */
+      --primary: #3f8cff; 
       --text-main: #1e293b; 
       --text-muted: #64748b; 
       --border: #e2e8f0; 
       --positive: #10b981; 
       --negative: #ef4444; 
-      --orange: #f97316; /* Actief oranje */
-      
-      /* Specifiek voor de theme switch */
+      --orange: #f97316; 
       --theme-btn-bg: #e2e8f0;
       --theme-btn-text: #64748b;
     }
 
-    /* DONKER THEMA (Deep Navy & Slate, geen zwart) */
     [data-theme="dark"] {
-      --bg-body: #0f172a; /* Deep Navy */
-      --bg-sidebar: #1e293b; /* Slate Navy */
+      --bg-body: #0f172a; 
+      --bg-sidebar: #1e293b; 
       --bg-card: #1e293b;
       --bg-input: #334155;
-      --primary: #60a5fa; /* Zachtblauw */
+      --primary: #60a5fa; 
       --text-main: #f1f5f9; 
       --text-muted: #94a3b8; 
       --border: #334155; 
-      --positive: #34d399; 
+      --positive: #4ade80; 
       --negative: #f87171; 
-      --orange: #fb923c; /* Levendig oranje */
-      
+      --orange: #fb923c; 
       --theme-btn-bg: #334155;
       --theme-btn-text: #f1f5f9;
     }
 
-    /* 2. BASIS STYLING */
     body {
       margin: 0;
       font-family: -apple-system, system-ui, sans-serif;
@@ -53,13 +46,10 @@
       -webkit-font-smoothing: antialiased;
       overflow: hidden;
       overscroll-behavior-y: contain;
-      transition: background-color 0.3s ease, color 0.3s ease; /* Zachte overgang */
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    .app-container {
-      display: flex;
-      height: 100vh;
-    }
+    .app-container { display: flex; height: 100vh; }
 
     /* SIDEBAR */
     .sidebar {
@@ -69,123 +59,41 @@
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+      transition: transform 0.3s ease, background-color 0.3s ease;
       z-index: 1000;
     }
+    .sidebar-header { padding: 24px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .sidebar-content { flex: 1; overflow-y: auto; padding: 12px; }
 
-    .sidebar-header {
-      padding: 24px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .sidebar-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-    }
-
-    .main-view {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      background-color: var(--bg-body);
-      position: relative;
-      transition: background-color 0.3s ease;
-    }
+    .main-view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background-color: var(--bg-body); position: relative; transition: background-color 0.3s ease; }
 
     .navbar {
       background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.9);
       backdrop-filter: blur(12px);
       height: 64px;
-      display: flex;
-      align-items: center;
-      padding: 0 25px;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      display: flex; align-items: center; padding: 0 25px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
     }
-    /* RGB helper voor navbar blur effect */
     body:not([data-theme="dark"]) .navbar { --bg-card-rgb: 255, 255, 255; }
     body[data-theme="dark"] .navbar { --bg-card-rgb: 30, 41, 59; }
 
-    /* ACCOUNT ITEMS */
-    .acc-item {
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      transition: all 0.2s;
-      position: relative;
-    }
+    /* ITEMS */
+    .acc-item { padding: 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; display: flex; flex-direction: column; gap: 3px; transition: all 0.2s; position: relative; }
     .acc-item:hover { background: var(--bg-body); }
-    .acc-item.active { 
-      background: rgba(63, 140, 255, 0.1);
-      border-color: var(--primary); 
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    }
+    .acc-item.active { background: rgba(63, 140, 255, 0.1); border-color: var(--primary); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     body[data-theme="dark"] .acc-item.active { background: rgba(96, 165, 250, 0.15); }
-
-    .acc-name { font-weight: 700; font-size: 14px; color: var(--text-main); line-height: 1.2; padding-right: 25px; }
+    .acc-name { font-weight: 700; font-size: 14px; color: var(--text-main); }
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 13px; font-weight: 700; }
     .acc-settings { position: absolute; right: 12px; top: 18px; opacity: 0.3; font-size: 14px; color: var(--text-main); }
 
-    .content-wrapper {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .summary-hero {
-      background: var(--bg-card);
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 25px;
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-    .hero-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .content-wrapper { padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+    .summary-hero { background: var(--bg-card); border-radius: 20px; padding: 30px; margin-bottom: 25px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03); }
     .hero-total { font-size: 32px; font-weight: 800; color: var(--orange); margin-top: 5px; }
 
-    /* TRANSACTIE RIJ */
-    .tr-row {
-      background: var(--bg-card);
-      margin-bottom: 8px;
-      padding: 14px 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      display: flex;
-      gap: 16px;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
-    }
-    .tr-row:hover { background: var(--bg-input); transform: translateY(-1px); }
-
-    .tr-status-line {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 5px;
-    }
-
+    /* TRANSACTIES */
+    .tr-row { background: var(--bg-card); margin-bottom: 8px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); display: flex; gap: 16px; cursor: pointer; position: relative; overflow: hidden; transition: 0.2s; }
+    .tr-row:hover { background: var(--bg-input); }
+    .tr-status-line { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
     .tr-main-info { flex: 1; min-width: 0; } 
     .tr-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
     .tr-cat { font-weight: 700; font-size: 15px; color: var(--text-main); }
@@ -194,102 +102,52 @@
     .tr-right-info { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-left: 10px; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 16px; display: block; }
 
-    /* MODALS & BUTTON GRID */
-    .modal {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5); z-index: 2000;
-      align-items: center; justify-content: center;
+    /* MODALS - FIXED SELECT STYLING */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+    .modal-content { background: var(--bg-card); width: 90%; max-width: 480px; padding: 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    
+    input, select { 
+      width: 100%; 
+      padding: 16px; /* Iets meer padding voor betere touch/look */
+      margin-top: 10px;
+      background: var(--bg-input); 
+      border: 1px solid var(--border);
+      border-radius: 14px; 
+      color: var(--text-main); 
+      font-size: 16px; 
+      box-sizing: border-box;
+      -webkit-appearance: none; /* Uniform iOS look */
     }
-    .modal-content {
-      background: var(--bg-card); width: 90%; max-width: 480px;
-      padding: 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-      transition: background-color 0.3s ease;
+
+    /* Pijl toevoegen aan select boxen omdat appearance none is */
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 18px;
+      padding-right: 45px;
     }
-    input, select {
-      width: 100%; padding: 14px; margin-top: 10px;
-      background: var(--bg-input); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text-main); font-size: 16px; box-sizing: border-box;
-      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-    }
-    .btn-grid { 
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: 12px; 
-      margin-top: 20px; 
-    }
-    .btn { padding: 16px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 15px; text-align: center; }
+
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+    .btn { padding: 16px; border-radius: 14px; font-weight: 700; border: none; cursor: pointer; font-size: 15px; }
     .btn-save { background: var(--primary); color: white; }
     .btn-cancel { background: var(--bg-input); color: var(--text-muted); }
     .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--negative); border: 1px solid rgba(239, 68, 68, 0.2); }
     .btn-dup { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); }
 
-    /* THEME SWITCH BUTTON */
-    .theme-switch {
-        background: var(--theme-btn-bg);
-        color: var(--theme-btn-text);
-        border: none;
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
+    .theme-switch { background: var(--theme-btn-bg); color: var(--theme-btn-text); border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
-    /* PULL TO REFRESH */
-    #pull-indicator { 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      right: 0; 
-      height: 64px; 
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center; 
-      font-size: 13px; 
-      font-weight: 700;
-      opacity: 0; 
-      color: var(--primary);
-      z-index: 50; 
-      background: var(--bg-body);
-    }
-
-    /* IPHONE TAB BAR */
+    /* TAB BAR */
     .iphone-tabs {
-      position: fixed; 
-      bottom: 0; 
-      left: 0; 
-      right: 0; 
-      height: 85px;
+      position: fixed; bottom: 0; left: 0; right: 0; height: 85px;
       background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.95); 
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      display: none; 
-      justify-content: space-around; 
-      align-items: flex-start; 
-      padding-top: 12px;
-      z-index: 1100;
-      box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      backdrop-filter: blur(20px); border-top: 1px solid var(--border);
+      display: none; justify-content: space-around; align-items: flex-start; padding-top: 12px;
+      z-index: 1100; box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
     }
-    .tab-item { 
-      background: none; 
-      border: none; 
-      color: var(--text-muted); 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      width: 80px;
-      cursor: pointer;
-    }
-    .tab-icon { font-size: 24px; transition: transform 0.2s ease; }
+    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 6px; width: 80px; cursor: pointer; }
+    .tab-icon { font-size: 24px; }
     .tab-text { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .tab-item.active { color: var(--primary); }
 
     .green-bg { background-color: var(--positive); }
     .red-bg { background-color: var(--negative); }
@@ -304,19 +162,14 @@
       .navbar { padding: 0 15px; }
       .modal { align-items: flex-end; }
       .modal-content { border-radius: 24px 24px 0 0; width: 100%; max-width: 100%; padding: 25px;}
-      
-      /* Theme switch verhuizen naar sidebar header op mobiel */
       .navbar .theme-switch { display: none; }
       .sidebar-header .theme-switch { display: flex; }
-    }
-    @media (min-width: 851px) {
-        .sidebar-header .theme-switch { display: none; }
     }
   </style>
 </head>
 <body id="app-body">
 
-<div id="pull-indicator">Laat los om te verversen...</div>
+<div id="pull-indicator" style="position: fixed; top: 0; left: 0; right: 0; height: 64px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 13px; font-weight: 700; opacity: 0; color: var(--primary); z-index: 50; background: var(--bg-body);">Laat los om te verversen...</div>
 
 <div class="app-container">
   <aside class="sidebar" id="sidebar">
@@ -343,7 +196,7 @@
     <div class="content-wrapper">
       <div id="transaction-view">
         <div class="summary-hero">
-          <div class="hero-label">Huidig Saldo</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Huidig Saldo</div>
           <div id="total" class="hero-total">€ 0,00</div>
         </div>
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
@@ -357,18 +210,9 @@
 </div>
 
 <div class="iphone-tabs">
-  <button class="tab-item" onclick="loadFromCloud()">
-    <span class="tab-icon">🔄</span>
-    <span class="tab-text">Sync</span>
-  </button>
-  <button class="tab-item" onclick="openModal()" style="color:var(--primary);">
-    <span class="tab-icon" style="font-size: 30px; margin-top: -4px;">⊕</span>
-    <span class="tab-text">Nieuw</span>
-  </button>
-  <button class="tab-item" onclick="toggleSidebar()">
-    <span class="tab-icon">🏦</span>
-    <span class="tab-text">Rekeningen</span>
-  </button>
+  <button class="tab-item" onclick="loadFromCloud()"><span class="tab-icon">🔄</span><span class="tab-text">Sync</span></button>
+  <button class="tab-item" onclick="openModal()" style="color:var(--primary);"><span class="tab-icon" style="font-size: 30px; margin-top: -4px;">⊕</span><span class="tab-text">Nieuw</span></button>
+  <button class="tab-item" onclick="toggleSidebar()"><span class="tab-icon">🏦</span><span class="tab-text">Rekeningen</span></button>
 </div>
 
 <div class="modal" id="modal">
@@ -384,7 +228,6 @@
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
     <select id="target-account"></select>
-    
     <div class="btn-grid">
         <button class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
         <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
@@ -407,7 +250,6 @@
 </div>
 
 <script>
-/** CONFIGURATIE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
@@ -422,7 +264,6 @@ let showConfirmed = false;
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-/* 3. THEME ENGINE LOGICA (Nieuw) */
 function applyTheme(theme) {
     document.body.setAttribute('data-theme', theme);
     const icon = theme === 'dark' ? '🌙' : '☀️';
@@ -430,17 +271,11 @@ function applyTheme(theme) {
     document.getElementById('theme-icon-mobile').innerText = icon;
     localStorage.setItem('payit-theme', theme);
 }
-
 function toggleTheme() {
     const currentTheme = document.body.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    applyTheme(newTheme);
+    applyTheme(currentTheme === 'light' ? 'dark' : 'light');
 }
-
-// Initialiseer thema
-const savedTheme = localStorage.getItem('payit-theme') || 'light';
-applyTheme(savedTheme);
-
+applyTheme(localStorage.getItem('payit-theme') || 'light');
 
 function selectAccount(accId) {
     activeAccountId = accId;
@@ -448,8 +283,7 @@ function selectAccount(accId) {
     const acc = accounts.find(a => a.id === accId);
     document.getElementById('nav-title').innerText = acc ? acc.name : "Laden...";
     document.getElementById('sidebar').classList.remove('open');
-    renderAccounts();
-    renderTransactions();
+    renderAccounts(); renderTransactions();
 }
 
 function renderAccounts() {
@@ -460,11 +294,7 @@ function renderAccounts() {
         const div = document.createElement('div');
         div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
         div.onclick = () => selectAccount(acc.id);
-        div.innerHTML = `
-            <span class="acc-name">${acc.name}</span>
-            <span class="acc-bal">${formatCurrency(bal)}</span>
-            <span class="acc-settings" onclick="event.stopPropagation(); openAccountModal('${acc.id}')">⚙️</span>
-        `;
+        div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span><span class="acc-settings" onclick="event.stopPropagation(); openAccountModal('${acc.id}')">⚙️</span>`;
         sidebar.appendChild(div);
     });
 }
@@ -475,24 +305,13 @@ function renderTransactions() {
     let allAccT = transactions.filter(t => t.accountId === activeAccountId);
     let totalBal = allAccT.reduce((sum, t) => sum + Number(t.amount), 0);
     let displayList = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
-
     displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
-        const statusClass = t.status === 'confirmed' ? 'green-bg' : 'red-bg';
         container.innerHTML += `
             <div class="tr-row" onclick="openModal('${t.id}')">
-                <div class="tr-status-line ${statusClass}"></div>
-                <div class="tr-main-info">
-                    <div class="tr-header">
-                        <span class="tr-cat">${t.category}</span>
-                        <span class="tr-date">${t.date}</span>
-                    </div>
-                    <span class="tr-memo">${t.memo || '-'}</span>
-                </div>
-                <div class="tr-right-info">
-                    <span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>
-                </div>
-            </div>
-        `;
+                <div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
+                <div class="tr-main-info"><div class="tr-header"><span class="tr-cat">${t.category}</span><span class="tr-date">${t.date}</span></div><span class="tr-memo">${t.memo || '-'}</span></div>
+                <div class="tr-right-info"><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span></div>
+            </div>`;
     });
     document.getElementById('total').innerText = formatCurrency(totalBal);
 }
@@ -506,24 +325,20 @@ function openModal(id = null) {
     document.getElementById('cat-list').innerHTML = categories.map(c => `<option value="${c}">`).join('');
     if (id) {
         let t = transactions.find(x => x.id === id);
-        document.getElementById('date').value = t.date;
-        document.getElementById('category').value = t.category;
-        document.getElementById('memo').value = t.memo;
-        document.getElementById('status').value = t.status;
+        document.getElementById('date').value = t.date; document.getElementById('category').value = t.category;
+        document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
         document.getElementById('target-account').value = t.accountId;
         if(t.amount >= 0) { document.getElementById('income').value = t.amount; document.getElementById('expense').value = ''; }
         else { document.getElementById('expense').value = Math.abs(t.amount); document.getElementById('income').value = ''; }
     } else {
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         document.getElementById('category').value = ''; document.getElementById('memo').value = '';
-        document.getElementById('status').value = 'pending';
-        document.getElementById('target-account').value = activeAccountId || accounts[0].id;
+        document.getElementById('status').value = 'pending'; document.getElementById('target-account').value = activeAccountId || accounts[0].id;
     }
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 function openAccountModal(id = null) {
-    editingAccountId = id;
-    document.getElementById('accModal').style.display = 'flex';
+    editingAccountId = id; document.getElementById('accModal').style.display = 'flex';
     document.getElementById('acc-delete-btn').style.display = id ? 'block' : 'none';
     document.getElementById('newAccName').value = id ? accounts.find(a => a.id === id).name : '';
 }
@@ -532,28 +347,17 @@ function closeAccountModal() { document.getElementById('accModal').style.display
 async function saveTransaction() {
     let amt = document.getElementById('income').value ? parseFloat(document.getElementById('income').value) : -parseFloat(document.getElementById('expense').value || 0);
     let data = { id: editingId || Date.now().toString(), date: document.getElementById('date').value, category: document.getElementById('category').value, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
-    if (editingId) transactions[transactions.findIndex(t => t.id === editingId)] = data;
-    else transactions.push(data);
+    if (editingId) transactions[transactions.findIndex(t => t.id === editingId)] = data; else transactions.push(data);
     closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
 }
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
 function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
-
 function handleAccountAction() {
-    const name = document.getElementById('newAccName').value;
-    if(!name) return;
-    if(editingAccountId) accounts.find(a => a.id === editingAccountId).name = name;
-    else accounts.push({ id: Date.now().toString(), name });
+    const name = document.getElementById('newAccName').value; if(!name) return;
+    if(editingAccountId) accounts.find(a => a.id === editingAccountId).name = name; else accounts.push({ id: Date.now().toString(), name });
     closeAccountModal(); syncToCloud(); renderAccounts();
 }
-function deleteAccount() {
-    if(confirm('Echt zeker?')) {
-        transactions = transactions.filter(t => t.accountId !== editingAccountId);
-        accounts = accounts.filter(a => a.id !== editingAccountId);
-        closeAccountModal(); syncToCloud(); renderAccounts();
-        if (accounts.length > 0) selectAccount(accounts[0].id);
-    }
-}
+function deleteAccount() { if(confirm('Echt zeker?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); syncToCloud(); renderAccounts(); if (accounts.length > 0) selectAccount(accounts[0].id); } }
 function toggleConfirmed() { showConfirmed = !showConfirmed; document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; renderTransactions(); }
 
 async function syncToCloud() {
@@ -569,24 +373,16 @@ async function loadFromCloud() {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
         const result = await response.json();
         if (result?.[0]?.data) {
-            const d = result[0].data;
-            if(d.categories) categories = d.categories;
-            if(d.accounts) accounts = d.accounts;
-            if(d.transactions) transactions = d.transactions;
+            const d = result[0].data; if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions;
             const lastId = localStorage.getItem('lastActiveAccountId');
-            if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId);
-            else if (accounts.length > 0) selectAccount(accounts[0].id);
-            renderAccounts();
-            document.getElementById('sync-label').innerText = "Sync: OK";
+            if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); else if (accounts.length > 0) selectAccount(accounts[0].id);
+            renderAccounts(); document.getElementById('sync-label').innerText = "Sync: OK";
         }
     } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }
 
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        if (document.getElementById('modal').style.display === 'flex') saveTransaction();
-        else if (document.getElementById('accModal').style.display === 'flex') handleAccountAction();
-    }
+    if (e.key === 'Enter') { if (document.getElementById('modal').style.display === 'flex') saveTransaction(); else if (document.getElementById('accModal').style.display === 'flex') handleAccountAction(); }
     if (e.key === 'Escape') { closeModal(); closeAccountModal(); }
 });
 
@@ -597,16 +393,9 @@ scrollArea.addEventListener('touchstart', (e) => { if (scrollArea.scrollTop === 
 scrollArea.addEventListener('touchmove', (e) => {
     if (startY === 0) return;
     pullDist = e.touches[0].pageY - startY;
-    if (pullDist > 0 && pullDist < 100) { 
-        indicator.style.opacity = pullDist / 100; 
-        indicator.style.transform = `translateY(${pullDist/2}px)`; 
-    }
+    if (pullDist > 0 && pullDist < 100) { indicator.style.opacity = pullDist / 100; indicator.style.transform = `translateY(${pullDist/2}px)`; }
 });
-scrollArea.addEventListener('touchend', async () => {
-    if (pullDist > 70) await loadFromCloud();
-    indicator.style.opacity = 0; indicator.style.transform = `translateY(0)`;
-    pullDist = 0; startY = 0;
-});
+scrollArea.addEventListener('touchend', async () => { if (pullDist > 70) await loadFromCloud(); indicator.style.opacity = 0; indicator.style.transform = `translateY(0)`; pullDist = 0; startY = 0; });
 
 loadFromCloud();
 </script>

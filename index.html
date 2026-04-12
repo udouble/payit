@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v4.3</title>
+  <title>Payit v4.4</title>
   <style>
     :root {
       --bg-body: #f0f2f5;
@@ -24,6 +24,24 @@
       background-color: var(--bg-body);
       color: var(--text-main);
       -webkit-font-smoothing: antialiased;
+      /* Voorkom standaard browser refresh bij overscroll */
+      overscroll-behavior-y: contain;
+    }
+
+    /* Pull to Refresh Indicator */
+    #pull-indicator {
+      position: fixed;
+      top: -50px;
+      left: 0;
+      right: 0;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+      z-index: 50;
     }
 
     /* Navbar */
@@ -54,7 +72,12 @@
     .nav-title { font-size: 18px; font-weight: 700; flex: 1; }
 
     /* Content Area */
-    .content { padding: 16px; max-width: 600px; margin: 0 auto; }
+    .content { 
+      padding: 16px; 
+      max-width: 600px; 
+      margin: 0 auto;
+      transition: transform 0.2s; /* Voor pull-to-refresh animatie */
+    }
 
     /* Account Cards */
     .account-card {
@@ -189,7 +212,9 @@
     .neg-text { color: var(--negative); }
   </style>
 </head>
-<body>
+<body id="app-body">
+
+<div id="pull-indicator">Laat los om te vernieuwen...</div>
 
 <div class="navbar">
   <button class="back-btn" id="backBtn" onclick="showDashboard()">←</button>
@@ -197,7 +222,7 @@
   <button style="background:none; border:none; color:white; font-size:24px;" onclick="openAccountModal()">+</button>
 </div>
 
-<div class="content">
+<div class="content" id="main-content">
   <div id="dashboard-view">
     <div id="accounts-container"></div>
   </div>
@@ -214,7 +239,7 @@
     <div id="transactions-container"></div>
   </div>
 
-  <div id="sync-label" class="sync-indicator">Sync: Laden...</div>
+  <div id="sync-label" class="sync-indicator">Sync: OK</div>
 </div>
 
 <button class="fab" onclick="openModal()">+</button>
@@ -487,6 +512,7 @@ async function syncToCloud() {
 }
 
 async function loadFromCloud() {
+    document.getElementById('sync-label').innerText = "Sync: Laden...";
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -497,11 +523,60 @@ async function loadFromCloud() {
             if(d.categories) categories = d.categories;
             if(d.accounts) accounts = d.accounts;
             if(d.transactions) transactions = d.transactions;
-            renderAccounts();
+            activeAccountId ? renderTransactions() : renderAccounts();
             document.getElementById('sync-label').innerText = "Sync: OK";
         }
     } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }
+
+/** PULL TO REFRESH LOGICA **/
+let startY = 0;
+let pullDistance = 0;
+const appBody = document.getElementById('app-body');
+const mainContent = document.getElementById('main-content');
+const pullIndicator = document.getElementById('pull-indicator');
+
+appBody.addEventListener('touchstart', (e) => {
+    // Alleen pull-to-refresh toestaan als we bovenaan de pagina zijn
+    if (window.scrollY === 0) {
+        startY = e.touches[0].pageY;
+    } else {
+        startY = 0;
+    }
+});
+
+appBody.addEventListener('touchmove', (e) => {
+    if (startY === 0) return;
+    
+    const currentY = e.touches[0].pageY;
+    pullDistance = currentY - startY;
+
+    if (pullDistance > 0 && pullDistance < 150) {
+        // Visuele feedback tijdens het trekken
+        mainContent.style.transform = `translateY(${pullDistance / 2}px)`;
+        pullIndicator.style.transform = `translateY(${pullDistance / 2}px)`;
+        
+        if (pullDistance > 80) {
+            pullIndicator.innerText = "Laat los om te vernieuwen...";
+        } else {
+            pullIndicator.innerText = "Trek omlaag om te vernieuwen";
+        }
+    }
+});
+
+appBody.addEventListener('touchend', async () => {
+    if (pullDistance > 80) {
+        // Start verversen
+        pullIndicator.innerText = "Bezig met vernieuwen...";
+        await loadFromCloud();
+    }
+    
+    // Reset posities
+    mainContent.style.transform = `translateY(0)`;
+    pullIndicator.style.transform = `translateY(0)`;
+    pullDistance = 0;
+    startY = 0;
+});
 
 loadFromCloud();
 </script>

@@ -3,471 +3,249 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit - v4.1 (Mobile First)</title>
-  
+  <title>Payit v4.2</title>
   <style>
-    /* 1. Basis & Kleurenpalet (Modern Deep Charcoal) */
     :root {
-      --bg-main: #141417;
-      --bg-panel: #1f1f23;
-      --bg-input: #29292e;
-      --text-main: #e4e4e9;
-      --text-muted: #94949e;
-      --accent: #3f8cff;
-      --accent-hover: #579aff;
-      --border: #2d2d33;
-      --positive: #4caf50;
-      --negative: #ff5e57;
-      --orange: #ff9f43;
-      
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
-      --shadow-md: 0 4px 8px rgba(0,0,0,0.2);
+      --bg-body: #f0f2f5;
+      --bg-card: #ffffff;
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --positive: #10b981;
+      --negative: #ef4444;
+      --orange: #f59e0b;
     }
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-main);
+      font-family: -apple-system, system-ui, sans-serif;
+      background-color: var(--bg-body);
       color: var(--text-main);
-      font-size: 16px; /* Iets groter basisfont */
-      overflow: hidden; /* Sidebar handling */
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* 2. Layout & Responsiviteit */
-    .container {
+    /* Navbar */
+    .navbar {
+      background: var(--primary);
+      color: white;
+      padding: 16px;
       display: flex;
-      height: 100vh;
-      position: relative;
-    }
-
-    /* Sidebar - Mobile First: Overlay menu */
-    .sidebar {
-      position: fixed;
-      left: 0;
+      align-items: center;
+      position: sticky;
       top: 0;
-      bottom: 0;
-      width: 280px;
-      background-color: var(--bg-panel);
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      height: 60px;
+      box-sizing: border-box;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      margin-right: 12px;
+      cursor: pointer;
+      display: none; /* Alleen tonen in transactie-view */
+    }
+
+    .nav-title { font-size: 18px; font-weight: 700; flex: 1; }
+
+    /* Content Area */
+    .content { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    /* Account Cards (Dashboard) */
+    .account-card {
+      background: var(--bg-card);
+      border-radius: 16px;
       padding: 20px;
-      border-right: 1px solid var(--border);
-      transform: translateX(-100%); /* Standaard verborgen */
-      transition: transform 0.3s ease;
-      z-index: 1000;
+      margin-bottom: 12px;
       display: flex;
-      flex-direction: column;
-      box-shadow: var(--shadow-md);
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: transform 0.1s;
+    }
+    .account-card:active { transform: scale(0.98); }
+    .account-info { display: flex; flex-direction: column; }
+    .account-name { font-weight: 700; font-size: 17px; margin-bottom: 4px; }
+    .account-balance { font-family: monospace; font-weight: 600; color: var(--text-muted); }
+
+    /* Transaction List View */
+    #transaction-view { display: none; }
+
+    .summary-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+    }
+    .summary-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .summary-total { font-size: 32px; font-weight: 800; margin-top: 4px; }
+
+    .list-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .list-title { font-weight: 700; font-size: 14px; color: var(--text-muted); }
+
+    .tr-item {
+      background: var(--bg-card);
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--border);
+    }
+    .tr-status { width: 8px; height: 8px; border-radius: 50%; }
+    .tr-main { flex: 1; min-width: 0; }
+    .tr-cat { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+    .tr-memo { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tr-right { text-align: right; }
+    .tr-amount { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+    .tr-date { font-size: 11px; color: var(--text-muted); }
+
+    /* Floating Action Button */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--primary);
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      border: none;
+      font-size: 28px;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .sidebar.open {
-      transform: translateX(0);
-    }
-
-    /* Overlay achtergrond als sidebar open is */
-    .sidebar-overlay {
+    /* Modals */
+    .modal {
       display: none;
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.5);
-      z-index: 999;
+      z-index: 1000;
+      align-items: flex-end;
     }
-    .sidebar-overlay.open { display: block; }
-
-    /* Main Content */
-    .main {
-      flex: 1;
-      padding: 16px; /* Compacter op mobiel */
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      margin-top: 60px; /* Ruimte voor mobiele header */
-    }
-
-    /* Mobiele Header met Hamburger */
-    .mobile-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background-color: var(--bg-panel);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      z-index: 900;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .menu-toggle {
-      background: none;
-      border: none;
-      color: var(--text-main);
-      font-size: 24px;
-      cursor: pointer;
-      padding: 0;
-      margin-right: 16px;
-    }
-
-    .mobile-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    /* 3. Sidebar Elementen */
-    #accounts-list {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 20px;
-    }
-
-    .account {
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      font-size: 15px;
-      color: var(--text-muted);
-      transition: background 0.2s, color 0.2s;
-      display: flex;
-      align-items: center;
-    }
-
-    .account:hover { background-color: rgba(255,255,255,0.05); color: var(--text-main); }
-    .account.active { background-color: var(--accent); color: white; font-weight: 600; box-shadow: var(--shadow-sm); }
-
-    .sidebar-btns {
-      border-top: 1px solid var(--border);
-      padding-top: 16px;
-    }
-
-    .add-account-btn, .cat-btn {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 10px;
-      background-color: var(--bg-input);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    .add-account-btn:hover, .cat-btn:hover { border-color: var(--text-muted); }
-
-    #sync-label { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: auto; }
-
-    /* 4. Topbar & Acties */
-    .topbar {
-      margin-bottom: 20px;
-    }
-
-    .balance-card {
-      background-color: var(--bg-panel);
-      padding: 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .total-box {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--orange);
-    }
-
-    .top-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .filter-btn {
-      background-color: var(--bg-input);
-      padding: 10px 16px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      color: var(--text-main);
-      cursor: pointer;
-    }
-
-    .add-btn {
-      background-color: var(--accent);
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      font-size: 24px;
-      border: none;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(63, 140, 255, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .add-btn:hover { background-color: var(--accent-hover); }
-
-    /* 5. Tabel & Lijstweergave (Mobile First) */
-    
-    /* Standaard: Lijstweergave voor mobiel */
-    #transactions-body {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    #transactions-header { display: none; } /* Verberg tabelkoppen op mobiel */
-
-    .tr-row {
-      background-color: var(--bg-panel);
-      padding: 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      position: relative;
-      display: grid;
-      grid-template-areas: 
-        "status date amount"
-        "status cat amount"
-        "memo memo memo";
-      grid-template-columns: 24px 1fr auto;
-      gap: 4px 10px;
-      align-items: center;
-    }
-
-    .tr-status { grid-area: status; justify-self: center; }
-    .tr-date { grid-area: date; font-size: 12px; color: var(--text-muted); }
-    .tr-cat { grid-area: cat; font-size: 15px; font-weight: 500; }
-    .tr-amount { grid-area: amount; font-size: 17px; font-weight: 700; text-align: right; }
-    .tr-memo { grid-area: memo; font-size: 13px; color: var(--text-muted); italic; margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.03); }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: block;
-    }
-    .green { background-color: var(--positive); }
-    .red { background-color: var(--negative); }
-
-    /* 6. Modals (Touch Friendly) */
-    .modal, .cat-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      justify-content: center;
-      align-items: flex-end; /* Mobile: Schuift van onderen */
-      z-index: 2000;
-      padding: 10px;
-    }
-
     .modal-content {
-      background-color: var(--bg-panel);
-      padding: 24px;
-      border-radius: 20px 20px 10px 10px;
+      background: white;
       width: 100%;
-      max-width: 500px;
-      box-shadow: var(--shadow-md);
-      transform: translateY(100%);
-      transition: transform 0.3s ease;
-    }
-
-    .modal.open .modal-content, .cat-modal.open .modal-content {
-      transform: translateY(0);
+      border-radius: 24px 24px 0 0;
+      padding: 24px;
+      box-sizing: border-box;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     input, select {
       width: 100%;
-      padding: 14px; /* Groter voor touch */
-      margin-top: 12px;
-      background-color: var(--bg-input);
-      border: 1px solid var(--border);
-      color: white;
-      border-radius: 10px;
-      font-size: 16px; /* Voorkom inzoomen op iOS */
-      box-sizing: border-box;
-      -webkit-appearance: none; /* Uniform styling iOS */
-    }
-
-    .amount-row { display: flex; gap: 10px; }
-    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-    
-    .btn {
-      flex: 1;
       padding: 14px;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      color: white;
-      text-align: center;
+      margin-top: 8px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 16px;
+      box-sizing: border-box;
+      -webkit-appearance: none;
     }
 
-    .save { background-color: var(--positive); }
-    .cancel { background-color: var(--bg-input); color: var(--text-muted); }
-    .dup { background-color: var(--accent); }
-    .del { background-color: rgba(255, 94, 87, 0.1); color: var(--negative); border: 1px solid var(--negative); }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    .btn-save { background: var(--primary); color: white; }
+    .btn-cancel { background: #f3f4f6; color: var(--text-muted); }
 
-    /* Autocomplete styling */
-    .autocomplete-box { position: relative; }
-    .autocomplete-list {
-      position: absolute;
-      width: 100%;
-      background-color: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 100;
-      margin-top: 4px;
-      box-shadow: var(--shadow-md);
-    }
-    .autocomplete-item { padding: 12px; cursor: pointer; font-size: 14px; }
-    .autocomplete-item:hover { background-color: rgba(255,255,255,0.05); }
-
-    /* 7. Desktop & Tablet Optimalisatie (Breder dan iPhone) */
-    @media (min-width: 768px) {
-      body { overflow: auto; }
-      .mobile-header { display: none; }
-      .sidebar {
-        position: relative;
-        transform: translateX(0);
-        z-index: 10;
-        box-shadow: none;
-      }
-      .sidebar-overlay { display: none !important; }
-      .main { margin-top: 0; padding: 30px; }
-      
-      .topbar { display: flex; justify-content: space-between; align-items: center; }
-      .balance-card { flex-direction: row; align-items: center; justify-content: space-between; width: 100%; }
-      .total-box { font-size: 28px; }
-
-      /* Terug naar Tabelweergave op Desktop */
-      #transactions-header {
-        display: table-header-group;
-        background-color: rgba(255,255,255,0.02);
-      }
-      
-      #transactions-body {
-        display: table-row-group;
-        gap: 0;
-      }
-
-      .tr-row {
-        display: table-row;
-        background-color: transparent;
-        border: none;
-        border-radius: 0;
-        grid-template-areas: none;
-        grid-template-columns: none;
-      }
-      
-      .tr-row:hover { background-color: rgba(255,255,255,0.02); }
-      .tr-row > td { display: table-cell; padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 14px;}
-      
-      /* Kolombreedtes herstellen */
-      td.tr-status { width: 40px; text-align: center; }
-      td.tr-date { width: 100px; color: var(--text-main); font-size: 14px; }
-      td.tr-cat { width: 180px; }
-      td.tr-amount { width: 120px; font-size: 14px;}
-      td.tr-memo { width: auto; font-style: normal; color: var(--text-main); padding-top: 12px; border-top: none; }
-    }
+    .sync-indicator { font-size: 10px; text-align: center; color: var(--text-muted); margin-top: 20px; padding-bottom: 40px;}
+    
+    .green { background: var(--positive); }
+    .red { background: var(--negative); }
+    .pos-text { color: var(--positive); }
+    .neg-text { color: var(--negative); }
   </style>
 </head>
-
 <body>
 
-<div class="mobile-header">
-  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-  <div class="mobile-title">Payit</div>
+<div class="navbar">
+  <button class="back-btn" id="backBtn" onclick="showDashboard()">←</button>
+  <div class="nav-title" id="navTitle">Mijn Rekeningen</div>
+  <button style="background:none; border:none; color:white; font-size:24px;" onclick="openAccountModal()">+</button>
 </div>
 
-<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-<div class="container">
-  <div class="sidebar" id="sidebar">
-    <div id="accounts-list"></div>
-    <div class="sidebar-btns">
-        <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
-        <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
-    </div>
-    <span id="sync-label">Sync: Laden...</span>
+<div class="content">
+  <div id="dashboard-view">
+    <div id="accounts-container"></div>
   </div>
 
-  <div class="main">
-    <div class="topbar">
-      <div class="balance-card">
-        <div id="total" class="total-box"></div>
-        <div class="top-actions">
-            <button class="filter-btn" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
-            <button class="add-btn" onclick="openModal()">＋</button>
-        </div>
-      </div>
+  <div id="transaction-view">
+    <div class="summary-card">
+      <div class="summary-label">Huidig Saldo</div>
+      <div id="total" class="summary-total">€ 0,00</div>
     </div>
-    
-    <table style="width:100%; border-collapse: collapse;">
-      <thead id="transactions-header">
-        <tr>
-          <th style="text-align:center;">ST</th>
-          <th>Datum</th>
-          <th>Categorie</th>
-          <th style="text-align:right;">Bedrag</th>
-          <th>Memo</th>
-        </tr>
-      </thead>
-      <tbody id="transactions-body">
-        </tbody>
-    </table>
-
+    <div class="list-header">
+      <div class="list-title">Transacties</div>
+      <button class="filter-btn" style="background:none; border:none; color:var(--primary); font-weight:600;" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
+    </div>
+    <div id="transactions-container"></div>
   </div>
+
+  <div id="sync-label" class="sync-indicator">Sync: Laden...</div>
 </div>
+
+<button class="fab" onclick="openModal()">+</button>
 
 <div class="modal" id="modal">
   <div class="modal-content">
+    <h3 style="margin:0 0 16px 0;">Transactie</h3>
     <input type="date" id="date">
-    <div class="autocomplete-box">
-      <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
-      <div id="category-list" class="autocomplete-list"></div>
-    </div>
-    <input type="text" id="memo" placeholder="Memo">
-    <div class="amount-row">
-      <input type="number" id="income" placeholder="Inkomsten" step="0.01">
-      <input type="number" id="expense" placeholder="Uitgaven" step="0.01">
+    <input type="text" id="category" placeholder="Categorie" list="cat-list">
+    <datalist id="cat-list"></datalist>
+    <input type="text" id="memo" placeholder="Omschrijving (memo)">
+    <div style="display:flex; gap:10px;">
+        <input type="number" id="income" placeholder="Inkomsten" step="0.01">
+        <input type="number" id="expense" placeholder="Uitgaven" step="0.01">
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
     <select id="target-account"></select>
     <div class="btn-row">
-      <button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
-      <button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
+      <button class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
+      <button class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
     </div>
-    <div class="btn-row">
-      <button class="btn cancel" onclick="closeModal()">Annuleren</button>
-      <button class="btn save" onclick="saveTransaction()">Opslaan</button>
+    <div class="btn-row" id="edit-btns" style="display:none;">
+        <button class="btn" style="background:#fee2e2; color:#ef4444;" onclick="deleteTransaction()">Verwijderen</button>
+        <button class="btn" style="background:#e0e7ff; color:#4f46e5;" onclick="duplicateTransaction()">Dupliceren</button>
     </div>
   </div>
 </div>
 
-<div class="cat-modal" id="catModal">
+<div class="modal" id="accModal">
   <div class="modal-content">
-    <h3 style="margin:0 0 16px 0;">Categorie toevoegen</h3>
-    <input type="text" id="newCat" placeholder="Nieuwe categorie">
+    <h3>Nieuwe Rekening</h3>
+    <input type="text" id="newAccName" placeholder="Bijv. Spaarrekening">
     <div class="btn-row">
-      <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
-      <button class="btn save" onclick="addCategory()">Toevoegen</button>
+      <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
+      <button class="btn btn-save" onclick="addAccount()">Toevoegen</button>
     </div>
   </div>
 </div>
 
 <script>
-/** CONFIGURATIE - SUPABASE **/
+/** CONFIGURATIE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
@@ -476,53 +254,190 @@ const DB_RECORD_ID = 'main_user';
 let categories = ["Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW","BMW - onderhoud en verzekering","Consensus","Correctie","Delhaize","Dienstencheques","Diversen","Eneco","Etentjes","Invecon","Kampen","Kapper-voeten","KBC","Lening","Maxem","NOG TE ONTVANGEN","Nutsvoorzieningen","Onderhoud","Opzij","Opzij voor liq.reserve 01/2027","Overige","Overschrijving","Paypal","Pensioen","Rekening courant","Reserve","Restant voor de maand","Straetus","Straetus-tweewekelijks","Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"];
 let accounts = [{ id:'1',name:'Privé'}];
 let transactions = [];
+let activeAccountId = null;
+let editingId = null;
+let showConfirmed = false;
 
-let activeAccountId = accounts[0].id;
-let editingId=null;
-let showConfirmed=false;
-
-// DOM Helpers
-const income = document.getElementById('income');
-const expense = document.getElementById('expense');
-const dateInput = document.getElementById('date');
-const categoryInput = document.getElementById('category');
-const memoInput = document.getElementById('memo');
-const statusSelect = document.getElementById('status');
-
-/** NIEUW: UI FUNCTIES VOOR MOBIEL **/
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-    document.querySelector('.sidebar-overlay').classList.toggle('open');
+/** UI NAVIGATION **/
+function showDashboard() {
+    activeAccountId = null;
+    document.getElementById('dashboard-view').style.display = 'block';
+    document.getElementById('transaction-view').style.display = 'none';
+    document.getElementById('backBtn').style.display = 'none';
+    document.getElementById('navTitle').innerText = "Mijn Rekeningen";
+    renderAccounts();
 }
 
-function openModalUI(id) {
-    const m = document.getElementById(id);
-    m.style.display = 'flex';
-    setTimeout(() => m.classList.add('open'), 10);
+function showTransactions(accId) {
+    activeAccountId = accId;
+    const acc = accounts.find(a => a.id === accId);
+    document.getElementById('dashboard-view').style.display = 'none';
+    document.getElementById('transaction-view').style.display = 'block';
+    document.getElementById('backBtn').style.display = 'block';
+    document.getElementById('navTitle').innerText = acc.name;
+    renderTransactions();
 }
 
-function closeModalUI(id) {
-    const m = document.getElementById(id);
-    m.classList.remove('open');
-    setTimeout(() => m.style.display = 'none', 300);
+/** RENDER FUNCTIES **/
+function renderAccounts() {
+    const container = document.getElementById('accounts-container');
+    container.innerHTML = '';
+    accounts.forEach(acc => {
+        const accTransactions = transactions.filter(t => t.accountId === acc.id);
+        const bal = accTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+        
+        container.innerHTML += `
+            <div class="account-card" onclick="showTransactions('${acc.id}')">
+                <div class="account-info">
+                    <span class="account-name">${acc.name}</span>
+                    <span class="account-balance">${formatCurrency(bal)}</span>
+                </div>
+                <div style="color:#ccc;">❯</div>
+            </div>
+        `;
+    });
 }
 
+function renderTransactions() {
+    const container = document.getElementById('transactions-container');
+    container.innerHTML = '';
+    
+    let filtered = transactions.filter(t => t.accountId === activeAccountId);
+    let pending = filtered.filter(t => t.status !== 'confirmed');
+    let confirmed = filtered.filter(t => t.status === 'confirmed');
+    
+    let displayList = showConfirmed ? [...pending, ...confirmed] : pending;
+    let total = displayList.reduce((sum, t) => sum + Number(t.amount), 0);
 
-/** SYNC FUNCTIES **/
+    displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
+        container.innerHTML += `
+            <div class="tr-item" onclick="openModal('${t.id}')">
+                <div class="tr-status ${t.status === 'confirmed' ? 'green' : 'red'}"></div>
+                <div class="tr-main">
+                    <div class="tr-cat">${t.category}</div>
+                    <div class="tr-memo">${t.memo || '-'}</div>
+                </div>
+                <div class="tr-right">
+                    <div class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</div>
+                    <div class="tr-date">${t.date}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    document.getElementById('total').innerText = formatCurrency(total);
+}
+
+function formatCurrency(n) {
+    return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n);
+}
+
+/** MODAL LOGICA **/
+function openModal(id = null) {
+    editingId = id;
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('income').value = '';
+    document.getElementById('expense').value = '';
+    document.getElementById('edit-btns').style.display = id ? 'flex' : 'none';
+    
+    // Fill categories datalist
+    const dl = document.getElementById('cat-list');
+    dl.innerHTML = categories.map(c => `<option value="${c}">`).join('');
+    
+    // Fill accounts select
+    const sel = document.getElementById('target-account');
+    sel.innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+
+    if (id) {
+        let t = transactions.find(x => x.id === id);
+        document.getElementById('date').value = t.date;
+        document.getElementById('category').value = t.category;
+        document.getElementById('memo').value = t.memo;
+        document.getElementById('status').value = t.status;
+        document.getElementById('target-account').value = t.accountId;
+        if(t.amount >= 0) document.getElementById('income').value = t.amount;
+        else document.getElementById('expense').value = Math.abs(t.amount);
+    } else {
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('category').value = '';
+        document.getElementById('memo').value = '';
+        document.getElementById('status').value = 'pending';
+        document.getElementById('target-account').value = activeAccountId || accounts[0].id;
+    }
+}
+
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+function openAccountModal() { document.getElementById('accModal').style.display = 'flex'; }
+function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }
+
+/** DATA ACTIES **/
+async function saveTransaction() {
+    let amt = document.getElementById('income').value ? parseFloat(document.getElementById('income').value) : -parseFloat(document.getElementById('expense').value || 0);
+    let data = {
+        id: editingId || Date.now().toString(),
+        date: document.getElementById('date').value,
+        category: document.getElementById('category').value,
+        memo: document.getElementById('memo').value,
+        amount: amt,
+        status: document.getElementById('status').value,
+        accountId: document.getElementById('target-account').value
+    };
+
+    if (editingId) {
+        let i = transactions.findIndex(t => t.id === editingId);
+        transactions[i] = data;
+    } else transactions.push(data);
+
+    closeModal();
+    if(activeAccountId) renderTransactions();
+    else renderAccounts();
+    syncToCloud();
+}
+
+function deleteTransaction() {
+    if(confirm('Wissen?')) {
+        transactions = transactions.filter(t => t.id !== editingId);
+        closeModal();
+        renderTransactions();
+        syncToCloud();
+    }
+}
+
+function duplicateTransaction() {
+    let t = transactions.find(x => x.id === editingId);
+    transactions.push({...t, id: Date.now().toString(), status: 'pending'});
+    closeModal();
+    renderTransactions();
+    syncToCloud();
+}
+
+function addAccount() {
+    const name = document.getElementById('newAccName').value;
+    if(name) {
+        accounts.push({ id: Date.now().toString(), name });
+        syncToCloud();
+        renderAccounts();
+        closeAccountModal();
+    }
+}
+
+function toggleConfirmed() {
+    showConfirmed = !showConfirmed;
+    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
+    renderTransactions();
+}
+
+/** SYNC **/
 async function syncToCloud() {
     document.getElementById('sync-label').innerText = "Sync: Opslaan...";
-    const payload = { categories, accounts, transactions };
     try {
         await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, {
             method: 'PATCH',
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: payload })
+            body: JSON.stringify({ data: { categories, accounts, transactions } })
         });
         document.getElementById('sync-label').innerText = "Sync: OK";
-    } catch (e) { 
-        console.error(e);
-        document.getElementById('sync-label').innerText = "Sync: Offline"; 
-    }
+    } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }
 
 async function loadFromCloud() {
@@ -531,184 +446,20 @@ async function loadFromCloud() {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
         });
         const result = await response.json();
-        if (result && result[0] && result[0].data) {
-            const cloudData = result[0].data;
-            if (cloudData.categories) categories = cloudData.categories;
-            if (cloudData.accounts) accounts = cloudData.accounts;
-            if (cloudData.transactions) transactions = cloudData.transactions;
+        if (result?.[0]?.data) {
+            const d = result[0].data;
+            if(d.categories) categories = d.categories;
+            if(d.accounts) accounts = d.accounts;
+            if(d.transactions) transactions = d.transactions;
             renderAccounts();
-            renderTransactions();
             document.getElementById('sync-label').innerText = "Sync: OK";
         }
-    } catch (e) { 
-        console.error(e);
-        document.getElementById('sync-label').innerText = "Sync: Fout"; 
-    }
+    } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }
 
-function dataChanged() { syncToCloud(); }
-
-/** APP FUNCTIES (v3.4) - GEWIJZIGDE RENDER LOGICA VOOR UI **/
-
-function filterCategories(){
-  const val=categoryInput.value.toLowerCase();
-  document.getElementById('category-list').innerHTML='';
-  categories.filter(c=>c.toLowerCase().includes(val)).forEach(c=>{
-    let d=document.createElement('div');
-    d.className='autocomplete-item';
-    d.innerText=c;
-    d.onclick=()=>{categoryInput.value=c;document.getElementById('category-list').innerHTML='';};
-    document.getElementById('category-list').appendChild(d);
-  });
-}
-
-document.addEventListener('click',e=>{
-  if(!document.getElementById('category').contains(e.target))
-    document.getElementById('category-list').innerHTML='';
-});
-
-function openCatModal(){openModalUI('catModal');}
-function closeCatModal(){closeModalUI('catModal');}
-
-function addCategory(){
-  const val=document.getElementById('newCat').value.trim();
-  if(val && !categories.includes(val)){
-    categories.push(val);
-    dataChanged();
-    document.getElementById('newCat').value='';
-    closeCatModal();
-  }
-}
-
-function formatCurrency(n){return "€ "+Number(n).toLocaleString('nl-BE',{minimumFractionDigits:2});}
-
-function renderAccounts(){
-  const list=document.getElementById('accounts-list');
-  list.innerHTML='';
-  accounts.forEach(a=>{
-    list.innerHTML+=`<div class="account ${a.id===activeAccountId?'active':''}" onclick="selectAccount('${a.id}')">${a.name}</div>`;
-  });
-
-  const sel=document.getElementById('target-account');
-  sel.innerHTML='';
-  accounts.forEach(a=>{
-    let o=document.createElement('option');
-    o.value=a.id;o.innerText=a.name;
-    sel.appendChild(o);
-  });
-}
-
-// Aangepaste renderTransactions voor responsieve lijst/tabel weergave
-function renderTransactions(){
-  const tbody=document.getElementById('transactions-body');
-  tbody.innerHTML='';
-
-  let data=transactions.filter(t=>t.accountId===activeAccountId);
-  let pending=data.filter(t=>t.status!=='confirmed');
-  let confirmed=data.filter(t=>t.status==='confirmed');
-  data=showConfirmed?[...pending,...confirmed]:pending;
-
-  let total=0;
-
-  data.forEach(t=>{
-    total+=Number(t.amount);
-    
-    // De UI structuur is aangepast om te werken als tabelrij op desktop EN grid-kaart op mobiel
-    tbody.innerHTML+=`
-    <tr class="tr-row" onclick="openModal('${t.id}')">
-      <td class="tr-status"><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
-      <td class="tr-date">${t.date}</td>
-      <td class="tr-cat">${t.category}</td>
-      <td class="tr-amount ${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
-      <td class="tr-memo">${t.memo||''}</td>
-    </tr>`;
-  });
-
-  document.getElementById('total').innerText="Totaal: "+formatCurrency(total);
-}
-
-function toggleConfirmed(){
-  showConfirmed=!showConfirmed;
-  document.getElementById('filterBtn').innerText=showConfirmed?"Verberg bevestigd":"Toon bevestigd";
-  renderTransactions();
-}
-
-function openModal(id=null){
-  editingId=id;
-  openModalUI('modal'); // Gebruik nieuwe UI functie
-
-  income.value='';expense.value='';
-
-  if(id){
-    let t=transactions.find(x=>x.id===id);
-    dateInput.value=t.date;
-    categoryInput.value=t.category;
-    memoInput.value=t.memo;
-    statusSelect.value=t.status;
-
-    if(t.amount>=0) income.value=t.amount;
-    else expense.value=Math.abs(t.amount);
-
-    document.getElementById('target-account').value=t.accountId;
-  } else {
-      dateInput.value=new Date().toISOString().split('T')[0];
-      categoryInput.value='';
-      memoInput.value='';
-      statusSelect.value='pending';
-      document.getElementById('target-account').value=activeAccountId;
-  }
-}
-
-function closeModal(){closeModalUI('modal');} // Gebruik nieuwe UI functie
-
-function saveTransaction(){
-  let amt = income.value ? parseFloat(income.value) : -parseFloat(expense.value || 0);
-  let data={
-    id:editingId||Date.now().toString(),
-    date:dateInput.value,
-    category:categoryInput.value,
-    memo:memoInput.value,
-    amount:amt,
-    status:statusSelect.value,
-    accountId:document.getElementById('target-account').value
-  };
-  if(editingId){
-    let i=transactions.findIndex(t=>t.id===editingId);
-    transactions[i]=data;
-  } else transactions.push(data);
-  dataChanged(); closeModal(); renderTransactions();
-}
-
-function duplicateTransaction(){
-  if(!editingId) return;
-  let t=transactions.find(x=>x.id===editingId);
-  transactions.push({...t,id:Date.now().toString(), status: 'pending'});
-  dataChanged(); closeModal(); renderTransactions();
-}
-
-function deleteTransaction(){
-  if(editingId && confirm('Wissen?')){
-    transactions=transactions.filter(t=>t.id!==editingId);
-    dataChanged(); closeModal(); renderTransactions();
-  }
-}
-
-function addAccount(){
-  let n=prompt("Naam rekening:");
-  if(n){ accounts.push({id:Date.now().toString(),name:n}); dataChanged(); renderAccounts(); }
-}
-
-function selectAccount(id){
-  activeAccountId=id;
-  renderAccounts(); renderTransactions();
-  if (window.innerWidth < 768) toggleSidebar(); // Sluit sidebar op mobiel na selectie
-}
-
-// Start de App
-renderAccounts();
-renderTransactions();
+// Start
 loadFromCloud();
-
 </script>
+
 </body>
 </html>

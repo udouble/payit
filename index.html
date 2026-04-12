@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v1.0 - DEFINITIVE RELEASE</title>
+  <title>Payit v1.0 - DEFINITIVE FIXED</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -64,25 +64,18 @@
     .tr-memo { color: var(--text-muted); font-size: 13px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; white-space: nowrap; }
 
-    /* MODALS & ACTION GRID */
+    /* MODALS */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 20px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     input, select { width: 100%; padding: 10px; margin-top: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; -webkit-appearance: none; appearance: none;}
     select { background-image: var(--chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px; }
     
-    .btn-grid { 
-        display: grid; 
-        grid-template-columns: 1fr 1fr; 
-        gap: 10px; 
-        margin-top: 14px; 
-    }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
     .btn { padding: 12px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; font-size: 14px; text-align: center; display: flex; align-items: center; justify-content: center;}
     .btn-cancel { background: var(--bg-input); color: var(--text-muted); grid-column: 1; grid-row: 1; }
     .btn-save   { background: var(--primary); color: white; grid-column: 2; grid-row: 1; }
     .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--negative); grid-column: 1; grid-row: 2; }
     .btn-dup    { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border); grid-column: 2; grid-row: 2; }
-
-    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text-muted); font-size: 12px; padding: 8px; }
 
     .iphone-tabs { 
         position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); 
@@ -144,7 +137,7 @@
                 <span id="total" class="saldo-text">€ 0,00</span>
             </div>
             <div class="header-right-group">
-                <div id="acc-title-text" class="acc-title-text">Laden...</div>
+                <div id="acc-title-text" class="acc-title-text" style="color:var(--text-main);">Laden...</div>
                 <button style="background:var(--theme-btn-bg); color:var(--theme-btn-text); border:none; width:32px; height:32px; border-radius:8px; cursor:pointer;" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
                 <button onclick="openModal()" style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; border: none; cursor:pointer;">+ Nieuw</button>
             </div>
@@ -197,7 +190,7 @@
 <div class="modal" id="catManagerModal" onclick="closeOnOverlay(event, this)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3 style="margin:0; color:var(--primary); font-weight: 800;">Beheer Categorieën</h3>
-    <div class="cat-manager-list" id="catManagerList" style="max-height: 250px; overflow-y: auto; margin: 15px 0; border: 1px solid var(--border); border-radius: 12px; padding: 5px;"></div>
+    <div id="catManagerList" style="max-height: 250px; overflow-y: auto; margin: 15px 0; border: 1px solid var(--border); border-radius: 12px; padding: 5px;"></div>
     <div style="display:flex; gap:8px; margin-top:10px;">
         <input type="text" id="newCatInput" placeholder="Nieuwe categorie..." style="flex:1; margin-top:0;">
         <button class="btn btn-save" onclick="addCategoryUI()" style="padding:10px 15px;">+</button>
@@ -210,14 +203,6 @@
   <div class="modal-content" onclick="event.stopPropagation()">
     <h3 id="accModalTitle" style="font-weight: 800; color: var(--primary);">Rekening Management</h3>
     <input type="text" id="newAccName" placeholder="Naam rekening">
-    <div style="margin-top: 20px; padding: 15px; border: 1px dashed var(--border); border-radius: 12px;">
-        <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">Backup & Herstel</div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn btn-outline" style="flex: 1;" onclick="exportData()">Download Backup</button>
-            <button class="btn btn-outline" style="flex: 1;" onclick="document.getElementById('importFile').click()">Importeer Backup</button>
-            <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
-        </div>
-    </div>
     <div class="btn-grid">
       <button class="btn btn-cancel" onclick="closeAccountModal()">Annuleren</button>
       <button class="btn btn-save" onclick="handleAccountAction()">Opslaan</button>
@@ -236,7 +221,7 @@ let accounts = [{ id:'1',name:'Privé'}];
 let transactions = [];
 let activeAccountId = null;
 let editingId = null;
-let showConfirmed = false;
+let showConfirmed = localStorage.getItem('payit-filter-showConfirmed') === 'true';
 
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -255,27 +240,6 @@ applyTheme(localStorage.getItem('payit-theme') || 'light');
 
 function closeOnOverlay(e, modalEl) { if (e.target === modalEl) { if (modalEl.id === 'modal') closeModal(); if (modalEl.id === 'catManagerModal') closeCategoryManager(); if (modalEl.id === 'accModal') closeAccountModal(); } }
 
-function exportData() {
-    const data = { categories, accounts, transactions, exportDate: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `payit_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url);
-}
-function importData(event) {
-    const file = event.target.files[0]; if (!file) return;
-    const reader = new FileReader(); reader.onload = async (e) => {
-        try {
-            const imported = JSON.parse(e.target.result);
-            if (imported.transactions && imported.accounts) {
-                if (confirm("Dit overschrijft huidige cloud-data. Doorgaan?")) {
-                    categories = imported.categories || categories; accounts = imported.accounts; transactions = imported.transactions;
-                    await syncToCloud(); location.reload();
-                }
-            }
-        } catch (err) { alert("Fout bij lezen bestand."); }
-    }; reader.readAsText(file);
-}
-
 function openCategoryManager() { document.getElementById('catManagerModal').style.display = 'flex'; renderCategoryManagerList(); }
 function closeCategoryManager() { document.getElementById('catManagerModal').style.display = 'none'; }
 function renderCategoryManagerList() {
@@ -289,8 +253,10 @@ function updateCategoryDatalist() { document.getElementById('cat-list').innerHTM
 function selectAccount(accId) { 
     activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); 
     const acc = accounts.find(a => a.id === accId); const name = acc ? acc.name : "Laden...";
-    document.getElementById('nav-title').innerText = name; document.getElementById('acc-title-text').innerText = name; 
-    document.getElementById('sidebar').classList.remove('open'); renderAccounts(); renderTransactions(); 
+    document.getElementById('nav-title').innerText = name; 
+    document.getElementById('acc-title-text').innerText = name; 
+    document.getElementById('sidebar').classList.remove('open'); 
+    renderAccounts(); renderTransactions(); 
 }
 
 function renderAccounts() {
@@ -299,12 +265,7 @@ function renderAccounts() {
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
         const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
         div.onclick = () => selectAccount(acc.id);
-        div.innerHTML = `
-            <span class="acc-name">${acc.name}</span>
-            <span class="acc-bal">${formatCurrency(bal)}</span>
-            <span onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="position:absolute; right:12px; top:12px; opacity:0.3; display:flex;">
-                <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </span>`;
+        div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span><span onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="position:absolute; right:12px; top:12px; opacity:0.3; display:flex;"><svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>`;
         sidebar.appendChild(div);
     });
 }
@@ -312,17 +273,12 @@ function renderAccounts() {
 function renderTransactions() {
     const container = document.getElementById('transactions-container'); container.innerHTML = '';
     let allAccT = transactions.filter(t => t.accountId === activeAccountId);
-    let totalBal = allAccT.reduce((sum, t) => sum + Number(t.amount), 0);
-    
-    const savedFilter = localStorage.getItem('payit-filter-showConfirmed');
-    if (savedFilter !== null) showConfirmed = (savedFilter === 'true');
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
-
-    let displayList = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
-    displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
+    let list = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
+    list.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
         container.innerHTML += `<div class="tr-row" onclick="openModal('${t.id}')"><div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div class="tr-left-side"><div class="tr-header"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span></div><span class="tr-memo">${t.memo || '-'}</span></div><div class="tr-right-side"><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span></div></div>`;
     });
-    document.getElementById('total').innerText = formatCurrency(totalBal);
+    document.getElementById('total').innerText = formatCurrency(allAccT.reduce((sum, t) => sum + Number(t.amount), 0));
 }
 
 function openModal(id = null) {
@@ -336,8 +292,8 @@ function openModal(id = null) {
         document.getElementById('date').value = t.date; document.getElementById('category').value = t.category;
         document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
         document.getElementById('target-account').value = t.accountId;
-        if(t.amount >= 0) { document.getElementById('income').value = t.amount.toString().replace(".", ","); document.getElementById('expense').value = ''; }
-        else { document.getElementById('expense').value = Math.abs(t.amount).toString().replace(".", ","); document.getElementById('income').value = ''; }
+        if(t.amount >= 0) { document.getElementById('income').value = t.amount; document.getElementById('expense').value = ''; }
+        else { document.getElementById('expense').value = Math.abs(t.amount); document.getElementById('income').value = ''; }
     } else {
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         document.getElementById('category').value = ''; document.getElementById('memo').value = '';
@@ -351,8 +307,8 @@ function closeAccountModal() { document.getElementById('accModal').style.display
 
 async function saveTransaction() {
     const catInput = document.getElementById('category').value.trim();
-    if (!catInput) { alert("Kies een categorie"); return; }
-    if (!categories.includes(catInput)) { if (confirm(`De categorie "${catInput}" bestaat nog niet. Toevoegen?`)) { categories.push(catInput); updateCategoryDatalist(); } else { return; } }
+    if (!catInput) return;
+    if (!categories.includes(catInput)) { if (confirm(`Categorie "${catInput}" toevoegen?`)) { categories.push(catInput); updateCategoryDatalist(); } else return; }
     let inc = parseNumericValue(document.getElementById('income').value);
     let exp = parseNumericValue(document.getElementById('expense').value);
     let amt = inc > 0 ? inc : -exp;
@@ -361,26 +317,18 @@ async function saveTransaction() {
     closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
-function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
+function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); syncToCloud(); closeModal(); renderTransactions(); }
 function handleAccountAction() { const name = document.getElementById('newAccName').value; if(!name) return; if(editingAccountId) accounts.find(a => a.id === editingAccountId).name = name; else accounts.push({ id: Date.now().toString(), name }); closeAccountModal(); syncToCloud(); renderAccounts(); }
-function deleteAccount() { if(confirm('Echt zeker?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); syncToCloud(); renderAccounts(); if (accounts.length > 0) selectAccount(accounts[0].id); } }
-
-function toggleConfirmed() { 
-    showConfirmed = !showConfirmed; 
-    localStorage.setItem('payit-filter-showConfirmed', showConfirmed);
-    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; 
-    renderTransactions(); 
-}
+function deleteAccount() { if(confirm('Zeker?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); syncToCloud(); renderAccounts(); if (accounts.length > 0) selectAccount(accounts[0].id); } }
+function toggleConfirmed() { showConfirmed = !showConfirmed; localStorage.setItem('payit-filter-showConfirmed', showConfirmed); renderTransactions(); }
 
 async function syncToCloud() {
-    document.getElementById('sync-label').innerText = "Sync: Opslaan...";
     try {
         await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions } }) });
         document.getElementById('sync-label').innerText = "Sync: OK";
     } catch (e) { document.getElementById('sync-label').innerText = "Sync: Offline"; }
 }
 async function loadFromCloud() {
-    document.getElementById('sync-label').innerText = "Sync: Laden...";
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
         const result = await response.json();
@@ -388,26 +336,10 @@ async function loadFromCloud() {
             const d = result[0].data; if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions;
             const lastId = localStorage.getItem('lastActiveAccountId');
             if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); else if (accounts.length > 0) selectAccount(accounts[0].id);
-            renderAccounts(); renderTransactions(); document.getElementById('sync-label').innerText = "Sync: OK";
+            renderAccounts(); renderTransactions();
         }
-    } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
+    } catch (e) { }
 }
-
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { if (document.getElementById('modal').style.display === 'flex') saveTransaction(); else if (document.getElementById('accModal').style.display === 'flex') handleAccountAction(); else if (document.getElementById('catManagerModal').style.display === 'flex') addCategoryUI(); }
-    if (e.key === 'Escape') { closeModal(); closeAccountModal(); closeCategoryManager(); }
-});
-
-let startY = 0; let pullDist = 0;
-const scrollArea = document.getElementById('main-scroll');
-const indicator = document.getElementById('pull-indicator');
-scrollArea.addEventListener('touchstart', (e) => { if (scrollArea.scrollTop === 0) startY = e.touches[0].pageY; else startY = 0; });
-scrollArea.addEventListener('touchmove', (e) => {
-    if (startY === 0) return;
-    pullDist = e.touches[0].pageY - startY;
-    if (pullDist > 0 && pullDist < 100) { indicator.style.opacity = pullDist / 100; indicator.style.transform = `translateY(${pullDist/2}px)`; }
-});
-scrollArea.addEventListener('touchend', async () => { if (pullDist > 70) await loadFromCloud(); indicator.style.opacity = 0; indicator.style.transform = `translateY(0)`; pullDist = 0; startY = 0; });
 
 loadFromCloud();
 </script>

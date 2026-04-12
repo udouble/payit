@@ -3,21 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v4.7</title>
+  <title>Payit v4.8</title>
   <style>
-    /* 1. Vernieuwd Kleurenpalet (Lichter & Frisser) */
     :root {
-      --bg-body: #e2e8f0; /* Light Slate Grey */
-      --bg-sidebar: #f1f5f9; /* Zeer licht Slate */
+      --bg-body: #e2e8f0; 
+      --bg-sidebar: #f1f5f9; 
       --bg-card: #ffffff;
       --bg-input: #f8fafc;
-      --primary: #3f8cff; /* Helderblauw */
-      --text-main: #1e293b; /* Deep Slate (bijna zwart) */
-      --text-muted: #64748b; /* Medium Slate */
-      --border: #cbd5e1; /* Slate Border */
-      --positive: #10b981; /* Emerald Green */
-      --negative: #ef4444; /* Red */
-      --orange: #f97316; /* Bright Orange */
+      --primary: #3f8cff; 
+      --text-main: #1e293b; 
+      --text-muted: #64748b; 
+      --border: #cbd5e1; 
+      --positive: #10b981; 
+      --negative: #ef4444; 
+      --orange: #f97316; 
     }
 
     body {
@@ -34,7 +33,6 @@
       height: 100vh;
     }
 
-    /* SIDEBAR */
     .sidebar {
       width: 300px;
       background: var(--bg-sidebar);
@@ -58,7 +56,6 @@
       padding: 12px;
     }
 
-    /* MAIN VIEW */
     .main-view {
       flex: 1;
       overflow-y: auto;
@@ -81,7 +78,6 @@
       z-index: 90;
     }
 
-    /* ACCOUNT ITEMS (Sidebar) */
     .acc-item {
       padding: 16px;
       border-radius: 12px;
@@ -103,7 +99,6 @@
     .acc-name { font-weight: 600; font-size: 15px; color: var(--text-main); }
     .acc-bal { font-family: "SF Mono", monospace; color: var(--orange); font-size: 14px; font-weight: 700; }
 
-    /* TRANSACTIONS CONTENT */
     .content-wrapper {
       padding: 30px;
       max-width: 1300px;
@@ -126,7 +121,6 @@
     .hero-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
     .hero-total { font-size: 32px; font-weight: 800; color: var(--orange); }
 
-    /* TRANSACTION ROW (Single Line) */
     .tr-row {
       background: var(--bg-card);
       margin-bottom: 8px;
@@ -151,7 +145,6 @@
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 16px; min-width: 110px; }
     .tr-date { font-size: 12px; color: var(--text-muted); width: 85px; }
 
-    /* MODALS & BUTTONS (Verbeterde Layout) */
     .modal {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.3); z-index: 1000;
@@ -169,7 +162,6 @@
       -webkit-appearance: none;
     }
 
-    /* Knoppen Grid */
     .btn-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -183,13 +175,11 @@
     .btn-danger { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
     .btn-dup { background: #e0e7ff; color: #4f46e5; border: 1px solid #c7d2fe; }
 
-    /* Pull indicator */
     #pull-indicator {
       position: absolute; top: 64px; left: 0; right: 0; text-align: center;
       font-size: 12px; color: var(--text-muted); opacity: 0; z-index: 10;
     }
 
-    /* Helpers */
     .green { background: var(--positive); box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
     .red { background: var(--negative); box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
     .pos-text { color: var(--positive); }
@@ -220,8 +210,7 @@
       <span style="font-weight: 800; color: var(--primary); font-size: 20px;">Payit</span>
       <button onclick="openAccountModal()" style="background:var(--bg-card); border:1px solid var(--border); color:var(--primary); width:32px; height:32px; border-radius:8px; cursor:pointer;">+</button>
     </div>
-    <div class="sidebar-content" id="sidebar-accounts">
-      </div>
+    <div class="sidebar-content" id="sidebar-accounts"></div>
     <div class="sync-label" id="sync-label">Sync: OK</div>
   </aside>
 
@@ -237,7 +226,7 @@
     <div class="content-wrapper">
       <div id="transaction-view">
         <div class="summary-hero">
-          <div class="hero-label">Huidig Saldo</div>
+          <div class="hero-label">Totaal Saldo</div>
           <div id="total" class="hero-total">€ 0,00</div>
         </div>
         
@@ -269,7 +258,6 @@
     <div class="btn-grid">
         <button id="btnCancelTransaction" class="btn btn-cancel" onclick="closeModal()">Annuleren</button>
         <button id="btnSaveTransaction" class="btn btn-save" onclick="saveTransaction()">Opslaan</button>
-        
         <button id="btnDeleteTransaction" class="btn btn-danger" onclick="deleteTransaction()" style="display:none; grid-column: 1 / -1;">Wissen</button>
         <button id="btnDupTransaction" class="btn btn-dup" onclick="duplicateTransaction()" style="display:none; grid-column: 1 / -1; margin-top:-8px;">Dupliceren</button>
     </div>
@@ -289,7 +277,6 @@
 </div>
 
 <script>
-/** CONFIGURATIE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
@@ -316,6 +303,7 @@ function renderAccounts() {
     const sidebar = document.getElementById('sidebar-accounts');
     sidebar.innerHTML = '';
     accounts.forEach(acc => {
+        // Bereken totaal van alle transacties voor sidebar-balans
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
         const div = document.createElement('div');
         div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
@@ -332,11 +320,15 @@ function renderAccounts() {
 function renderTransactions() {
     const container = document.getElementById('transactions-container');
     container.innerHTML = '';
-    let filtered = transactions.filter(t => t.accountId === activeAccountId);
-    let pending = filtered.filter(t => t.status !== 'confirmed');
-    let confirmed = filtered.filter(t => t.status === 'confirmed');
+    
+    // De cruciale fix: bereken het totaal op basis van ALLE transacties van deze rekening
+    let allAccountTransactions = transactions.filter(t => t.accountId === activeAccountId);
+    let totalBalance = allAccountTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    // Pas daarna de visuele filtering toe voor de lijst
+    let pending = allAccountTransactions.filter(t => t.status !== 'confirmed');
+    let confirmed = allAccountTransactions.filter(t => t.status === 'confirmed');
     let displayList = showConfirmed ? [...pending, ...confirmed] : pending;
-    let total = displayList.reduce((sum, t) => sum + Number(t.amount), 0);
 
     displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
         container.innerHTML += `
@@ -354,18 +346,16 @@ function renderTransactions() {
             </div>
         `;
     });
-    document.getElementById('total').innerText = formatCurrency(total);
+    
+    // Het weergegeven totaal is nu stabiel
+    document.getElementById('total').innerText = formatCurrency(totalBalance);
 }
 
-/** MODALS & ACTIONS (Verbeterde Knoppen Logica) **/
 function openModal(id = null) {
     editingId = id;
     document.getElementById('modal').style.display = 'flex';
-    
-    // Knoppen tonen/verbergen op basis van bewerken/nieuw
     document.getElementById('btnDeleteTransaction').style.display = id ? 'block' : 'none';
     document.getElementById('btnDupTransaction').style.display = id ? 'block' : 'none';
-    
     document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     document.getElementById('cat-list').innerHTML = categories.map(c => `<option value="${c}">`).join('');
     if (id) {
@@ -420,7 +410,6 @@ function deleteAccount() {
 }
 function toggleConfirmed() { showConfirmed = !showConfirmed; document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; renderTransactions(); }
 
-/** CLOUD & SYNC **/
 async function syncToCloud() {
     document.getElementById('sync-label').innerText = "Sync: Opslaan...";
     try {
@@ -445,7 +434,6 @@ async function loadFromCloud() {
     } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }
 
-/** KEYS & PULL **/
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         if (document.getElementById('modal').style.display === 'flex') saveTransaction();

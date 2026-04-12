@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v1.0 - DEFINITIVE RELEASE</title>
+  <title>Payit v1.3 - KNOPPEN RECHTSBOVEN FIXED</title>
   <style>
     /* THEMA DEFINITIES */
     :root {
@@ -42,7 +42,7 @@
 
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     
-    /* HEADER INDELING */
+    /* HEADER STYLING */
     .header-card { 
         background: var(--bg-card); border-radius: 16px; padding: 12px 20px; margin-bottom: 15px; border: 1px solid var(--border); 
         display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
@@ -51,7 +51,7 @@
     .header-center-group { flex: 2; text-align: center; }
     .header-right-group { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
     
-    .acc-title-text { font-weight: 800; font-size: 16px; color: var(--text-main); }
+    .acc-title-text { font-weight: 800; font-size: 15px; color: var(--text-main); }
     .hero-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
 
@@ -67,7 +67,6 @@
     .tr-memo { color: var(--text-muted); font-size: 13px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; white-space: nowrap; }
 
-    /* MODALS */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 20px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     input, select { width: 100%; padding: 10px; margin-top: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; -webkit-appearance: none; appearance: none;}
@@ -101,8 +100,8 @@
       .navbar { display: flex; background: var(--bg-sidebar); height: 50px; align-items: center; padding: 0 15px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; justify-content: space-between;}
       .nav-title-text { font-weight: 800; font-size: 15px; color: var(--text-main); flex: 1; text-align: left; }
       .header-card { flex-direction: column; align-items: center; padding: 12px; gap: 4px; }
-      .header-left-group, .header-center-group, .header-right-group { flex: none; text-align: center; justify-content: center; }
-      .header-right-group, .acc-title-text { display: none; }
+      .header-left-group, .header-center-group, .header-right-group { flex: none; width: 100%; text-align: center; justify-content: center; }
+      .header-right-group { display: none; }
       .saldo-text { font-size: 24px; }
       .modal { align-items: flex-end; }
       .modal-content { border-radius: 20px 20px 0 0; width: 100%; max-width: 100%; }
@@ -149,7 +148,6 @@
                 <button onclick="openModal()" style="background: var(--primary); color: white; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none; cursor:pointer;">+ Nieuw</button>
             </div>
         </div>
-        
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px;"><span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span><button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Toon bevestigd</button></div>
         <div id="transactions-container"></div>
       </div>
@@ -237,7 +235,7 @@ let accounts = [{ id:'1',name:'Privé'}];
 let transactions = [];
 let activeAccountId = null;
 let editingId = null;
-let showConfirmed = localStorage.getItem('payit-filter-showConfirmed') === 'true';
+let showConfirmed = false;
 
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -246,10 +244,8 @@ function parseNumericValue(str) { if (!str) return 0; let clean = str.toString()
 function applyTheme(theme) { 
     document.body.setAttribute('data-theme', theme); 
     const icon = theme === 'dark' ? '🌙' : '☀️';
-    const ids = ['theme-icon-mobile', 'theme-icon-desktop', 'theme-icon-iphone'];
-    ids.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.innerText = icon;
+    ['theme-icon-mobile','theme-icon-desktop','theme-icon-iphone'].forEach(id => {
+        let el = document.getElementById(id); if(el) el.innerText = icon;
     });
     localStorage.setItem('payit-theme', theme); 
 }
@@ -262,7 +258,7 @@ function exportData() {
     const data = { categories, accounts, transactions, exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `payit_backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `payit_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url);
 }
 function importData(event) {
     const file = event.target.files[0]; if (!file) return;
@@ -286,14 +282,13 @@ function renderCategoryManagerList() {
     list.innerHTML = categories.sort().map(cat => `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:8px 12px; border-radius:8px; margin:4px; font-size:14px;"><span>${cat}</span><span style="color:var(--negative); font-weight:800; cursor:pointer; padding:0 5px;" onclick="removeCategoryUI('${cat}')">✕</span></div>`).join('');
 }
 function addCategoryUI() { const input = document.getElementById('newCatInput'); const val = input.value.trim(); if (val && !categories.includes(val)) { categories.push(val); input.value = ''; renderCategoryManagerList(); updateCategoryDatalist(); syncToCloud(); } }
-function removeCategoryUI(cat) { if (confirm(`Categorie verwijderen?`)) { categories = categories.filter(c => c !== cat); renderCategoryManagerList(); updateCategoryDatalist(); syncToCloud(); } }
+function removeCategoryUI(cat) { if (confirm(`Categorie "${cat}" verwijderen?`)) { categories = categories.filter(c => c !== cat); renderCategoryManagerList(); updateCategoryDatalist(); syncToCloud(); } }
 function updateCategoryDatalist() { document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join(''); }
 
 function selectAccount(accId) { 
     activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); 
     const acc = accounts.find(a => a.id === accId); const name = acc ? acc.name : "Laden...";
-    document.getElementById('nav-title').innerText = name; 
-    document.getElementById('acc-title-text').innerText = name; 
+    document.getElementById('nav-title').innerText = name; document.getElementById('acc-title-text').innerText = name; 
     document.getElementById('sidebar').classList.remove('open'); renderAccounts(); renderTransactions(); 
 }
 
@@ -303,7 +298,12 @@ function renderAccounts() {
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
         const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
         div.onclick = () => selectAccount(acc.id);
-        div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span><span onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="position:absolute; right:12px; top:12px; opacity:0.3; display:flex;"><svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>`;
+        div.innerHTML = `
+            <span class="acc-name">${acc.name}</span>
+            <span class="acc-bal">${formatCurrency(bal)}</span>
+            <span onclick="event.stopPropagation(); openAccountModal('${acc.id}')" style="position:absolute; right:12px; top:12px; opacity:0.3; display:flex;">
+                <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </span>`;
         sidebar.appendChild(div);
     });
 }
@@ -311,16 +311,23 @@ function renderAccounts() {
 function renderTransactions() {
     const container = document.getElementById('transactions-container'); container.innerHTML = '';
     let allAccT = transactions.filter(t => t.accountId === activeAccountId);
+    let totalBal = allAccT.reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    const savedFilter = localStorage.getItem('payit-filter-showConfirmed');
+    if (savedFilter !== null) showConfirmed = (savedFilter === 'true');
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
-    let list = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
-    list.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
+
+    let displayList = showConfirmed ? [...allAccT] : allAccT.filter(t => t.status !== 'confirmed');
+    displayList.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
         container.innerHTML += `<div class="tr-row" onclick="openModal('${t.id}')"><div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div class="tr-left-side"><div class="tr-header"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span></div><span class="tr-memo">${t.memo || '-'}</span></div><div class="tr-right-side"><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span></div></div>`;
     });
-    document.getElementById('total').innerText = formatCurrency(allAccT.reduce((sum, t) => sum + Number(t.amount), 0));
+    document.getElementById('total').innerText = formatCurrency(totalBal);
 }
 
 function openModal(id = null) {
     editingId = id; document.getElementById('modal').style.display = 'flex';
+    document.getElementById('btnDeleteTransaction').style.display = id ? 'flex' : 'none';
+    document.getElementById('btnDupTransaction').style.display = id ? 'flex' : 'none';
     document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     updateCategoryDatalist();
     if (id) {
@@ -328,15 +335,13 @@ function openModal(id = null) {
         document.getElementById('date').value = t.date; document.getElementById('category').value = t.category;
         document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
         document.getElementById('target-account').value = t.accountId;
-        if(t.amount >= 0) { document.getElementById('income').value = t.amount; document.getElementById('expense').value = ''; }
-        else { document.getElementById('expense').value = Math.abs(t.amount); document.getElementById('income').value = ''; }
-        document.getElementById('btnDeleteTransaction').style.display = 'flex'; document.getElementById('btnDupTransaction').style.display = 'flex';
+        if(t.amount >= 0) { document.getElementById('income').value = t.amount.toString().replace(".", ","); document.getElementById('expense').value = ''; }
+        else { document.getElementById('expense').value = Math.abs(t.amount).toString().replace(".", ","); document.getElementById('income').value = ''; }
     } else {
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         document.getElementById('category').value = ''; document.getElementById('memo').value = '';
-        document.getElementById('status').value = 'pending'; document.getElementById('target-account').value = activeAccountId || accounts[0].id;
+        document.getElementById('status').value = 'pending'; document.getElementById('target-account').value = activeAccountId || (accounts.length > 0 ? accounts[0].id : "");
         document.getElementById('income').value = ''; document.getElementById('expense').value = '';
-        document.getElementById('btnDeleteTransaction').style.display = 'none'; document.getElementById('btnDupTransaction').style.display = 'none';
     }
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
@@ -344,26 +349,37 @@ function openAccountModal(id = null) { editingAccountId = id; document.getElemen
 function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }
 
 async function saveTransaction() {
-    const catInput = document.getElementById('category').value.trim(); if (!catInput) return;
-    if (!categories.includes(catInput)) { if (confirm(`Toevoegen?`)) { categories.push(catInput); updateCategoryDatalist(); } else return; }
-    let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
+    const catInput = document.getElementById('category').value.trim();
+    if (!catInput) { alert("Kies een categorie"); return; }
+    if (!categories.includes(catInput)) { if (confirm(`De categorie "${catInput}" bestaat nog niet. Toevoegen?`)) { categories.push(catInput); updateCategoryDatalist(); } else { return; } }
+    let inc = parseNumericValue(document.getElementById('income').value);
+    let exp = parseNumericValue(document.getElementById('expense').value);
+    let amt = inc > 0 ? inc : -exp;
     let data = { id: editingId || Date.now().toString(), date: document.getElementById('date').value, category: catInput, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
     if (editingId) transactions[transactions.findIndex(t => t.id === editingId)] = data; else transactions.push(data);
     closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
-function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); syncToCloud(); closeModal(); renderTransactions(); }
+function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
 function handleAccountAction() { const name = document.getElementById('newAccName').value; if(!name) return; if(editingAccountId) accounts.find(a => a.id === editingAccountId).name = name; else accounts.push({ id: Date.now().toString(), name }); closeAccountModal(); syncToCloud(); renderAccounts(); }
-function deleteAccount() { if(confirm('Zeker?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); syncToCloud(); renderAccounts(); if (accounts.length > 0) selectAccount(accounts[0].id); } }
-function toggleConfirmed() { showConfirmed = !showConfirmed; localStorage.setItem('payit-filter-showConfirmed', showConfirmed); renderTransactions(); }
+function deleteAccount() { if(confirm('Echt zeker?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); syncToCloud(); renderAccounts(); if (accounts.length > 0) selectAccount(accounts[0].id); } }
+
+function toggleConfirmed() { 
+    showConfirmed = !showConfirmed; 
+    localStorage.setItem('payit-filter-showConfirmed', showConfirmed);
+    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; 
+    renderTransactions(); 
+}
 
 async function syncToCloud() {
+    document.getElementById('sync-label').innerText = "Sync: Opslaan...";
     try {
         await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions } }) });
         document.getElementById('sync-label').innerText = "Sync: OK";
-    } catch (e) { }
+    } catch (e) { document.getElementById('sync-label').innerText = "Sync: Offline"; }
 }
 async function loadFromCloud() {
+    document.getElementById('sync-label').innerText = "Sync: Laden...";
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
         const result = await response.json();
@@ -371,20 +387,26 @@ async function loadFromCloud() {
             const d = result[0].data; if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions;
             const lastId = localStorage.getItem('lastActiveAccountId');
             if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); else if (accounts.length > 0) selectAccount(accounts[0].id);
-            renderAccounts(); renderTransactions();
+            renderAccounts(); renderTransactions(); document.getElementById('sync-label').innerText = "Sync: OK";
         }
-    } catch (e) { }
+    } catch (e) { document.getElementById('sync-label').innerText = "Sync: Fout"; }
 }
 
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { if (document.getElementById('modal').style.display === 'flex') saveTransaction(); else if (document.getElementById('accModal').style.display === 'flex') handleAccountAction(); }
+    if (e.key === 'Enter') { if (document.getElementById('modal').style.display === 'flex') saveTransaction(); else if (document.getElementById('accModal').style.display === 'flex') handleAccountAction(); else if (document.getElementById('catManagerModal').style.display === 'flex') addCategoryUI(); }
     if (e.key === 'Escape') { closeModal(); closeAccountModal(); closeCategoryManager(); }
 });
 
-let pullStartY = 0;
+let startY = 0; let pullDist = 0;
 const scrollArea = document.getElementById('main-scroll');
-scrollArea.addEventListener('touchstart', (e) => { if (scrollArea.scrollTop === 0) pullStartY = e.touches[0].pageY; });
-scrollArea.addEventListener('touchend', async (e) => { if (e.changedTouches[0].pageY - pullStartY > 70) await loadFromCloud(); });
+const indicator = document.getElementById('pull-indicator');
+scrollArea.addEventListener('touchstart', (e) => { if (scrollArea.scrollTop === 0) startY = e.touches[0].pageY; else startY = 0; });
+scrollArea.addEventListener('touchmove', (e) => {
+    if (startY === 0) return;
+    pullDist = e.touches[0].pageY - startY;
+    if (pullDist > 0 && pullDist < 100) { indicator.style.opacity = pullDist / 100; indicator.style.transform = `translateY(${pullDist/2}px)`; }
+});
+scrollArea.addEventListener('touchend', async () => { if (pullDist > 70) await loadFromCloud(); indicator.style.opacity = 0; indicator.style.transform = `translateY(0)`; pullDist = 0; startY = 0; });
 
 loadFromCloud();
 </script>

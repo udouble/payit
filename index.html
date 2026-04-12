@@ -1,358 +1,479 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
-  <title>Payit - v3.5 (Sync Edition)</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Payit - v4.1 (Mobile First)</title>
+  
   <style>
+    /* 1. Basis & Kleurenpalet (Modern Deep Charcoal) */
+    :root {
+      --bg-main: #141417;
+      --bg-panel: #1f1f23;
+      --bg-input: #29292e;
+      --text-main: #e4e4e9;
+      --text-muted: #94949e;
+      --accent: #3f8cff;
+      --accent-hover: #579aff;
+      --border: #2d2d33;
+      --positive: #4caf50;
+      --negative: #ff5e57;
+      --orange: #ff9f43;
+      
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
     body {
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-      background:#1c1c1e;
-      color:#e5e5e7;
-      font-size:15px;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-size: 16px; /* Iets groter basisfont */
+      overflow: hidden; /* Sidebar handling */
     }
 
-    .container{display:flex;height:100vh;}
-
-    .sidebar{
-      width:260px;
-      background:#2a2a2d;
-      padding:18px;
-      border-right:1px solid #3a3a3d;
+    /* 2. Layout & Responsiviteit */
+    .container {
+      display: flex;
+      height: 100vh;
+      position: relative;
     }
 
-    .account{
-      padding:10px 12px;
-      border-radius:6px;
-      margin-bottom:6px;
-      cursor:pointer;
-      font-size:14px;
+    /* Sidebar - Mobile First: Overlay menu */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 280px;
+      background-color: var(--bg-panel);
+      padding: 20px;
+      border-right: 1px solid var(--border);
+      transform: translateX(-100%); /* Standaard verborgen */
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-md);
     }
 
-    .account:hover{background:#3a3a3d;}
-    .account.active{background:#3f8cff;color:white;}
-
-    .add-account-btn,.cat-btn{
-      width:100%;
-      padding:10px;
-      margin-top:8px;
-      background:#3a3a3d;
-      border:none;
-      color:#ccc;
-      border-radius:6px;
-      font-size:13px;
-      cursor:pointer;
+    .sidebar.open {
+      transform: translateX(0);
     }
 
-    .main{flex:1;padding:24px;overflow-y:auto;}
+    /* Overlay achtergrond als sidebar open is */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+    .sidebar-overlay.open { display: block; }
 
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:18px;
+    /* Main Content */
+    .main {
+      flex: 1;
+      padding: 16px; /* Compacter op mobiel */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 60px; /* Ruimte voor mobiele header */
     }
 
-    .total-box{
-      background:#ff9f43;
-      color:#000;
-      padding:6px 12px;
-      border-radius:6px;
-      font-size:13px;
-      font-weight:600;
+    /* Mobiele Header met Hamburger */
+    .mobile-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background-color: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      z-index: 900;
+      box-shadow: var(--shadow-sm);
     }
 
-    .filter-btn{
-      background:#3a3a3d;
-      padding:8px 12px;
-      border:none;
-      border-radius:6px;
-      font-size:12px;
-      color:#ccc;
-      cursor:pointer;
+    .menu-toggle {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      margin-right: 16px;
     }
 
-    .add-btn{
-      background:#3f8cff;
-      width:36px;
-      height:36px;
-      border-radius:10px;
-      font-size:20px;
-      border:none;
-      color:white;
-      cursor:pointer;
+    .mobile-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      table-layout:fixed;
+    /* 3. Sidebar Elementen */
+    #accounts-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 20px;
     }
 
-    th{
-      text-align:left;
-      font-size:12px;
-      color:#888;
-      padding:8px;
-      border-bottom:1px solid #333;
+    .account {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--text-muted);
+      transition: background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
     }
 
-    td{
-      padding:10px 8px;
-      border-bottom:1px solid #2a2a2d;
-      font-size:14px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+    .account:hover { background-color: rgba(255,255,255,0.05); color: var(--text-main); }
+    .account.active { background-color: var(--accent); color: white; font-weight: 600; box-shadow: var(--shadow-sm); }
+
+    .sidebar-btns {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
     }
 
-    th:nth-child(1), td:nth-child(1){width:30px;}
-    th:nth-child(2), td:nth-child(2){width:110px;}
-    th:nth-child(3), td:nth-child(3){width:180px;}
-    th:nth-child(4), td:nth-child(4){
-      width:120px;
-      text-align:right;
+    .add-account-btn, .cat-btn {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s;
     }
-    th:nth-child(5), td:nth-child(5){width:auto;}
+    .add-account-btn:hover, .cat-btn:hover { border-color: var(--text-muted); }
 
-    .positive{color:#4caf50;}
-    .negative{color:#ff5e57;}
+    #sync-label { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: auto; }
 
-    .status-dot{
-      width:6px;
-      height:6px;
-      border-radius:50%;
-      display:inline-block;
-    }
-
-    .green{background:#4caf50;}
-    .red{background:#ff5e57;}
-
-    .modal{
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.75);
-      justify-content:center;
-      align-items:center;
-      z-index:100;
+    /* 4. Topbar & Acties */
+    .topbar {
+      margin-bottom: 20px;
     }
 
-    .modal-content{
-      background:#2a2a2d;
-      padding:20px;
-      border-radius:10px;
-      width:420px;
+    .balance-card {
+      background-color: var(--bg-panel);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
     }
 
-    input,select{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      background:#1c1c1e;
-      border:1px solid #3a3a3d;
-      color:white;
-      border-radius:6px;
-      font-size:14px;
+    .total-box {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--orange);
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .filter-btn {
+      background-color: var(--bg-input);
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .add-btn {
+      background-color: var(--accent);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      font-size: 24px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(63, 140, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .add-btn:hover { background-color: var(--accent-hover); }
+
+    /* 5. Tabel & Lijstweergave (Mobile First) */
+    
+    /* Standaard: Lijstweergave voor mobiel */
+    #transactions-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #transactions-header { display: none; } /* Verberg tabelkoppen op mobiel */
+
+    .tr-row {
+      background-color: var(--bg-panel);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      position: relative;
+      display: grid;
+      grid-template-areas: 
+        "status date amount"
+        "status cat amount"
+        "memo memo memo";
+      grid-template-columns: 24px 1fr auto;
+      gap: 4px 10px;
+      align-items: center;
+    }
+
+    .tr-status { grid-area: status; justify-self: center; }
+    .tr-date { grid-area: date; font-size: 12px; color: var(--text-muted); }
+    .tr-cat { grid-area: cat; font-size: 15px; font-weight: 500; }
+    .tr-amount { grid-area: amount; font-size: 17px; font-weight: 700; text-align: right; }
+    .tr-memo { grid-area: memo; font-size: 13px; color: var(--text-muted); italic; margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.03); }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: block;
+    }
+    .green { background-color: var(--positive); }
+    .red { background-color: var(--negative); }
+
+    /* 6. Modals (Touch Friendly) */
+    .modal, .cat-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: flex-end; /* Mobile: Schuift van onderen */
+      z-index: 2000;
+      padding: 10px;
+    }
+
+    .modal-content {
+      background-color: var(--bg-panel);
+      padding: 24px;
+      border-radius: 20px 20px 10px 10px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: var(--shadow-md);
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .modal.open .modal-content, .cat-modal.open .modal-content {
+      transform: translateY(0);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px; /* Groter voor touch */
+      margin-top: 12px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      color: white;
+      border-radius: 10px;
+      font-size: 16px; /* Voorkom inzoomen op iOS */
       box-sizing: border-box;
+      -webkit-appearance: none; /* Uniform styling iOS */
     }
 
-    select{height:40px;}
-
-    .amount-row{display:flex;gap:8px;}
-
-    .btn-row{display:flex;gap:8px;margin-top:16px;}
-
-    .btn{
-      flex:1;
-      padding:10px;
-      border:none;
-      border-radius:6px;
-      font-size:13px;
-      cursor:pointer;
-      color:white;
+    .amount-row { display: flex; gap: 10px; }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      color: white;
+      text-align: center;
     }
 
-    .save{background:#4caf50;}
-    .cancel{background:#555;}
-    .dup{background:#3f8cff;}
-    .del{background:#ff5e57;}
+    .save { background-color: var(--positive); }
+    .cancel { background-color: var(--bg-input); color: var(--text-muted); }
+    .dup { background-color: var(--accent); }
+    .del { background-color: rgba(255, 94, 87, 0.1); color: var(--negative); border: 1px solid var(--negative); }
 
-    .autocomplete-box{position:relative;}
-    .autocomplete-list{
-      position:absolute;
-      width:100%;
-      background:#1c1c1e;
-      border:1px solid #333;
-      max-height:160px;
-      overflow-y:auto;
-      z-index:10;
-    }
-
-    .autocomplete-item{
-      padding:8px;
-      cursor:pointer;
-      font-size:13px;
-    }
-
-    .autocomplete-item:hover{background:#333;}
-
-    .cat-modal{
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.75);
-      justify-content:center;
-      align-items:center;
+    /* Autocomplete styling */
+    .autocomplete-box { position: relative; }
+    .autocomplete-list {
+      position: absolute;
+      width: 100%;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
       z-index: 100;
+      margin-top: 4px;
+      box-shadow: var(--shadow-md);
     }
+    .autocomplete-item { padding: 12px; cursor: pointer; font-size: 14px; }
+    .autocomplete-item:hover { background-color: rgba(255,255,255,0.05); }
 
-    #sync-label { 
-      display: block; 
-      margin-top: 10px; 
-      font-size: 11px; 
-      color: #888; 
+    /* 7. Desktop & Tablet Optimalisatie (Breder dan iPhone) */
+    @media (min-width: 768px) {
+      body { overflow: auto; }
+      .mobile-header { display: none; }
+      .sidebar {
+        position: relative;
+        transform: translateX(0);
+        z-index: 10;
+        box-shadow: none;
+      }
+      .sidebar-overlay { display: none !important; }
+      .main { margin-top: 0; padding: 30px; }
+      
+      .topbar { display: flex; justify-content: space-between; align-items: center; }
+      .balance-card { flex-direction: row; align-items: center; justify-content: space-between; width: 100%; }
+      .total-box { font-size: 28px; }
+
+      /* Terug naar Tabelweergave op Desktop */
+      #transactions-header {
+        display: table-header-group;
+        background-color: rgba(255,255,255,0.02);
+      }
+      
+      #transactions-body {
+        display: table-row-group;
+        gap: 0;
+      }
+
+      .tr-row {
+        display: table-row;
+        background-color: transparent;
+        border: none;
+        border-radius: 0;
+        grid-template-areas: none;
+        grid-template-columns: none;
+      }
+      
+      .tr-row:hover { background-color: rgba(255,255,255,0.02); }
+      .tr-row > td { display: table-cell; padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 14px;}
+      
+      /* Kolombreedtes herstellen */
+      td.tr-status { width: 40px; text-align: center; }
+      td.tr-date { width: 100px; color: var(--text-main); font-size: 14px; }
+      td.tr-cat { width: 180px; }
+      td.tr-amount { width: 120px; font-size: 14px;}
+      td.tr-memo { width: auto; font-style: normal; color: var(--text-main); padding-top: 12px; border-top: none; }
     }
   </style>
 </head>
 
 <body>
 
+<div class="mobile-header">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+  <div class="mobile-title">Payit</div>
+</div>
+
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <div class="container">
-
-<div class="sidebar">
-  <div id="accounts-list"></div>
-  <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
-  <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
-  <span id="sync-label">Sync: Laden...</span>
-</div>
-
-<div class="main">
-
-<div class="topbar">
-  <div style="display:flex;gap:8px;">
-    <div id="total" class="total-box"></div>
-    <button class="filter-btn" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
+  <div class="sidebar" id="sidebar">
+    <div id="accounts-list"></div>
+    <div class="sidebar-btns">
+        <button class="add-account-btn" onclick="addAccount()">+ Nieuwe rekening</button>
+        <button class="cat-btn" onclick="openCatModal()">Categorie toevoegen</button>
+    </div>
+    <span id="sync-label">Sync: Laden...</span>
   </div>
-  <button class="add-btn" onclick="openModal()">＋</button>
-</div>
 
-<table>
-<thead>
-<tr>
-  <th>ST</th>
-  <th>Datum</th>
-  <th>Categorie</th>
-  <th>Bedrag</th>
-  <th>Memo</th>
-</tr>
-</thead>
-<tbody id="transactions-body"></tbody>
-</table>
+  <div class="main">
+    <div class="topbar">
+      <div class="balance-card">
+        <div id="total" class="total-box"></div>
+        <div class="top-actions">
+            <button class="filter-btn" onclick="toggleConfirmed()" id="filterBtn">Toon bevestigd</button>
+            <button class="add-btn" onclick="openModal()">＋</button>
+        </div>
+      </div>
+    </div>
+    
+    <table style="width:100%; border-collapse: collapse;">
+      <thead id="transactions-header">
+        <tr>
+          <th style="text-align:center;">ST</th>
+          <th>Datum</th>
+          <th>Categorie</th>
+          <th style="text-align:right;">Bedrag</th>
+          <th>Memo</th>
+        </tr>
+      </thead>
+      <tbody id="transactions-body">
+        </tbody>
+    </table>
 
-</div>
+  </div>
 </div>
 
 <div class="modal" id="modal">
-<div class="modal-content">
-
-<input type="date" id="date">
-
-<div class="autocomplete-box">
-  <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
-  <div id="category-list" class="autocomplete-list"></div>
-</div>
-
-<input type="text" id="memo" placeholder="Memo">
-
-<div class="amount-row">
-  <input type="number" id="income" placeholder="Inkomsten" step="0.01">
-  <input type="number" id="expense" placeholder="Uitgaven" step="0.01">
-</div>
-
-<select id="status">
-  <option value="pending">Afwachtend</option>
-  <option value="confirmed">Bevestigd</option>
-</select>
-
-<select id="target-account"></select>
-
-<div class="btn-row">
-  <button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
-  <button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
-</div>
-
-<div class="btn-row">
-  <button class="btn cancel" onclick="closeModal()">Annuleren</button>
-  <button class="btn save" onclick="saveTransaction()">Opslaan</button>
-</div>
-
-</div>
+  <div class="modal-content">
+    <input type="date" id="date">
+    <div class="autocomplete-box">
+      <input type="text" id="category" placeholder="Categorie" oninput="filterCategories()">
+      <div id="category-list" class="autocomplete-list"></div>
+    </div>
+    <input type="text" id="memo" placeholder="Memo">
+    <div class="amount-row">
+      <input type="number" id="income" placeholder="Inkomsten" step="0.01">
+      <input type="number" id="expense" placeholder="Uitgaven" step="0.01">
+    </div>
+    <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
+    <select id="target-account"></select>
+    <div class="btn-row">
+      <button class="btn del" onclick="deleteTransaction()">Verwijderen</button>
+      <button class="btn dup" onclick="duplicateTransaction()">Dupliceren</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn cancel" onclick="closeModal()">Annuleren</button>
+      <button class="btn save" onclick="saveTransaction()">Opslaan</button>
+    </div>
+  </div>
 </div>
 
 <div class="cat-modal" id="catModal">
-<div class="modal-content">
-  <h3 style="margin:0 0 10px 0;">Categorie toevoegen</h3>
-
-  <input type="text" id="newCat" placeholder="Nieuwe categorie">
-
-  <div class="btn-row">
-    <button class="btn save" onclick="addCategory()">Toevoegen</button>
-    <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
+  <div class="modal-content">
+    <h3 style="margin:0 0 16px 0;">Categorie toevoegen</h3>
+    <input type="text" id="newCat" placeholder="Nieuwe categorie">
+    <div class="btn-row">
+      <button class="btn cancel" onclick="closeCatModal()">Sluiten</button>
+      <button class="btn save" onclick="addCategory()">Toevoegen</button>
+    </div>
   </div>
-</div>
 </div>
 
 <script>
-
 /** CONFIGURATIE - SUPABASE **/
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
 
 /** STATE **/
-let categories = [
-"Apple Pay",
-"Bancontact",
-"Belastingen",
-"BTW",
-"BTW-voorzien",
-"BMW",
-"BMW - onderhoud en verzekering",
-"Consensus",
-"Correctie",
-"Delhaize",
-"Dienstencheques",
-"Diversen",
-"Eneco",
-"Etentjes",
-"Invecon",
-"Kampen",
-"Kapper-voeten",
-"KBC",
-"Lening",
-"Maxem",
-"NOG TE ONTVANGEN",
-"Nutsvoorzieningen",
-"Onderhoud",
-"Opzij",
-"Opzij voor liq.reserve 01/2027",
-"Overige",
-"Overschrijving",
-"Paypal",
-"Pensioen",
-"Rekening courant",
-"Reserve",
-"Restant voor de maand",
-"Straetus",
-"Straetus-tweewekelijks",
-"Terugbetaling",
-"TotalEnergies",
-"Tuin",
-"Vanalles",
-"Vergoeding laden"
-];
-
+let categories = ["Apple Pay","Bancontact","Belastingen","BTW","BTW-voorzien","BMW","BMW - onderhoud en verzekering","Consensus","Correctie","Delhaize","Dienstencheques","Diversen","Eneco","Etentjes","Invecon","Kampen","Kapper-voeten","KBC","Lening","Maxem","NOG TE ONTVANGEN","Nutsvoorzieningen","Onderhoud","Opzij","Opzij voor liq.reserve 01/2027","Overige","Overschrijving","Paypal","Pensioen","Rekening courant","Reserve","Restant voor de maand","Straetus","Straetus-tweewekelijks","Terugbetaling","TotalEnergies","Tuin","Vanalles","Vergoeding laden"];
 let accounts = [{ id:'1',name:'Privé'}];
 let transactions = [];
 
@@ -368,19 +489,33 @@ const categoryInput = document.getElementById('category');
 const memoInput = document.getElementById('memo');
 const statusSelect = document.getElementById('status');
 
-/** SYNC FUNCTIES **/
+/** NIEUW: UI FUNCTIES VOOR MOBIEL **/
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.querySelector('.sidebar-overlay').classList.toggle('open');
+}
 
+function openModalUI(id) {
+    const m = document.getElementById(id);
+    m.style.display = 'flex';
+    setTimeout(() => m.classList.add('open'), 10);
+}
+
+function closeModalUI(id) {
+    const m = document.getElementById(id);
+    m.classList.remove('open');
+    setTimeout(() => m.style.display = 'none', 300);
+}
+
+
+/** SYNC FUNCTIES **/
 async function syncToCloud() {
     document.getElementById('sync-label').innerText = "Sync: Opslaan...";
     const payload = { categories, accounts, transactions };
     try {
         await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, {
             method: 'PATCH',
-            headers: { 
-                'apikey': SUPABASE_KEY, 
-                'Authorization': `Bearer ${SUPABASE_KEY}`, 
-                'Content-Type': 'application/json' 
-            },
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ data: payload })
         });
         document.getElementById('sync-label').innerText = "Sync: OK";
@@ -411,11 +546,9 @@ async function loadFromCloud() {
     }
 }
 
-function dataChanged() {
-    syncToCloud();
-}
+function dataChanged() { syncToCloud(); }
 
-/** APP FUNCTIES (v3.4) **/
+/** APP FUNCTIES (v3.4) - GEWIJZIGDE RENDER LOGICA VOOR UI **/
 
 function filterCategories(){
   const val=categoryInput.value.toLowerCase();
@@ -434,8 +567,8 @@ document.addEventListener('click',e=>{
     document.getElementById('category-list').innerHTML='';
 });
 
-function openCatModal(){document.getElementById('catModal').style.display='flex';}
-function closeCatModal(){document.getElementById('catModal').style.display='none';}
+function openCatModal(){openModalUI('catModal');}
+function closeCatModal(){closeModalUI('catModal');}
 
 function addCategory(){
   const val=document.getElementById('newCat').value.trim();
@@ -465,28 +598,29 @@ function renderAccounts(){
   });
 }
 
+// Aangepaste renderTransactions voor responsieve lijst/tabel weergave
 function renderTransactions(){
   const tbody=document.getElementById('transactions-body');
   tbody.innerHTML='';
 
   let data=transactions.filter(t=>t.accountId===activeAccountId);
-
   let pending=data.filter(t=>t.status!=='confirmed');
   let confirmed=data.filter(t=>t.status==='confirmed');
-
   data=showConfirmed?[...pending,...confirmed]:pending;
 
   let total=0;
 
   data.forEach(t=>{
     total+=Number(t.amount);
+    
+    // De UI structuur is aangepast om te werken als tabelrij op desktop EN grid-kaart op mobiel
     tbody.innerHTML+=`
-    <tr onclick="openModal('${t.id}')">
-      <td><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
-      <td>${t.date}</td>
-      <td>${t.category}</td>
-      <td class="${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
-      <td>${t.memo||''}</td>
+    <tr class="tr-row" onclick="openModal('${t.id}')">
+      <td class="tr-status"><span class="status-dot ${t.status==='confirmed'?'green':'red'}"></span></td>
+      <td class="tr-date">${t.date}</td>
+      <td class="tr-cat">${t.category}</td>
+      <td class="tr-amount ${t.amount<0?'negative':'positive'}">${formatCurrency(t.amount)}</td>
+      <td class="tr-memo">${t.memo||''}</td>
     </tr>`;
   });
 
@@ -501,7 +635,7 @@ function toggleConfirmed(){
 
 function openModal(id=null){
   editingId=id;
-  document.getElementById('modal').style.display='flex';
+  openModalUI('modal'); // Gebruik nieuwe UI functie
 
   income.value='';expense.value='';
 
@@ -525,62 +659,49 @@ function openModal(id=null){
   }
 }
 
-function closeModal(){document.getElementById('modal').style.display='none';}
+function closeModal(){closeModalUI('modal');} // Gebruik nieuwe UI functie
 
 function saveTransaction(){
-  let amount=income.value?parseFloat(income.value):-parseFloat(expense.value||0);
-
+  let amt = income.value ? parseFloat(income.value) : -parseFloat(expense.value || 0);
   let data={
     id:editingId||Date.now().toString(),
     date:dateInput.value,
     category:categoryInput.value,
     memo:memoInput.value,
-    amount,
+    amount:amt,
     status:statusSelect.value,
     accountId:document.getElementById('target-account').value
   };
-
   if(editingId){
     let i=transactions.findIndex(t=>t.id===editingId);
     transactions[i]=data;
   } else transactions.push(data);
-
-  dataChanged();
-  closeModal();
-  renderTransactions();
+  dataChanged(); closeModal(); renderTransactions();
 }
 
 function duplicateTransaction(){
   if(!editingId) return;
   let t=transactions.find(x=>x.id===editingId);
   transactions.push({...t,id:Date.now().toString(), status: 'pending'});
-  dataChanged();
-  closeModal();
-  renderTransactions();
+  dataChanged(); closeModal(); renderTransactions();
 }
 
 function deleteTransaction(){
   if(editingId && confirm('Wissen?')){
     transactions=transactions.filter(t=>t.id!==editingId);
-    dataChanged();
-    closeModal();
-    renderTransactions();
+    dataChanged(); closeModal(); renderTransactions();
   }
 }
 
 function addAccount(){
   let n=prompt("Naam rekening:");
-  if(n){
-      accounts.push({id:Date.now().toString(),name:n});
-      dataChanged();
-      renderAccounts();
-  }
+  if(n){ accounts.push({id:Date.now().toString(),name:n}); dataChanged(); renderAccounts(); }
 }
 
 function selectAccount(id){
   activeAccountId=id;
-  renderAccounts();
-  renderTransactions();
+  renderAccounts(); renderTransactions();
+  if (window.innerWidth < 768) toggleSidebar(); // Sluit sidebar op mobiel na selectie
 }
 
 // Start de App
@@ -589,6 +710,5 @@ renderTransactions();
 loadFromCloud();
 
 </script>
-
 </body>
 </html>

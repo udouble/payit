@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v3.0.1 [Bugfix Release - Opslaan Fix]</title>
+  <title>Payit v3.0.3 - stabiele versie</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -58,43 +58,48 @@
     input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; appearance: none; }
     select { background-image: var(--chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; padding-right: 36px; }
 
-    /* WHEEL PICKER (iOS Style) */
-    .wheel-picker-container { display: flex; justify-content: space-around; height: 150px; background: var(--bg-input); border-radius: 15px; overflow: hidden; margin-top: 10px; position: relative; border: 1px solid var(--border); }
-    .wheel-picker-container::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 34px; transform: translateY(-50%); background: rgba(63, 140, 255, 0.1); border-top: 1px solid var(--primary); border-bottom: 1px solid var(--primary); pointer-events: none; }
-    .wheel-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; -ms-overflow-style: none; scrollbar-width: none; text-align: center; }
+    /* --- CLEAN DATE PICKER ENGINE --- */
+    .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
+    .cal-mac-view { padding: 12px; display: block; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
+    /* Geforceerde 7 kolommen */
+    .cal-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 4px; text-align: center; }
+    .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
+    .cal-cell:hover { background: rgba(63, 140, 255, 0.1); }
+    .cal-cell.active { background: var(--primary); color: white; }
+    .cal-cell.other { opacity: 0.1; }
+
+    .cal-touch-view { display: none; justify-content: space-around; height: 150px; position: relative; padding: 10px 0; }
+    .wheel-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; scrollbar-width: none; }
     .wheel-col::-webkit-scrollbar { display: none; }
-    .wheel-item { height: 34px; line-height: 34px; scroll-snap-align: center; font-size: 16px; color: var(--text-muted); transition: color 0.2s; }
-    .wheel-item.selected { color: var(--primary); font-weight: 800; font-size: 18px; }
+    .wheel-item { height: 34px; line-height: 34px; scroll-snap-align: center; font-size: 16px; color: var(--text-muted); }
+    .wheel-item.selected { color: var(--primary); font-weight: 800; }
     .wheel-spacer { height: 58px; }
 
-    /* Z-INDEX FIX VOOR KNOPPEN */
-    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; position: relative; z-index: 3000; }
-    .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 15px; }
-
-    .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding-top: 8px; z-index: 1100; }
-    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; cursor: pointer; }
-
-    .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
-    .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
-
-    @media (max-width: 850px) {
+    @media (max-width: 1025px) {
+      .cal-mac-view { display: none; }
+      .cal-touch-view { display: flex; }
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
       .iphone-tabs { display: flex; }
     }
 
     @media (max-width: 600px) {
-      .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 8px 12px !important; gap: 4px; min-height: 0 !important; }
-      .acc-title-text { text-align: left !important; width: 100%; font-size: 14px; padding-right: 80px; box-sizing: border-box; }
-      .header-btns-aside { position: absolute; right: 10px; top: 8px; }
+      .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 8px 12px !important; gap: 4px; }
       .tr-row { height: auto !important; padding: 12px 14px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; }
       .tr-main-content { flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; flex: 1 !important; }
-      .tr-memo-list { white-space: normal !important; overflow: visible !important; flex: none !important; }
       .tr-amount { text-align: right !important; margin-left: 10px !important; flex: none !important; width: auto !important; }
     }
+
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 15px; }
+    .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding-top: 8px; z-index: 1100; }
+    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; cursor: pointer; }
+    .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
+    .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
   </style>
 </head>
-<body id="app-body">
+<body>
 
 <div class="app-container">
   <aside class="sidebar" id="sidebar">
@@ -154,9 +159,9 @@
             <div class="cal-grid" id="cal-grid"></div>
         </div>
         <div class="cal-touch-view">
-            <div class="wheel-col" id="w-day"></div>
-            <div class="wheel-col" id="w-month"></div>
-            <div class="wheel-col" id="w-year"></div>
+            <div class="wheel-col" id="wheel-day"></div>
+            <div class="wheel-col" id="wheel-month"></div>
+            <div class="wheel-col" id="wheel-year"></div>
         </div>
     </div>
 
@@ -178,59 +183,27 @@
   </div>
 </div>
 
-<div class="modal" id="accModal">
-  <div class="modal-content">
-    <h3 style="font-weight: 800; color: var(--primary);">Rekening</h3>
-    <input type="text" id="newAccName" placeholder="Naam rekening">
-    <div class="btn-grid">
-      <button class="btn-action" style="background:var(--bg-input); color:var(--text-muted);" onclick="closeAccountModal()">Sluiten</button>
-      <button class="btn-action" style="background:var(--primary); color:white;" onclick="handleAccountAction()">Opslaan</button>
-      <button id="btnDeleteAcc" class="btn-action" style="grid-column: 1/-1; background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteAccount()">Verwijder Rekening</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
 
 let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Kampen","Kapper","Lening","Pensioen","Tuin","Opzij"];
-let accounts = [], transactions = [], activeAccountId = null, editingId = null, editingAccountId = null, showConfirmed = false;
+let accounts = [], transactions = [], activeAccountId = null, editingId = null, showConfirmed = false;
 let currentPickerDate = new Date();
 
-// --- KEYBOARD SUPPORT ---
-window.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        const modal = document.getElementById('modal');
-        if (modal && modal.style.display === 'flex') {
-            saveTransaction();
-        }
-    }
-});
-
-// --- ROBUUSTE NUMERIEKE PARSER (v3.0.1) ---
-function parseNumericValue(str) {
-    if (!str) return 0;
-    // Strip alles behalve cijfers, komma en punt
-    let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", ".");
-    return parseFloat(clean) || 0;
-}
+window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.getElementById('modal').style.display === 'flex') saveTransaction(); });
 
 function setupWheel(id, start, end, selected) {
     const col = document.getElementById(id);
     let html = '<div class="wheel-spacer"></div>';
-    for (let i = start; i <= end; i++) {
-        const val = i.toString().padStart(2, '0');
-        html += `<div class="wheel-item" data-val="${i}">${val}</div>`;
-    }
+    for (let i = start; i <= end; i++) html += `<div class="wheel-item" data-val="${i}">${i.toString().padStart(2, '0')}</div>`;
     html += '<div class="wheel-spacer"></div>';
     col.innerHTML = html;
     col.onscroll = () => {
         const items = col.getElementsByClassName('wheel-item');
-        const scroll = col.scrollTop;
-        const index = Math.round(scroll / 34);
-        for(let i=0; i<items.length; i++) items[i].classList.remove('selected');
+        const index = Math.round(col.scrollTop / 34);
+        for(let it of items) it.classList.remove('selected');
         if(items[index]) {
             items[index].classList.add('selected');
             const v = parseInt(items[index].dataset.val);
@@ -240,19 +213,12 @@ function setupWheel(id, start, end, selected) {
             renderCalGrid();
         }
     };
-    setTimeout(() => { col.scrollTop = (selected - start) * 34; }, 100);
-}
-
-function setWheelDate(isoDate) {
-    const date = isoDate ? new Date(isoDate) : new Date();
-    setupWheel('w-day', 1, 31, date.getDate());
-    setupWheel('w-month', 1, 12, date.getMonth() + 1);
-    setupWheel('w-year', 2020, 2035, date.getFullYear());
+    setTimeout(() => col.scrollTop = (selected - start) * 34, 100);
 }
 
 function renderCalGrid() {
     const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
-    const months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+    const months = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
     document.getElementById('cal-label').innerText = `${months[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`;
     let firstDay = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth(), 1).getDay();
     firstDay = (firstDay === 0) ? 6 : firstDay - 1;
@@ -265,39 +231,26 @@ function renderCalGrid() {
 }
 function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
 function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
+function syncWheels() { setupWheel('wheel-day', 1, 31, currentPickerDate.getDate()); setupWheel('wheel-month', 1, 12, currentPickerDate.getMonth() + 1); setupWheel('wheel-year', 2020, 2035, currentPickerDate.getFullYear()); }
 
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
+function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", "."); return parseFloat(clean) || 0; }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-
-function applyTheme(theme) { 
-    document.body.setAttribute('data-theme', theme); 
-    const icon = theme === 'dark' ? '🌙' : '☀️';
-    const ids = ['theme-icon-mobile','theme-icon-desktop'];
-    ids.forEach(id => { let el = document.getElementById(id); if(el) el.innerText = icon; });
-    localStorage.setItem('payit-theme', theme); 
-}
+function applyTheme(theme) { document.body.setAttribute('data-theme', theme); localStorage.setItem('payit-theme', theme); }
 function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
 applyTheme(localStorage.getItem('payit-theme') || 'light');
 
-function selectAccount(accId) { 
-    activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); 
-    const acc = accounts.find(a => a.id === accId);
-    document.getElementById('acc-title-text').innerText = acc ? acc.name : "Geen rekening"; 
-    document.getElementById('sidebar').classList.remove('open'); renderAccounts(); renderTransactions(); 
-}
-
+function selectAccount(accId) { activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); renderAccounts(); renderTransactions(); }
 function renderAccounts() {
     const sidebar = document.getElementById('sidebar-accounts'); sidebar.innerHTML = '';
-    if(accounts.length === 0) { sidebar.innerHTML = 'Geen rekeningen'; return; }
     accounts.forEach(acc => {
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
         const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
-        div.onclick = (e) => { e.stopPropagation(); selectAccount(acc.id); };
+        div.onclick = () => selectAccount(acc.id);
         div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span>`;
         sidebar.appendChild(div);
     });
 }
-
 function renderTransactions() {
     const container = document.getElementById('transactions-container'); container.innerHTML = '';
     let list = transactions.filter(t => t.accountId === activeAccountId);
@@ -307,13 +260,8 @@ function renderTransactions() {
     displayList.forEach(t => {
         const div = document.createElement('div'); div.className = 'tr-row';
         div.onclick = () => openModal(t.id);
-        div.innerHTML = `
-            <div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
-            <div class="tr-main-content">
-                <span class="tr-date">${t.date}</span>
-                <span class="tr-cat">${t.category}</span>
-                <span class="tr-memo-list">${t.memo || ''}</span>
-            </div>
+        div.innerHTML = `<div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
+            <div class="tr-main-content"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span><span class="tr-memo-list">${t.memo || ''}</span></div>
             <span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>`;
         container.appendChild(div);
     });
@@ -322,92 +270,36 @@ function renderTransactions() {
 
 function openModal(id = null) {
     editingId = id; document.getElementById('modal').style.display = 'flex';
-    document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join('');
     document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     if (id) {
-        let t = transactions.find(x => x.id === id);
-        currentPickerDate = new Date(t.date);
-        document.getElementById('category').value = t.category;
-        document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
-        document.getElementById('target-account').value = t.accountId;
+        let t = transactions.find(x => x.id === id); currentPickerDate = new Date(t.date);
+        document.getElementById('category').value = t.category; document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
         if(t.amount >= 0) { document.getElementById('income').value = t.amount; document.getElementById('expense').value = ''; }
         else { document.getElementById('expense').value = Math.abs(t.amount); document.getElementById('income').value = ''; }
         document.getElementById('btnDelete').style.display = 'block'; document.getElementById('btnDup').style.display = 'block';
     } else {
-        currentPickerDate = new Date();
-        document.getElementById('category').value = ''; document.getElementById('memo').value = '';
+        currentPickerDate = new Date(); document.getElementById('category').value = ''; document.getElementById('memo').value = '';
         document.getElementById('income').value = ''; document.getElementById('expense').value = '';
-        document.getElementById('target-account').value = activeAccountId;
         document.getElementById('btnDelete').style.display = 'none'; document.getElementById('btnDup').style.display = 'none';
     }
     renderCalGrid(); syncWheels();
 }
-
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
-function openAccountModal(id = null) { editingAccountId = id; document.getElementById('accModal').style.display = 'flex'; document.getElementById('newAccName').value = id ? accounts.find(a => a.id === id).name : ''; document.getElementById('btnDeleteAcc').style.display = id ? 'block' : 'none'; }
-function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }
-
-async function handleAccountAction() { 
-    const name = document.getElementById('newAccName').value.trim(); if(!name) return; 
-    if(editingAccountId) accounts.find(a => a.id === editingAccountId).name = name; 
-    else accounts.push({ id: Date.now().toString(), name }); 
-    closeAccountModal(); await syncToCloud(); renderAccounts(); 
-}
-
-// --- VERBETERDE SAVE FUNCTIE (v3.0.1) ---
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
-    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
-    
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
-    const isoDate = currentPickerDate.toISOString().split('T')[0];
-    
-    // Zorg voor een geldig accountId (fallback naar actieve account)
-    let accId = document.getElementById('target-account').value || activeAccountId;
-    
-    let data = { 
-        id: editingId || Date.now().toString(), 
-        date: isoDate, 
-        category: catVal, 
-        memo: document.getElementById('memo').value, 
-        amount: amt, 
-        status: document.getElementById('status').value, 
-        accountId: accId 
-    };
-    
-    if (editingId) { 
-        let idx = transactions.findIndex(t => t.id === editingId); 
-        if(idx > -1) transactions[idx] = data; 
-    } else {
-        transactions.push(data);
-    }
-    
-    closeModal(); 
-    await syncToCloud(); 
-    renderTransactions(); 
-    renderAccounts();
+    let data = { id: editingId || Date.now().toString(), date: currentPickerDate.toISOString().split('T')[0], category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
+    if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = data; } else transactions.push(data);
+    closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
-
-function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
-function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
-async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
-async function deleteAccount() { if(confirm('Rekening wissen?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); await syncToCloud(); if (accounts.length > 0) selectAccount(accounts[0].id); else location.reload(); } }
-
-async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label').innerText = "Sync: OK"; } catch (e) { } }
+async function syncToCloud() { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); }
 async function loadFromCloud() {
-    try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-        const result = await response.json();
-        if (result?.[0]?.data) {
-            const d = result[0].data; 
-            if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions;
-            showConfirmed = d.showConfirmed === true; 
-            const lastId = localStorage.getItem('lastActiveAccountId');
-            if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); 
-            else if (accounts.length > 0) selectAccount(accounts[0].id);
-            renderAccounts(); renderTransactions();
-        }
-    } catch (e) { }
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const result = await response.json();
+    if (result?.[0]?.data) {
+        const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
+        if (accounts.length > 0) selectAccount(localStorage.getItem('lastActiveAccountId') || accounts[0].id);
+    }
 }
 loadFromCloud();
 </script>

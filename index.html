@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.1.6 - NATIVE ENGINE</title>
+  <title>Payit v2.1.7 - NATIVE ENGINE REBUILD</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -25,6 +25,7 @@
     body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); -webkit-font-smoothing: antialiased; overflow: hidden; overscroll-behavior-y: contain; transition: background-color 0.3s, color 0.3s; }
     .app-container { display: flex; height: 100vh; }
     
+    /* SIDEBAR */
     .sidebar { width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s ease; z-index: 1000; }
     .sidebar-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
     .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; }
@@ -53,30 +54,30 @@
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; appearance: none; }
 
-    /* --- NATIVE CALENDAR UI ENGINE --- */
+    /* --- CALENDAR ENGINE --- */
     .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
     
-    /* Grid (Mac) */
-    .cal-mac { padding: 10px; display: block; }
-    .cal-mac-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 800; font-size: 14px; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
-    .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
+    /* Grid (Desktop) */
+    .cal-grid-view { padding: 12px; display: block; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; transition: 0.2s; }
     .cal-cell:hover { background: rgba(63, 140, 255, 0.1); }
     .cal-cell.active { background: var(--primary); color: white; }
     .cal-cell.other { opacity: 0.2; }
 
-    /* Native Wheel (iPhone/iPad) */
-    .cal-ios { display: none; justify-content: space-around; height: 180px; position: relative; padding: 10px 0; mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); }
-    .cal-ios::after { content: ""; position: absolute; top: 50%; left: 8px; right: 8px; height: 36px; transform: translateY(-50%); background: rgba(63, 140, 255, 0.08); border-radius: 8px; pointer-events: none; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
+    /* Wheel (iOS/iPad) */
+    .cal-wheel-view { display: none; justify-content: space-around; height: 180px; position: relative; padding: 10px 0; mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); }
+    .cal-wheel-view::after { content: ""; position: absolute; top: 50%; left: 10px; right: 10px; height: 38px; transform: translateY(-50%); background: rgba(63, 140, 255, 0.08); border-radius: 8px; pointer-events: none; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
     .wheel-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; scrollbar-width: none; -ms-overflow-style: none; }
     .wheel-col::-webkit-scrollbar { display: none; }
     .wheel-item { height: 40px; line-height: 40px; scroll-snap-align: center; font-size: 17px; color: var(--text-muted); transition: color 0.2s; }
     .wheel-item.selected { color: var(--text-main); font-weight: 700; }
     .wheel-spacer { height: 70px; }
 
-    @media (max-width: 1025px) { /* Tablet and below */
-      .cal-mac { display: none; }
-      .cal-ios { display: flex; }
+    @media (max-width: 1024px) { /* Tablet & Mobiel */
+      .cal-grid-view { display: none; }
+      .cal-wheel-view { display: flex; }
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
       .iphone-tabs { display: flex !important; }
@@ -92,7 +93,7 @@
     }
 
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-    .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; }
+    .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 15px; }
     .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding-top: 8px; z-index: 1100; }
     .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; cursor: pointer; }
     .aside-btn { height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -120,7 +121,7 @@
   <main class="main-view">
     <div class="content-wrapper">
       <div id="transaction-view">
-        <div class="header-wrapper">
+        <div class="header-wrapper" style="position: relative;">
             <div class="header-card">
                 <div style="display:flex; align-items:baseline; gap:12px;">
                     <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Saldo</span>
@@ -153,15 +154,15 @@
     <h3 style="margin:0; color:var(--primary); margin-bottom: 8px; font-weight: 800;">Transactie</h3>
     
     <div class="cal-engine">
-        <div class="cal-mac">
-            <div class="cal-mac-header">
+        <div class="cal-grid-view">
+            <div class="cal-header">
                 <button onclick="changeMonth(-1)" style="background:none;border:none;color:var(--primary);cursor:pointer;font-weight:bold;">&lt;</button>
                 <span id="cal-label"></span>
                 <button onclick="changeMonth(1)" style="background:none;border:none;color:var(--primary);cursor:pointer;font-weight:bold;">&gt;</button>
             </div>
             <div class="cal-grid" id="cal-grid"></div>
         </div>
-        <div class="cal-ios">
+        <div class="cal-wheel-view">
             <div class="wheel-col" id="w-day"></div>
             <div class="wheel-col" id="w-month"></div>
             <div class="wheel-col" id="w-year"></div>
@@ -180,7 +181,7 @@
     <div class="btn-grid">
         <button class="btn-action" style="background:var(--bg-input); color:var(--text-muted);" onclick="closeModal()">Annuleren</button>
         <button class="btn-action" style="background:var(--primary); color:white;" onclick="saveTransaction()">Opslaan</button>
-        <button id="btnDelete" class="btn-action" style="grid-column: 1/-1; background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteTransaction()">Wissen</button>
+        <button id="btnDelete" class="btn-action" style="background:rgba(239,68,68,0.1); color:var(--negative); display:none; grid-column: 1/-1;" onclick="deleteTransaction()">Wissen</button>
     </div>
   </div>
 </div>
@@ -194,11 +195,14 @@ let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Ka
 let accounts = [], transactions = [], activeAccountId = null, editingId = null, showConfirmed = false;
 let currentPickerDate = new Date();
 
-// --- CALENDAR ENGINES ---
+// --- CALENDAR GRID ENGINE ---
 function renderCalGrid() {
     const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
-    const months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
-    document.getElementById('cal-label').innerText = `${months[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`;
+    const label = document.getElementById('cal-label');
+    const months = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
+    label.innerText = `${months[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`;
+    const days = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
+    days.forEach(d => grid.innerHTML += `<div style="font-size:10px;font-weight:800;opacity:0.5;">${d}</div>`);
     let firstDay = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth(), 1).getDay();
     firstDay = (firstDay === 0) ? 6 : firstDay - 1;
     const daysInMonth = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth() + 1, 0).getDate();
@@ -211,6 +215,7 @@ function renderCalGrid() {
 function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
 function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
 
+// --- WHEEL PICKER ENGINE ---
 function setupWheel(id, start, end, selected) {
     const col = document.getElementById(id);
     let html = '<div class="wheel-spacer"></div>';

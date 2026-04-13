@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v3.0 - STABILITY RESTORE</title>
+  <title>Payit v3.0.1 [Bugfix Release - Opslaan Fix]</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -55,7 +55,7 @@
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-    input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; -webkit-appearance: none; appearance: none; }
+    input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; appearance: none; }
     select { background-image: var(--chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; padding-right: 36px; }
 
     /* WHEEL PICKER (iOS Style) */
@@ -67,7 +67,8 @@
     .wheel-item.selected { color: var(--primary); font-weight: 800; font-size: 18px; }
     .wheel-spacer { height: 58px; }
 
-    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    /* Z-INDEX FIX VOOR KNOPPEN */
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; position: relative; z-index: 3000; }
     .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 15px; }
 
     .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding-top: 8px; z-index: 1100; }
@@ -143,10 +144,20 @@
   <div class="modal-content">
     <h3 style="margin:0; color:var(--primary); margin-bottom: 8px; font-weight: 800;">Transactie</h3>
     
-    <div class="wheel-picker-container">
-        <div class="wheel-col" id="wheel-day"></div>
-        <div class="wheel-col" id="wheel-month"></div>
-        <div class="wheel-col" id="wheel-year"></div>
+    <div class="cal-engine">
+        <div class="cal-mac-view">
+            <div class="cal-header">
+                <button onclick="changeMonth(-1)" style="background:none;border:none;color:var(--primary);cursor:pointer;font-weight:bold;">&lt;</button>
+                <span id="cal-label"></span>
+                <button onclick="changeMonth(1)" style="background:none;border:none;color:var(--primary);cursor:pointer;font-weight:bold;">&gt;</button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div class="cal-touch-view">
+            <div class="wheel-col" id="w-day"></div>
+            <div class="wheel-col" id="w-month"></div>
+            <div class="wheel-col" id="w-year"></div>
+        </div>
     </div>
 
     <input type="text" id="category" placeholder="Categorie" list="cat-list">
@@ -185,12 +196,26 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const DB_RECORD_ID = 'main_user'; 
 
 let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Kampen","Kapper","Lening","Pensioen","Tuin","Opzij"];
-let accounts = [];
-let transactions = [];
-let activeAccountId = null;
-let editingId = null;
-let editingAccountId = null;
-let showConfirmed = false;
+let accounts = [], transactions = [], activeAccountId = null, editingId = null, editingAccountId = null, showConfirmed = false;
+let currentPickerDate = new Date();
+
+// --- KEYBOARD SUPPORT ---
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const modal = document.getElementById('modal');
+        if (modal && modal.style.display === 'flex') {
+            saveTransaction();
+        }
+    }
+});
+
+// --- ROBUUSTE NUMERIEKE PARSER (v3.0.1) ---
+function parseNumericValue(str) {
+    if (!str) return 0;
+    // Strip alles behalve cijfers, komma en punt
+    let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", ".");
+    return parseFloat(clean) || 0;
+}
 
 function setupWheel(id, start, end, selected) {
     const col = document.getElementById(id);
@@ -206,28 +231,43 @@ function setupWheel(id, start, end, selected) {
         const scroll = col.scrollTop;
         const index = Math.round(scroll / 34);
         for(let i=0; i<items.length; i++) items[i].classList.remove('selected');
-        if(items[index]) items[index].classList.add('selected');
+        if(items[index]) {
+            items[index].classList.add('selected');
+            const v = parseInt(items[index].dataset.val);
+            if(id === 'wheel-day') currentPickerDate.setDate(v);
+            if(id === 'wheel-month') currentPickerDate.setMonth(v-1);
+            if(id === 'wheel-year') currentPickerDate.setFullYear(v);
+            renderCalGrid();
+        }
     };
     setTimeout(() => { col.scrollTop = (selected - start) * 34; }, 100);
 }
 
-function getWheelDate() {
-    const d = document.querySelector('#wheel-day .selected')?.dataset.val;
-    const m = document.querySelector('#wheel-month .selected')?.dataset.val;
-    const y = document.querySelector('#wheel-year .selected')?.dataset.val;
-    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-}
-
 function setWheelDate(isoDate) {
     const date = isoDate ? new Date(isoDate) : new Date();
-    setupWheel('wheel-day', 1, 31, date.getDate());
-    setupWheel('wheel-month', 1, 12, date.getMonth() + 1);
-    setupWheel('wheel-year', 2020, 2035, date.getFullYear());
+    setupWheel('w-day', 1, 31, date.getDate());
+    setupWheel('w-month', 1, 12, date.getMonth() + 1);
+    setupWheel('w-year', 2020, 2035, date.getFullYear());
 }
+
+function renderCalGrid() {
+    const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
+    const months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+    document.getElementById('cal-label').innerText = `${months[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`;
+    let firstDay = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth(), 1).getDay();
+    firstDay = (firstDay === 0) ? 6 : firstDay - 1;
+    const daysInMonth = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth() + 1, 0).getDate();
+    for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
+    for(let i=1; i<=daysInMonth; i++) {
+        const isActive = i === currentPickerDate.getDate();
+        grid.innerHTML += `<div class="cal-cell ${isActive ? 'active' : ''}" onclick="setCalDay(${i})">${i}</div>`;
+    }
+}
+function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
+function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
 
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/\./g, "").replace(",", "."); return parseFloat(clean) || 0; }
 
 function applyTheme(theme) { 
     document.body.setAttribute('data-theme', theme); 
@@ -286,7 +326,7 @@ function openModal(id = null) {
     document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     if (id) {
         let t = transactions.find(x => x.id === id);
-        setWheelDate(t.date);
+        currentPickerDate = new Date(t.date);
         document.getElementById('category').value = t.category;
         document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
         document.getElementById('target-account').value = t.accountId;
@@ -294,13 +334,15 @@ function openModal(id = null) {
         else { document.getElementById('expense').value = Math.abs(t.amount); document.getElementById('income').value = ''; }
         document.getElementById('btnDelete').style.display = 'block'; document.getElementById('btnDup').style.display = 'block';
     } else {
-        setWheelDate(null);
+        currentPickerDate = new Date();
         document.getElementById('category').value = ''; document.getElementById('memo').value = '';
         document.getElementById('income').value = ''; document.getElementById('expense').value = '';
         document.getElementById('target-account').value = activeAccountId;
         document.getElementById('btnDelete').style.display = 'none'; document.getElementById('btnDup').style.display = 'none';
     }
+    renderCalGrid(); syncWheels();
 }
+
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 function openAccountModal(id = null) { editingAccountId = id; document.getElementById('accModal').style.display = 'flex'; document.getElementById('newAccName').value = id ? accounts.find(a => a.id === id).name : ''; document.getElementById('btnDeleteAcc').style.display = id ? 'block' : 'none'; }
 function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }
@@ -312,14 +354,40 @@ async function handleAccountAction() {
     closeAccountModal(); await syncToCloud(); renderAccounts(); 
 }
 
+// --- VERBETERDE SAVE FUNCTIE (v3.0.1) ---
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
     if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
+    
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
-    let data = { id: editingId || Date.now().toString(), date: getWheelDate(), category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
-    if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = data; } else transactions.push(data);
-    closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
+    const isoDate = currentPickerDate.toISOString().split('T')[0];
+    
+    // Zorg voor een geldig accountId (fallback naar actieve account)
+    let accId = document.getElementById('target-account').value || activeAccountId;
+    
+    let data = { 
+        id: editingId || Date.now().toString(), 
+        date: isoDate, 
+        category: catVal, 
+        memo: document.getElementById('memo').value, 
+        amount: amt, 
+        status: document.getElementById('status').value, 
+        accountId: accId 
+    };
+    
+    if (editingId) { 
+        let idx = transactions.findIndex(t => t.id === editingId); 
+        if(idx > -1) transactions[idx] = data; 
+    } else {
+        transactions.push(data);
+    }
+    
+    closeModal(); 
+    await syncToCloud(); 
+    renderTransactions(); 
+    renderAccounts();
 }
+
 function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
 async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }

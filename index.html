@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.1.3 - DUAL UI</title>
+  <title>Payit v2.1.4 - CALENDAR SPLIT & SORT RESTORE</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -58,19 +58,16 @@
     input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; -webkit-appearance: none; appearance: none; }
     select { background-image: var(--chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; padding-right: 36px; }
 
-    /* --- ADAPTIVE CALENDAR UI --- */
+    /* --- CALENDAR UI --- */
     .calendar-ui-wrapper { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
-    
-    /* Desktop Mode (Grid) */
-    .cal-grid-container { padding: 10px; display: block; }
-    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 800; font-size: 14px; }
+    .cal-desktop-container { padding: 10px; display: block; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
     .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
     .cal-cell:hover { background: rgba(63, 140, 255, 0.1); }
     .cal-cell.active { background: var(--primary); color: white; }
     .cal-cell.other { opacity: 0.2; }
 
-    /* Mobile/iPad Mode (Rolling Wheels) */
+    /* Rolling Wheels (iPhone/iPad) */
     .wheel-picker-container { display: none; justify-content: space-around; height: 160px; position: relative; padding: 10px 0; }
     .wheel-picker-container::before { content: ""; position: absolute; top: 50%; left: 10px; right: 10px; height: 36px; transform: translateY(-50%); background: rgba(63, 140, 255, 0.08); border-radius: 8px; pointer-events: none; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
     .wheel-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; scrollbar-width: none; -ms-overflow-style: none; }
@@ -79,8 +76,8 @@
     .wheel-item.selected { color: var(--text-main); font-weight: 700; transform: scale(1.1); }
     .wheel-spacer { height: 60px; }
 
-    @media (max-width: 1024px) { /* iPhone & iPad */
-      .cal-grid-container { display: none; }
+    @media (max-width: 1024px) {
+      .cal-desktop-container { display: none; }
       .wheel-picker-container { display: flex; }
     }
 
@@ -133,10 +130,19 @@
                 <button class="aside-btn aside-add" onclick="openModal()">+ Nieuw</button>
             </div>
         </div>
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 5px;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span>
+            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Laden...</button>
+        </div>
         <div id="transactions-container"></div>
       </div>
     </div>
   </main>
+</div>
+
+<div class="iphone-tabs">
+  <button class="tab-item" onclick="toggleSidebar()"><span style="font-size: 20px;">☰</span></button>
+  <button class="tab-item" onclick="openModal()" style="color:var(--primary);"><span style="font-size: 28px;">⊕</span></button>
 </div>
 
 <div class="modal" id="modal">
@@ -144,8 +150,8 @@
     <h3 style="margin:0; color:var(--primary); margin-bottom: 8px; font-weight: 800;">Transactie</h3>
     
     <div class="calendar-ui-wrapper">
-        <div class="cal-grid-container">
-            <div class="cal-header">
+        <div class="cal-desktop-container">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 800; font-size: 14px;">
                 <button onclick="changeMonth(-1)" style="background:none;border:none;color:var(--primary);cursor:pointer;font-weight:bold;">&lt;</button>
                 <span id="cal-label"></span>
                 <button onclick="changeMonth(1)" style="background:none;border:none;color:var(--primary);cursor:pointer;font-weight:bold;">&gt;</button>
@@ -167,9 +173,24 @@
         <input type="text" id="expense" placeholder="Uit" inputmode="decimal" style="color:var(--negative)">
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
+    <select id="target-account"></select>
     <div class="btn-grid">
         <button class="btn-action" style="background:var(--bg-input); color:var(--text-muted);" onclick="closeModal()">Annuleren</button>
         <button class="btn-action" style="background:var(--primary); color:white;" onclick="saveTransaction()">Opslaan</button>
+        <button id="btnDelete" class="btn-action" style="background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteTransaction()">Wissen</button>
+        <button id="btnDup" class="btn-action" style="background:var(--bg-input); border:1px solid var(--border); display:none;" onclick="duplicateTransaction()">Dupliceren</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="accModal">
+  <div class="modal-content">
+    <h3 style="font-weight: 800; color: var(--primary);">Rekening</h3>
+    <input type="text" id="newAccName" placeholder="Naam rekening">
+    <div class="btn-grid">
+      <button class="btn-action" style="background:var(--bg-input); color:var(--text-muted);" onclick="closeAccountModal()">Sluiten</button>
+      <button class="btn-action" style="background:var(--primary); color:white;" onclick="handleAccountAction()">Opslaan</button>
+      <button id="btnDeleteAcc" class="btn-action" style="grid-column: 1/-1; background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteAccount()">Verwijder Rekening</button>
     </div>
   </div>
 </div>
@@ -180,10 +201,10 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const DB_RECORD_ID = 'main_user'; 
 
 let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Kampen","Kapper","Lening","Pensioen","Tuin","Opzij"];
-let accounts = [], transactions = [], activeAccountId = null, editingId = null;
+let accounts = [], transactions = [], activeAccountId = null, editingId = null, editingAccountId = null, showConfirmed = false;
 let currentPickerDate = new Date();
 
-// --- CALENDAR GRID ENGINE (MAC) ---
+// --- CALENDAR LOGIC (DESKTOP) ---
 function renderCalGrid() {
     const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
     const label = document.getElementById('cal-label');
@@ -203,7 +224,7 @@ function renderCalGrid() {
 function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
 function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
 
-// --- WHEEL PICKER ENGINE (IOS/IPAD) ---
+// --- WHEEL PICKER LOGIC (IOS) ---
 function setupWheel(id, start, end, selected) {
     const col = document.getElementById(id);
     let html = '<div class="wheel-spacer"></div>';
@@ -231,8 +252,9 @@ function syncWheels() {
     setupWheel('w-year', 2020, 2035, currentPickerDate.getFullYear());
 }
 
-// --- CORE APP LOGIC (RESTORED) ---
+// --- CORE APP LOGIC (v2.1.0 BASIS) ---
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/\./g, "").replace(",", "."); return parseFloat(clean) || 0; }
 
 function applyTheme(theme) { 
@@ -249,15 +271,16 @@ function selectAccount(accId) {
     activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); 
     const acc = accounts.find(a => a.id === accId);
     document.getElementById('acc-title-text').innerText = acc ? acc.name : "Geen rekening"; 
-    renderAccounts(); renderTransactions(); 
+    document.getElementById('sidebar').classList.remove('open'); renderAccounts(); renderTransactions(); 
 }
 
 function renderAccounts() {
     const sidebar = document.getElementById('sidebar-accounts'); sidebar.innerHTML = '';
+    if(accounts.length === 0) { sidebar.innerHTML = 'Geen rekeningen'; return; }
     accounts.forEach(acc => {
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
         const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
-        div.onclick = () => selectAccount(acc.id);
+        div.onclick = (e) => { e.stopPropagation(); selectAccount(acc.id); };
         div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span>`;
         sidebar.appendChild(div);
     });
@@ -266,12 +289,22 @@ function renderAccounts() {
 function renderTransactions() {
     const container = document.getElementById('transactions-container'); container.innerHTML = '';
     let list = transactions.filter(t => t.accountId === activeAccountId);
-    list.sort((a, b) => new Date(b.date) - new Date(a.date));
-    list.forEach(t => {
+    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
+    let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
+    
+    // SORTERING HERSTELD: Status (Pending eerst), dan Datum (Nieuwste eerst)
+    displayList.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.date) - new Date(a.date));
+    
+    displayList.forEach(t => {
         const div = document.createElement('div'); div.className = 'tr-row';
         div.onclick = () => openModal(t.id);
-        div.innerHTML = `<div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
-            <div class="tr-main-content"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span><span class="tr-memo-list">${t.memo || ''}</span></div>
+        div.innerHTML = `
+            <div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
+            <div class="tr-main-content">
+                <span class="tr-date">${t.date}</span>
+                <span class="tr-cat">${t.category}</span>
+                <span class="tr-memo-list">${t.memo || ''}</span>
+            </div>
             <span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>`;
         container.appendChild(div);
     });
@@ -280,41 +313,67 @@ function renderTransactions() {
 
 function openModal(id = null) {
     editingId = id; document.getElementById('modal').style.display = 'flex';
+    document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join('');
+    document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     if (id) {
         let t = transactions.find(x => x.id === id);
         currentPickerDate = new Date(t.date);
         document.getElementById('category').value = t.category;
         document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
+        document.getElementById('target-account').value = t.accountId;
         if(t.amount >= 0) { document.getElementById('income').value = t.amount; document.getElementById('expense').value = ''; }
         else { document.getElementById('expense').value = Math.abs(t.amount); document.getElementById('income').value = ''; }
+        document.getElementById('btnDelete').style.display = 'block'; document.getElementById('btnDup').style.display = 'block';
     } else {
         currentPickerDate = new Date();
         document.getElementById('category').value = ''; document.getElementById('memo').value = '';
         document.getElementById('income').value = ''; document.getElementById('expense').value = '';
+        document.getElementById('target-account').value = activeAccountId;
+        document.getElementById('btnDelete').style.display = 'none'; document.getElementById('btnDup').style.display = 'none';
     }
-    renderCalGrid();
-    syncWheels();
+    renderCalGrid(); syncWheels();
 }
 
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
+function openAccountModal(id = null) { editingAccountId = id; document.getElementById('accModal').style.display = 'flex'; document.getElementById('newAccName').value = id ? accounts.find(a => a.id === id).name : ''; document.getElementById('btnDeleteAcc').style.display = id ? 'block' : 'none'; }
+function closeAccountModal() { document.getElementById('accModal').style.display = 'none'; }
+
+async function handleAccountAction() { 
+    const name = document.getElementById('newAccName').value.trim(); if(!name) return; 
+    if(editingAccountId) accounts.find(a => a.id === editingAccountId).name = name; 
+    else accounts.push({ id: Date.now().toString(), name }); 
+    closeAccountModal(); await syncToCloud(); renderAccounts(); 
+}
 
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
-    const isoDate = currentPickerDate.toISOString().split('T')[0];
+    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
-    let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
-    if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); transactions[idx] = data; } else transactions.push(data);
+    const isoDate = currentPickerDate.toISOString().split('T')[0];
+    let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
+    if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = data; } else transactions.push(data);
     closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
+function duplicateTransaction() { let t = transactions.find(x => x.id === editingId); transactions.push({...t, id: Date.now().toString(), status: 'pending'}); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
+function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
+async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
+async function deleteAccount() { if(confirm('Rekening wissen?')) { transactions = transactions.filter(t => t.accountId !== editingAccountId); accounts = accounts.filter(a => a.id !== editingAccountId); closeAccountModal(); await syncToCloud(); if (accounts.length > 0) selectAccount(accounts[0].id); else location.reload(); } }
 
-async function syncToCloud() { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions } }) }); }
+async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label').innerText = "Sync: OK"; } catch (e) { } }
 async function loadFromCloud() {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-    const result = await response.json();
-    if (result?.[0]?.data) {
-        const d = result[0].data; accounts = d.accounts; transactions = d.transactions;
-        if (accounts.length > 0) selectAccount(localStorage.getItem('lastActiveAccountId') || accounts[0].id);
-    }
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+        const result = await response.json();
+        if (result?.[0]?.data) {
+            const d = result[0].data; 
+            if(d.categories) categories = d.categories; if(d.accounts) accounts = d.accounts; if(d.transactions) transactions = d.transactions;
+            showConfirmed = d.showConfirmed === true; 
+            const lastId = localStorage.getItem('lastActiveAccountId');
+            if (lastId && accounts.find(a => a.id === lastId)) selectAccount(lastId); 
+            else if (accounts.length > 0) selectAccount(accounts[0].id);
+            renderAccounts(); renderTransactions();
+        }
+    } catch (e) { }
 }
 loadFromCloud();
 </script>

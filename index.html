@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v3.1.0 - Smart Duplicate</title>
+  <title>Payit v3.1.1 - Duplicate UI Fix</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -169,12 +169,18 @@
         <input type="text" id="expense" placeholder="Uit" inputmode="decimal" style="color:var(--negative)">
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
-    <select id="target-account"></select>
+    
+    <div id="dup-ui" style="display:none; border:1px solid var(--primary); padding:10px; border-radius:10px; margin-top:10px; background:rgba(63, 140, 255, 0.05);">
+        <label style="font-size:11px; font-weight:800; color:var(--primary); text-transform:uppercase;">Dupliceren naar:</label>
+        <select id="dup-target-account" style="margin-top:5px;"></select>
+    </div>
+
     <div class="btn-grid">
         <button class="btn-action" style="background:var(--bg-input); color:var(--text-muted);" onclick="closeModal()">Annuleren</button>
-        <button class="btn-action" style="background:var(--primary); color:white;" onclick="saveTransaction()">Opslaan</button>
+        <button id="btnSave" class="btn-action" style="background:var(--primary); color:white;" onclick="saveTransaction()">Opslaan</button>
         <button id="btnDelete" class="btn-action" style="background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteTransaction()">Wissen</button>
-        <button id="btnDup" class="btn-action" style="background:var(--bg-input); border:1px solid var(--border); display:none;" onclick="duplicateToAccount()">Dupliceren naar...</button>
+        <button id="btnDup" class="btn-action" style="background:var(--primary); color:white; display:none;" onclick="toggleDuplicateUI()">Dupliceren naar...</button>
+        <button id="btnDupConfirm" class="btn-action" style="background:var(--positive); color:white; display:none; grid-column: 1 / -1;" onclick="duplicateToAccount()">Bevestig Duplicatie</button>
     </div>
   </div>
 </div>
@@ -243,9 +249,9 @@ function setupWheel(id, start, end, selected) {
         const idx = Math.round(col.scrollTop / 34);
         const items = col.getElementsByClassName('wheel-item');
         for(let it of items) it.classList.remove('selected');
-        if(items[index]) {
-            items[index].classList.add('selected');
-            const v = parseInt(items[index].dataset.val);
+        if(items[idx]) {
+            items[idx].classList.add('selected');
+            const v = parseInt(items[idx].dataset.val);
             if(id === 'wheel-day') currentPickerDate.setDate(v);
             if(id === 'wheel-month') currentPickerDate.setMonth(v-1);
             if(id === 'wheel-year') currentPickerDate.setFullYear(v);
@@ -274,7 +280,10 @@ function syncWheels() { setupWheel('wheel-day', 1, 31, currentPickerDate.getDate
 
 function openModal(id = null) {
     editingId = id; document.getElementById('modal').style.display = 'flex';
-    document.getElementById('target-account').innerHTML = accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    document.getElementById('dup-ui').style.display = 'none';
+    document.getElementById('btnDupConfirm').style.display = 'none';
+    document.getElementById('btnSave').style.display = 'block';
+    document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join('');
     if (id) {
         let t = transactions.find(x => x.id === id); currentPickerDate = new Date(t.date);
         document.getElementById('category').value = t.category; document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
@@ -290,8 +299,25 @@ function openModal(id = null) {
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
+function toggleDuplicateUI() {
+    const ui = document.getElementById('dup-ui');
+    const select = document.getElementById('dup-target-account');
+    const saveBtn = document.getElementById('btnSave');
+    const delBtn = document.getElementById('btnDelete');
+    const dupBtn = document.getElementById('btnDup');
+    const confirmBtn = document.getElementById('btnDupConfirm');
+    
+    select.innerHTML = accounts.map(a => `<option value="${a.id}" ${a.id === activeAccountId ? 'selected' : ''}>${a.name}</option>`).join('');
+    ui.style.display = 'block';
+    confirmBtn.style.display = 'block';
+    saveBtn.style.display = 'none';
+    delBtn.style.display = 'none';
+    dupBtn.style.display = 'none';
+}
+
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
+    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
     const isoDate = currentPickerDate.toISOString().split('T')[0];
     let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
@@ -302,35 +328,11 @@ async function saveTransaction() {
 function duplicateToAccount() {
     let t = transactions.find(x => x.id === editingId);
     if (!t) return;
-    
-    // Bouw lijst met rekeningen voor de keuze
-    let accountOptions = accounts.map((acc, idx) => `${idx + 1}: ${acc.name}`).join('\n');
-    let choice = prompt(`Kies een rekeningnummer om naar te dupliceren:\n\n${accountOptions}`, "1");
-    
-    let chosenIndex = parseInt(choice) - 1;
-    if (isNaN(chosenIndex) || !accounts[chosenIndex]) {
-        alert("Ongeldige keuze.");
-        return;
-    }
-
-    let targetAcc = accounts[chosenIndex];
-    // Datum van NU
-    let today = new Date().toISOString().split('T')[0];
-    
-    let newTr = {
-        ...t,
-        id: Date.now().toString(),
-        date: today,
-        status: 'pending',
-        accountId: targetAcc.id
-    };
-
+    const targetAccId = document.getElementById('dup-target-account').value;
+    const today = new Date().toISOString().split('T')[0];
+    let newTr = { ...t, id: Date.now().toString(), date: today, status: 'pending', accountId: targetAccId };
     transactions.push(newTr);
-    alert(`Gedupliceerd naar ${targetAcc.name} met datum ${today}`);
-    closeModal();
-    syncToCloud();
-    renderTransactions();
-    renderAccounts();
+    closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
 }
 
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
@@ -338,14 +340,16 @@ async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransac
 
 async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label').innerText = "Sync: OK"; } catch (e) {} }
 async function loadFromCloud() {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-    const result = await response.json();
-    if (result?.[0]?.data) {
-        const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
-        renderAccounts(); renderTransactions();
-        const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
-        if (lastId) selectAccount(lastId);
-    }
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+        const result = await response.json();
+        if (result?.[0]?.data) {
+            const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
+            renderAccounts(); renderTransactions();
+            const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
+            if (lastId) selectAccount(lastId);
+        }
+    } catch (e) {}
 }
 loadFromCloud();
 </script>

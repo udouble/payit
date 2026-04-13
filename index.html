@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v3.0.4 - Account Fix</title>
+  <title>Payit v3.1.0 - Smart Duplicate</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -174,7 +174,7 @@
         <button class="btn-action" style="background:var(--bg-input); color:var(--text-muted);" onclick="closeModal()">Annuleren</button>
         <button class="btn-action" style="background:var(--primary); color:white;" onclick="saveTransaction()">Opslaan</button>
         <button id="btnDelete" class="btn-action" style="background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteTransaction()">Wissen</button>
-        <button id="btnDup" class="btn-action" style="background:var(--bg-input); border:1px solid var(--border); display:none;" onclick="duplicateTransaction()">Dupliceren</button>
+        <button id="btnDup" class="btn-action" style="background:var(--bg-input); border:1px solid var(--border); display:none;" onclick="duplicateToAccount()">Dupliceren naar...</button>
     </div>
   </div>
 </div>
@@ -243,16 +243,16 @@ function setupWheel(id, start, end, selected) {
         const idx = Math.round(col.scrollTop / 34);
         const items = col.getElementsByClassName('wheel-item');
         for(let it of items) it.classList.remove('selected');
-        if(items[idx]) {
-            items[idx].classList.add('selected');
-            const v = parseInt(items[idx].dataset.val);
+        if(items[index]) {
+            items[index].classList.add('selected');
+            const v = parseInt(items[index].dataset.val);
             if(id === 'wheel-day') currentPickerDate.setDate(v);
             if(id === 'wheel-month') currentPickerDate.setMonth(v-1);
             if(id === 'wheel-year') currentPickerDate.setFullYear(v);
             renderCalGrid();
         }
     };
-    setTimeout(() => col.scrollTop = (selected - start) * 34, 100);
+    setTimeout(() => { col.scrollTop = (selected - start) * 34; }, 100);
 }
 
 function renderCalGrid() {
@@ -289,25 +289,63 @@ function openModal(id = null) {
     renderCalGrid(); syncWheels();
 }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
-    let data = { id: editingId || Date.now().toString(), date: currentPickerDate.toISOString().split('T')[0], category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
+    const isoDate = currentPickerDate.toISOString().split('T')[0];
+    let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
     if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = data; } else transactions.push(data);
     closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
-async function syncToCloud() { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); }
+
+function duplicateToAccount() {
+    let t = transactions.find(x => x.id === editingId);
+    if (!t) return;
+    
+    // Bouw lijst met rekeningen voor de keuze
+    let accountOptions = accounts.map((acc, idx) => `${idx + 1}: ${acc.name}`).join('\n');
+    let choice = prompt(`Kies een rekeningnummer om naar te dupliceren:\n\n${accountOptions}`, "1");
+    
+    let chosenIndex = parseInt(choice) - 1;
+    if (isNaN(chosenIndex) || !accounts[chosenIndex]) {
+        alert("Ongeldige keuze.");
+        return;
+    }
+
+    let targetAcc = accounts[chosenIndex];
+    // Datum van NU
+    let today = new Date().toISOString().split('T')[0];
+    
+    let newTr = {
+        ...t,
+        id: Date.now().toString(),
+        date: today,
+        status: 'pending',
+        accountId: targetAcc.id
+    };
+
+    transactions.push(newTr);
+    alert(`Gedupliceerd naar ${targetAcc.name} met datum ${today}`);
+    closeModal();
+    syncToCloud();
+    renderTransactions();
+    renderAccounts();
+}
+
+function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
+async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
+
+async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label').innerText = "Sync: OK"; } catch (e) {} }
 async function loadFromCloud() {
-    try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-        const result = await response.json();
-        if (result?.[0]?.data) {
-            const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
-            renderAccounts(); renderTransactions();
-            const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
-            if (lastId) selectAccount(lastId);
-        }
-    } catch (e) {}
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const result = await response.json();
+    if (result?.[0]?.data) {
+        const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
+        renderAccounts(); renderTransactions();
+        const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
+        if (lastId) selectAccount(lastId);
+    }
 }
 loadFromCloud();
 </script>

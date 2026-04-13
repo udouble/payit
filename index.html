@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.3. Master Release</title>
+  <title>Payit v2.3.1 [Enter Key Support & Dual Calendar Fix]</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -53,10 +53,9 @@
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; appearance: none; }
 
-    /* --- DATE PICKER UI ENGINE --- */
+    /* --- DUAL ENGINE DATE PICKER --- */
     .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
     
-    /* Grid (Mac/Desktop) */
     .cal-mac-view { padding: 12px; display: block; }
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
@@ -65,16 +64,15 @@
     .cal-cell.active { background: var(--primary); color: white; }
     .cal-cell.other { opacity: 0.2; }
 
-    /* Wheel (iPhone/iPad) */
     .cal-touch-view { display: none; justify-content: space-around; height: 160px; position: relative; padding: 10px 0; mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); }
-    .cal-touch-view::after { content: ""; position: absolute; top: 50%; left: 10px; right: 10px; height: 36px; transform: translateY(-50%); background: rgba(63, 140, 255, 0.08); border-radius: 8px; pointer-events: none; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
+    .cal-touch-view::after { content: ""; position: absolute; top: 50%; left: 10px; right: 10px; height: 38px; transform: translateY(-50%); background: rgba(63, 140, 255, 0.08); border-radius: 8px; pointer-events: none; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
     .wheel-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; scrollbar-width: none; -ms-overflow-style: none; }
     .wheel-col::-webkit-scrollbar { display: none; }
     .wheel-item { height: 40px; line-height: 40px; scroll-snap-align: center; font-size: 16px; color: var(--text-muted); transition: color 0.2s; }
     .wheel-item.selected { color: var(--text-main); font-weight: 700; }
     .wheel-spacer { height: 60px; }
 
-    @media (max-width: 1025px) { /* Detecteert iPad en iPhone */
+    @media (max-width: 1025px) {
       .cal-mac-view { display: none; }
       .cal-touch-view { display: flex; }
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
@@ -194,7 +192,17 @@ let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Ka
 let accounts = [], transactions = [], activeAccountId = null, editingId = null, showConfirmed = false;
 let currentPickerDate = new Date();
 
-// --- CALENDAR GRID ENGINE (MAC) ---
+// --- KEYBOARD SUPPORT (v2.3.1) ---
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const modal = document.getElementById('modal');
+        if (modal && modal.style.display === 'flex') {
+            saveTransaction();
+        }
+    }
+});
+
+// --- CALENDAR ENGINES ---
 function renderCalGrid() {
     const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
     const months = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
@@ -211,7 +219,6 @@ function renderCalGrid() {
 function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
 function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
 
-// --- WHEEL PICKER ENGINE (IOS/IPAD) ---
 function setupWheel(id, start, end, selected) {
     const col = document.getElementById(id);
     let html = '<div class="wheel-spacer"></div>';
@@ -324,8 +331,9 @@ async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransac
 
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
-    const isoDate = currentPickerDate.toISOString().split('T')[0];
+    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
+    const isoDate = currentPickerDate.toISOString().split('T')[0];
     let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: document.getElementById('target-account').value };
     if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = data; } else transactions.push(data);
     closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();

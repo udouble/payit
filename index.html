@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v3.0.3 - stabiele versie</title>
+  <title>Payit v3.0.4 - Account Fix</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -58,11 +58,9 @@
     input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; appearance: none; }
     select { background-image: var(--chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; padding-right: 36px; }
 
-    /* --- CLEAN DATE PICKER ENGINE --- */
     .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
     .cal-mac-view { padding: 12px; display: block; }
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
-    /* Geforceerde 7 kolommen */
     .cal-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 4px; text-align: center; }
     .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
     .cal-cell:hover { background: rgba(63, 140, 255, 0.1); }
@@ -148,7 +146,6 @@
 <div class="modal" id="modal">
   <div class="modal-content">
     <h3 style="margin:0; color:var(--primary); margin-bottom: 8px; font-weight: 800;">Transactie</h3>
-    
     <div class="cal-engine">
         <div class="cal-mac-view">
             <div class="cal-header">
@@ -164,7 +161,6 @@
             <div class="wheel-col" id="wheel-year"></div>
         </div>
     </div>
-
     <input type="text" id="category" placeholder="Categorie" list="cat-list">
     <datalist id="cat-list"></datalist>
     <input type="text" id="memo" placeholder="Memo / Omschrijving">
@@ -188,11 +184,54 @@ const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
 
-let categories = ["Apple Pay","Bancontact","BTW","BMW","Delhaize","Etentjes","Kampen","Kapper","Lening","Pensioen","Tuin","Opzij"];
+let categories = ["Opzij","BMW","Belastingen","Delhaize","Etentjes","Pensioen","Lening"];
 let accounts = [], transactions = [], activeAccountId = null, editingId = null, showConfirmed = false;
 let currentPickerDate = new Date();
 
 window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.getElementById('modal').style.display === 'flex') saveTransaction(); });
+
+function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
+function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", "."); return parseFloat(clean) || 0; }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function applyTheme(theme) { document.body.setAttribute('data-theme', theme); localStorage.setItem('payit-theme', theme); }
+function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
+applyTheme(localStorage.getItem('payit-theme') || 'light');
+
+function selectAccount(accId) { 
+    activeAccountId = accId; 
+    localStorage.setItem('lastActiveAccountId', accId); 
+    const acc = accounts.find(a => a.id === accId);
+    document.getElementById('acc-title-text').innerText = acc ? acc.name : "Geen rekening"; 
+    renderAccounts(); renderTransactions(); 
+}
+
+function renderAccounts() {
+    const sidebar = document.getElementById('sidebar-accounts'); sidebar.innerHTML = '';
+    accounts.forEach(acc => {
+        const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
+        const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
+        div.onclick = () => selectAccount(acc.id);
+        div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span>`;
+        sidebar.appendChild(div);
+    });
+}
+
+function renderTransactions() {
+    const container = document.getElementById('transactions-container'); container.innerHTML = '';
+    let list = transactions.filter(t => t.accountId === activeAccountId);
+    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
+    let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
+    displayList.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.date) - new Date(a.date));
+    displayList.forEach(t => {
+        const div = document.createElement('div'); div.className = 'tr-row';
+        div.onclick = () => openModal(t.id);
+        div.innerHTML = `<div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
+            <div class="tr-main-content"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span><span class="tr-memo-list">${t.memo || ''}</span></div>
+            <span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>`;
+        container.appendChild(div);
+    });
+    document.getElementById('total').innerText = formatCurrency(list.reduce((sum, t) => sum + Number(t.amount), 0));
+}
 
 function setupWheel(id, start, end, selected) {
     const col = document.getElementById(id);
@@ -201,12 +240,12 @@ function setupWheel(id, start, end, selected) {
     html += '<div class="wheel-spacer"></div>';
     col.innerHTML = html;
     col.onscroll = () => {
+        const idx = Math.round(col.scrollTop / 34);
         const items = col.getElementsByClassName('wheel-item');
-        const index = Math.round(col.scrollTop / 34);
         for(let it of items) it.classList.remove('selected');
-        if(items[index]) {
-            items[index].classList.add('selected');
-            const v = parseInt(items[index].dataset.val);
+        if(items[idx]) {
+            items[idx].classList.add('selected');
+            const v = parseInt(items[idx].dataset.val);
             if(id === 'wheel-day') currentPickerDate.setDate(v);
             if(id === 'wheel-month') currentPickerDate.setMonth(v-1);
             if(id === 'wheel-year') currentPickerDate.setFullYear(v);
@@ -232,41 +271,6 @@ function renderCalGrid() {
 function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
 function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
 function syncWheels() { setupWheel('wheel-day', 1, 31, currentPickerDate.getDate()); setupWheel('wheel-month', 1, 12, currentPickerDate.getMonth() + 1); setupWheel('wheel-year', 2020, 2035, currentPickerDate.getFullYear()); }
-
-function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
-function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", "."); return parseFloat(clean) || 0; }
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-function applyTheme(theme) { document.body.setAttribute('data-theme', theme); localStorage.setItem('payit-theme', theme); }
-function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
-applyTheme(localStorage.getItem('payit-theme') || 'light');
-
-function selectAccount(accId) { activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); renderAccounts(); renderTransactions(); }
-function renderAccounts() {
-    const sidebar = document.getElementById('sidebar-accounts'); sidebar.innerHTML = '';
-    accounts.forEach(acc => {
-        const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
-        const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
-        div.onclick = () => selectAccount(acc.id);
-        div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span>`;
-        sidebar.appendChild(div);
-    });
-}
-function renderTransactions() {
-    const container = document.getElementById('transactions-container'); container.innerHTML = '';
-    let list = transactions.filter(t => t.accountId === activeAccountId);
-    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
-    let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
-    displayList.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.date) - new Date(a.date));
-    displayList.forEach(t => {
-        const div = document.createElement('div'); div.className = 'tr-row';
-        div.onclick = () => openModal(t.id);
-        div.innerHTML = `<div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div>
-            <div class="tr-main-content"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span><span class="tr-memo-list">${t.memo || ''}</span></div>
-            <span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>`;
-        container.appendChild(div);
-    });
-    document.getElementById('total').innerText = formatCurrency(list.reduce((sum, t) => sum + Number(t.amount), 0));
-}
 
 function openModal(id = null) {
     editingId = id; document.getElementById('modal').style.display = 'flex';
@@ -294,12 +298,16 @@ async function saveTransaction() {
 }
 async function syncToCloud() { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); }
 async function loadFromCloud() {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-    const result = await response.json();
-    if (result?.[0]?.data) {
-        const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
-        if (accounts.length > 0) selectAccount(localStorage.getItem('lastActiveAccountId') || accounts[0].id);
-    }
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+        const result = await response.json();
+        if (result?.[0]?.data) {
+            const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
+            renderAccounts(); renderTransactions();
+            const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
+            if (lastId) selectAccount(lastId);
+        }
+    } catch (e) {}
 }
 loadFromCloud();
 </script>

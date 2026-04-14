@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0 - definitief</title>
+  <title>Payit v2.0.1 - shortcuts fix</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -74,12 +74,21 @@
     .wheel-item.selected { color: var(--primary); font-weight: 800; }
     .wheel-spacer { height: 58px; }
 
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 15px; }
+
+    .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding-top: 8px; z-index: 1100; }
+    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; cursor: pointer; }
+
+    .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
+    .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
+
     @media (max-width: 1025px) {
       .cal-mac-view { display: none; }
       .cal-touch-view { display: flex; }
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
-      .iphone-tabs { display: flex; }
+      .iphone-tabs { display: flex; } /* TAB BAR FIX */
     }
 
     @media (max-width: 600px) {
@@ -88,16 +97,9 @@
       .tr-main-content { flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; flex: 1 !important; }
       .tr-amount { text-align: right !important; margin-left: 10px !important; flex: none !important; width: auto !important; }
     }
-
-    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-    .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 15px; }
-    .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding-top: 8px; z-index: 1100; }
-    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; cursor: pointer; }
-    .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
-    .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
   </style>
 </head>
-<body>
+<body id="app-body">
 
 <div class="app-container">
   <aside class="sidebar" id="sidebar">
@@ -146,6 +148,7 @@
 <div class="modal" id="modal">
   <div class="modal-content">
     <h3 style="margin:0; color:var(--primary); margin-bottom: 8px; font-weight: 800;">Transactie</h3>
+    
     <div class="cal-engine">
         <div class="cal-mac-view">
             <div class="cal-header">
@@ -161,6 +164,7 @@
             <div class="wheel-col" id="wheel-year"></div>
         </div>
     </div>
+
     <input type="text" id="category" placeholder="Categorie" list="cat-list">
     <datalist id="cat-list"></datalist>
     <input type="text" id="memo" placeholder="Memo / Omschrijving">
@@ -185,13 +189,25 @@
   </div>
 </div>
 
+<div class="modal" id="accModal">
+  <div class="modal-content">
+    <h3 style="font-weight: 800; color: var(--primary);">Rekening</h3>
+    <input type="text" id="newAccName" placeholder="Naam rekening">
+    <div class="btn-grid">
+      <button class="btn-action" style="background:var(--bg-input); color:var(--text-muted);" onclick="closeAccountModal()">Sluiten</button>
+      <button class="btn-action" style="background:var(--primary); color:white;" onclick="handleAccountAction()">Opslaan</button>
+      <button id="btnDeleteAcc" class="btn-action" style="grid-column: 1/-1; background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteAccount()">Verwijder Rekening</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
 const DB_RECORD_ID = 'main_user'; 
 
 let categories = ["Opzij","BMW","Belastingen","Delhaize","Etentjes","Pensioen","Lening"];
-let accounts = [], transactions = [], activeAccountId = null, editingId = null, showConfirmed = false;
+let accounts = [], transactions = [], activeAccountId = null, editingId = null, editingAccountId = null, showConfirmed = false;
 let currentPickerDate = new Date();
 
 window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.getElementById('modal').style.display === 'flex') saveTransaction(); });
@@ -317,6 +333,7 @@ function toggleDuplicateUI() {
 
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
+    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
     const isoDate = currentPickerDate.toISOString().split('T')[0];
     let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };

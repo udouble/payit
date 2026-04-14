@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0.1 - shortcuts fix</title>
+  <title>Payit v2.0.2 - UI Optimization</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -77,8 +77,9 @@
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
     .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 15px; }
 
-    .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding-top: 8px; z-index: 1100; }
-    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; cursor: pointer; }
+    /* COMPACT IPHONE TABS */
+    .iphone-tabs { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding-top: 5px; z-index: 1100; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+    .tab-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 2px; width: 80px; cursor: pointer; }
 
     .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
     .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
@@ -88,13 +89,16 @@
       .cal-touch-view { display: flex; }
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; }
       .sidebar.open { transform: translateX(0); }
-      .iphone-tabs { display: flex; } /* TAB BAR FIX */
+      .iphone-tabs { display: flex; }
     }
 
     @media (max-width: 600px) {
       .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 8px 12px !important; gap: 4px; }
+      .acc-title-text { text-align: left !important; width: 100%; font-size: 14px; padding-right: 80px; box-sizing: border-box; }
+      .header-btns-aside { position: absolute; right: 10px; top: 8px; }
       .tr-row { height: auto !important; padding: 12px 14px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; }
       .tr-main-content { flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; flex: 1 !important; }
+      .tr-memo-list { white-space: normal !important; overflow: visible !important; flex: none !important; }
       .tr-amount { text-align: right !important; margin-left: 10px !important; flex: none !important; width: auto !important; }
     }
   </style>
@@ -141,8 +145,8 @@
 </div>
 
 <div class="iphone-tabs">
-  <button class="tab-item" onclick="toggleSidebar()"><span style="font-size: 20px;">☰</span></button>
-  <button class="tab-item" onclick="openModal()" style="color:var(--primary);"><span style="font-size: 28px;">⊕</span></button>
+  <button class="tab-item" onclick="toggleSidebar()"><span style="font-size: 18px;">☰</span></button>
+  <button class="tab-item" onclick="openModal()" style="color:var(--primary);"><span style="font-size: 24px;">⊕</span></button>
 </div>
 
 <div class="modal" id="modal">
@@ -173,6 +177,7 @@
         <input type="text" id="expense" placeholder="Uit" inputmode="decimal" style="color:var(--negative)">
     </div>
     <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
+    <select id="target-account"></select>
     
     <div id="dup-ui" style="display:none; border:1px solid var(--primary); padding:10px; border-radius:10px; margin-top:10px; background:rgba(63, 140, 255, 0.05);">
         <label style="font-size:11px; font-weight:800; color:var(--primary); text-transform:uppercase;">Dupliceren naar:</label>
@@ -229,10 +234,11 @@ function selectAccount(accId) {
 
 function renderAccounts() {
     const sidebar = document.getElementById('sidebar-accounts'); sidebar.innerHTML = '';
+    if(accounts.length === 0) { sidebar.innerHTML = 'Geen rekeningen'; return; }
     accounts.forEach(acc => {
         const bal = transactions.filter(t => t.accountId === acc.id).reduce((sum, t) => sum + Number(t.amount), 0);
         const div = document.createElement('div'); div.className = `acc-item ${activeAccountId === acc.id ? 'active' : ''}`;
-        div.onclick = () => selectAccount(acc.id);
+        div.onclick = (e) => { e.stopPropagation(); selectAccount(acc.id); };
         div.innerHTML = `<span class="acc-name">${acc.name}</span><span class="acc-bal">${formatCurrency(bal)}</span>`;
         sidebar.appendChild(div);
     });
@@ -280,94 +286,4 @@ function setupWheel(id, start, end, selected) {
 function renderCalGrid() {
     const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
     const months = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
-    document.getElementById('cal-label').innerText = `${months[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`;
-    let firstDay = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth(), 1).getDay();
-    firstDay = (firstDay === 0) ? 6 : firstDay - 1;
-    const daysInMonth = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth() + 1, 0).getDate();
-    for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-    for(let i=1; i<=daysInMonth; i++) {
-        const isActive = i === currentPickerDate.getDate();
-        grid.innerHTML += `<div class="cal-cell ${isActive ? 'active' : ''}" onclick="setCalDay(${i})">${i}</div>`;
-    }
-}
-function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
-function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
-function syncWheels() { setupWheel('wheel-day', 1, 31, currentPickerDate.getDate()); setupWheel('wheel-month', 1, 12, currentPickerDate.getMonth() + 1); setupWheel('wheel-year', 2020, 2035, currentPickerDate.getFullYear()); }
-
-function openModal(id = null) {
-    editingId = id; document.getElementById('modal').style.display = 'flex';
-    document.getElementById('dup-ui').style.display = 'none';
-    document.getElementById('btnDupConfirm').style.display = 'none';
-    document.getElementById('btnSave').style.display = 'block';
-    document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join('');
-    if (id) {
-        let t = transactions.find(x => x.id === id); currentPickerDate = new Date(t.date);
-        document.getElementById('category').value = t.category; document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
-        if(t.amount >= 0) { document.getElementById('income').value = t.amount; document.getElementById('expense').value = ''; }
-        else { document.getElementById('expense').value = Math.abs(t.amount); document.getElementById('income').value = ''; }
-        document.getElementById('btnDelete').style.display = 'block'; document.getElementById('btnDup').style.display = 'block';
-    } else {
-        currentPickerDate = new Date(); document.getElementById('category').value = ''; document.getElementById('memo').value = '';
-        document.getElementById('income').value = ''; document.getElementById('expense').value = '';
-        document.getElementById('btnDelete').style.display = 'none'; document.getElementById('btnDup').style.display = 'none';
-    }
-    renderCalGrid(); syncWheels();
-}
-function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-function toggleDuplicateUI() {
-    const ui = document.getElementById('dup-ui');
-    const select = document.getElementById('dup-target-account');
-    const saveBtn = document.getElementById('btnSave');
-    const delBtn = document.getElementById('btnDelete');
-    const dupBtn = document.getElementById('btnDup');
-    const confirmBtn = document.getElementById('btnDupConfirm');
-    
-    select.innerHTML = accounts.map(a => `<option value="${a.id}" ${a.id === activeAccountId ? 'selected' : ''}>${a.name}</option>`).join('');
-    ui.style.display = 'block';
-    confirmBtn.style.display = 'block';
-    saveBtn.style.display = 'none';
-    delBtn.style.display = 'none';
-    dupBtn.style.display = 'none';
-}
-
-async function saveTransaction() {
-    const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
-    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
-    let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
-    const isoDate = currentPickerDate.toISOString().split('T')[0];
-    let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
-    if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = data; } else transactions.push(data);
-    closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
-}
-
-function duplicateToAccount() {
-    let t = transactions.find(x => x.id === editingId);
-    if (!t) return;
-    const targetAccId = document.getElementById('dup-target-account').value;
-    const today = new Date().toISOString().split('T')[0];
-    let newTr = { ...t, id: Date.now().toString(), date: today, status: 'pending', accountId: targetAccId };
-    transactions.push(newTr);
-    closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
-}
-
-function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
-async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
-
-async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label').innerText = "Sync: OK"; } catch (e) {} }
-async function loadFromCloud() {
-    try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
-        const result = await response.json();
-        if (result?.[0]?.data) {
-            const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
-            renderAccounts(); renderTransactions();
-            const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
-            if (lastId) selectAccount(lastId);
-        }
-    } catch (e) {}
-}
-loadFromCloud();
-</script>
-</body>
-</html>
+    document.getElementById('cal

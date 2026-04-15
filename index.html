@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0.5 - Native Nav Fix</title>
+  <title>Payit v2.0.6 - Account Management Fix</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -25,7 +25,6 @@
     body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); -webkit-font-smoothing: antialiased; overflow: hidden; overscroll-behavior-y: contain; transition: background-color 0.3s, color 0.3s; }
     .app-container { display: flex; height: 100vh; }
     
-    /* Sidebar met transition voor mobiel */
     .sidebar { width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; }
     .sidebar-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
     .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; }
@@ -51,20 +50,15 @@
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; text-align: right; min-width: 120px; margin-left: auto; }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
-    .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 85vh; overflow-y: auto; }
     input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; appearance: none; }
     
-    /* Nav Balk onderaan (iPhone) */
     .iphone-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--tab-bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; align-items: center; z-index: 1100; padding-bottom: env(safe-area-inset-bottom); }
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; border: none; background: none; color: var(--text-muted); cursor: pointer; }
-    .nav-item.active-nav { color: var(--primary); }
-    .nav-icon { font-size: 20px; }
     .nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
-    /* Calendar styles behouden */
     .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
     .cal-mac-view { padding: 12px; display: block; }
-    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
     .cal-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 4px; text-align: center; }
     .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
     .cal-cell.active { background: var(--primary); color: white; }
@@ -86,12 +80,13 @@
 
     @media (max-width: 600px) {
       .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 8px 12px !important; gap: 4px; }
-      .acc-title-text { text-align: left !important; width: 100%; font-size: 14px; }
-      .header-btns-aside { position: absolute; right: 10px; top: 8px; }
       .tr-row { height: auto !important; padding: 12px 14px !important; display: flex !important; flex-direction: row !important; }
-      .tr-main-content { flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; flex: 1 !important; }
     }
 
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 14px; }
+    .btn-menu { width: 100%; text-align: left; padding: 0 15px; margin-top: 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; height: 50px; display: flex; align-items: center; gap: 10px; color: var(--text-main); font-weight: 600; cursor: pointer; }
+    
     .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
     .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
   </style>
@@ -104,7 +99,7 @@
       <span style="font-weight: 800; color: var(--primary); font-size: 20px;">Payit</span>
       <div style="display:flex; gap:8px;">
           <button class="aside-btn" style="height:32px; width:32px; border-radius:8px; border:none; background:var(--theme-btn-bg); color:var(--theme-btn-text);" onclick="toggleTheme()" id="theme-icon-sidebar">☀️</button>
-          <button class="aside-btn" style="height:32px; border-radius:8px; border:1px solid var(--border); color:var(--primary); background:var(--bg-card); width:32px; font-size:18px;" onclick="openAccountModal()">+</button>
+          <button class="aside-btn" style="height:32px; border-radius:8px; border:1px solid var(--border); color:var(--primary); background:var(--bg-card); width:32px; font-size:18px; cursor:pointer;" onclick="openAccMgmtModal()">+</button>
       </div>
     </div>
     <div class="sidebar-content" id="sidebar-accounts"></div>
@@ -137,19 +132,27 @@
 </div>
 
 <nav class="iphone-nav">
-  <button class="nav-item" onclick="toggleSidebar()">
-      <span class="nav-icon">💳</span>
-      <span class="nav-label">Rekeningen</span>
-  </button>
-  <button class="nav-item" onclick="openModal()">
-      <span class="nav-icon" style="color:var(--primary); font-size:24px;">⊕</span>
-      <span class="nav-label">Nieuw</span>
-  </button>
-  <button class="nav-item">
-      <span class="nav-icon">🔄</span>
-      <span class="nav-label" id="sync-label-mobile">Sync OK</span>
-  </button>
+  <button class="nav-item" onclick="toggleSidebar()"><span class="nav-icon">💳</span><span class="nav-label">Rekeningen</span></button>
+  <button class="nav-item" onclick="openModal()"><span class="nav-icon" style="color:var(--primary); font-size:24px;">⊕</span><span class="nav-label">Nieuw</span></button>
+  <button class="nav-item"><span class="nav-icon">🔄</span><span class="nav-label" id="sync-label-mobile">Sync OK</span></button>
 </nav>
+
+<div class="modal" id="accMgmtModal">
+  <div class="modal-content">
+    <h3 style="margin:0; color:var(--primary); margin-bottom: 15px; font-weight: 800;">Beheer Rekeningen</h3>
+    
+    <button class="btn-menu" onclick="createNewAccount()"><span>➕</span> Nieuwe rekening aanmaken</button>
+    <button class="btn-menu" onclick="showEditAccountList()"><span>✏️</span> Bestaande rekening wijzigen/wissen</button>
+    <button class="btn-menu" onclick="downloadBackup()"><span>💾</span> Back-up maken (Export)</button>
+    
+    <div id="edit-acc-list" style="display:none; margin-top:15px; border-top:1px solid var(--border); padding-top:10px;">
+        <p style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Selecteer om te wijzigen:</p>
+        <div id="acc-edit-items"></div>
+    </div>
+
+    <button class="btn-action" style="width:100%; margin-top:20px; background:var(--bg-input); color:var(--text-muted);" onclick="closeAccMgmtModal()">Sluiten</button>
+  </div>
+</div>
 
 <div class="modal" id="modal">
   <div class="modal-content">
@@ -161,7 +164,7 @@
                 <span id="cal-label"></span>
                 <button onclick="changeMonth(1)" style="background:none;border:none;color:var(--primary);cursor:pointer;font-weight:bold;">&gt;</button>
             </div>
-            <div class="cal-grid" id="cal-grid"></div>
+            <div id="cal-grid" class="cal-grid"></div>
         </div>
         <div class="cal-touch-view">
             <div class="wheel-col" id="wheel-day"></div>
@@ -181,12 +184,12 @@
         <label style="font-size:11px; font-weight:800; color:var(--primary); text-transform:uppercase;">Dupliceren naar:</label>
         <select id="dup-target-account" style="margin-top:5px;"></select>
     </div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 20px;">
-        <button style="height:48px; border-radius:10px; border:none; font-weight:700; cursor:pointer;" onclick="closeModal()">Annuleren</button>
-        <button id="btnSave" style="height:48px; border-radius:10px; border:none; font-weight:700; cursor:pointer; background:var(--primary); color:white;" onclick="saveTransaction()">Opslaan</button>
-        <button id="btnDelete" style="height:48px; border-radius:10px; border:none; font-weight:700; cursor:pointer; background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteTransaction()">Wissen</button>
-        <button id="btnDup" style="height:48px; border-radius:10px; border:none; font-weight:700; cursor:pointer; background:var(--primary); color:white; display:none;" onclick="toggleDuplicateUI()">Dupliceren...</button>
-        <button id="btnDupConfirm" style="height:48px; border-radius:10px; border:none; font-weight:700; cursor:pointer; background:var(--positive); color:white; display:none; grid-column: 1 / -1;" onclick="duplicateToAccount()">Bevestig Duplicatie</button>
+    <div class="btn-grid">
+        <button class="btn-action" style="background:var(--bg-input); color:var(--text-muted);" onclick="closeModal()">Annuleren</button>
+        <button id="btnSave" class="btn-action" style="background:var(--primary); color:white;" onclick="saveTransaction()">Opslaan</button>
+        <button id="btnDelete" class="btn-action" style="background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteTransaction()">Wissen</button>
+        <button id="btnDup" class="btn-action" style="background:var(--primary); color:white; display:none;" onclick="toggleDuplicateUI()">Dupliceren...</button>
+        <button id="btnDupConfirm" class="btn-action" style="background:var(--positive); color:white; display:none; grid-column: 1 / -1;" onclick="duplicateToAccount()">Bevestig Duplicatie</button>
     </div>
   </div>
 </div>
@@ -202,29 +205,93 @@ let currentPickerDate = new Date();
 
 window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.getElementById('modal').style.display === 'flex') saveTransaction(); });
 
-function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
-function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", "."); return parseFloat(clean) || 0; }
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-
-function applyTheme(theme) { 
-    document.body.setAttribute('data-theme', theme); 
-    const icon = theme === 'dark' ? '🌙' : '☀️';
-    ['theme-icon-sidebar','theme-icon-desktop'].forEach(id => {
-        let el = document.getElementById(id); if(el) el.innerText = icon;
-    });
-    localStorage.setItem('payit-theme', theme); 
+// --- ACCOUNT BEHEER FUNCTIES ---
+function openAccMgmtModal() { 
+    document.getElementById('accMgmtModal').style.display = 'flex'; 
+    document.getElementById('edit-acc-list').style.display = 'none';
 }
+function closeAccMgmtModal() { document.getElementById('accMgmtModal').style.display = 'none'; }
+
+async function createNewAccount() {
+    const name = prompt("Naam van de nieuwe rekening:");
+    if (name && name.trim()) {
+        const newAcc = { id: Date.now().toString(), name: name.trim() };
+        accounts.push(newAcc);
+        await syncToCloud();
+        renderAccounts();
+        alert("Rekening aangemaakt.");
+    }
+}
+
+function showEditAccountList() {
+    const container = document.getElementById('acc-edit-items');
+    container.innerHTML = '';
+    accounts.forEach(acc => {
+        const div = document.createElement('div');
+        div.className = 'btn-menu';
+        div.style.justifyContent = 'space-between';
+        div.innerHTML = `<span>${acc.name}</span>
+            <div style="display:flex; gap:10px;">
+                <button onclick="editAccountName('${acc.id}')" style="background:none; border:none; cursor:pointer;">✏️</button>
+                <button onclick="confirmDeleteAccount('${acc.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
+            </div>`;
+        container.appendChild(div);
+    });
+    document.getElementById('edit-acc-list').style.display = 'block';
+}
+
+async function editAccountName(id) {
+    const acc = accounts.find(a => a.id === id);
+    const newName = prompt("Nieuwe naam voor deze rekening:", acc.name);
+    if (newName && newName.trim()) {
+        acc.name = newName.trim();
+        await syncToCloud();
+        renderAccounts();
+        if (activeAccountId === id) document.getElementById('acc-title-text').innerText = acc.name;
+        showEditAccountList();
+    }
+}
+
+async function confirmDeleteAccount(id) {
+    const acc = accounts.find(a => a.id === id);
+    if (confirm(`Weet je zeker dat je "${acc.name}" wilt verwijderen?`)) {
+        if (confirm(`LAATSTE WAARSCHUWING: Alle transacties van "${acc.name}" gaan verloren. Doorgaan?`)) {
+            transactions = transactions.filter(t => t.accountId !== id);
+            accounts = accounts.filter(a => a.id !== id);
+            await syncToCloud();
+            renderAccounts();
+            if (activeAccountId === id) {
+                activeAccountId = accounts.length > 0 ? accounts[0].id : null;
+                location.reload();
+            }
+            showEditAccountList();
+        }
+    }
+}
+
+function downloadBackup() {
+    const data = JSON.stringify({ categories, accounts, transactions }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payit_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+}
+
+// --- CORE LOGICA (ONGEWIJZIGD) ---
+function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", "."); return parseFloat(clean) || 0; }
+function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function applyTheme(theme) { document.body.setAttribute('data-theme', theme); localStorage.setItem('payit-theme', theme); }
 function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
 applyTheme(localStorage.getItem('payit-theme') || 'light');
 
-// --- AUTO-CLOSE LOGICA HIER ---
 function selectAccount(accId) { 
-    activeAccountId = accId; 
-    localStorage.setItem('lastActiveAccountId', accId); 
+    activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); 
     const acc = accounts.find(a => a.id === accId);
     document.getElementById('acc-title-text').innerText = acc ? acc.name : "Geen rekening"; 
     renderAccounts(); renderTransactions();
-    // Sluit zijbalk direct na selectie op mobiel
     document.getElementById('sidebar').classList.remove('open');
 }
 
@@ -279,7 +346,8 @@ function setupWheel(id, start, end, selected) {
 }
 
 function renderCalGrid() {
-    const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
+    const grid = document.getElementById('cal-grid'); if(!grid) return;
+    grid.innerHTML = '';
     const months = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
     document.getElementById('cal-label').innerText = `${months[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`;
     let firstDay = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth(), 1).getDay();
@@ -331,7 +399,8 @@ async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
     if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
-    let data = { id: editingId || Date.now().toString(), date: currentPickerDate.toISOString().split('T')[0], category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
+    const isoDate = currentPickerDate.toISOString().split('T')[0];
+    let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
     if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = data; } else transactions.push(data);
     closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
@@ -355,7 +424,7 @@ async function loadFromCloud() {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
         const result = await response.json();
         if (result?.[0]?.data) {
-            const d = result[0].data; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
+            const d = result[0].data; if(d.categories) categories = d.categories; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
             renderAccounts(); renderTransactions();
             const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
             if (lastId) selectAccount(lastId);

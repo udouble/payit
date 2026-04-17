@@ -38,9 +38,13 @@
 
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     .header-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; position: relative; }
-    .header-card { flex: 1; background: var(--bg-card); border-radius: 12px; padding: 6px 16px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); min-height: 44px; }
+    
+    /* GECORRIGEERDE HEADER CARD */
+    .header-card { flex: 1; background: var(--bg-card); border-radius: 12px; padding: 8px 16px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); min-height: 54px; }
+    .acc-title-text { font-weight: 800; font-size: 14px; text-align: right; max-width: 60%; line-height: 1.2; color: var(--text-main); }
+    
     .header-btns-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; position: relative; z-index: 100; }
-    .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
+    .saldo-text { font-size: 24px; font-weight: 800; color: var(--orange); white-space: nowrap; }
 
     .tr-row { background: var(--bg-card); margin-bottom: 4px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; height: 50px; box-sizing: border-box; z-index: 5; }
     .tr-status-line { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
@@ -105,11 +109,11 @@
     <div class="content-wrapper">
         <div class="header-wrapper">
             <div class="header-card">
-                <div style="display:flex; align-items:baseline; gap:12px;">
+                <div style="display:flex; align-items:baseline; gap:6px;">
                     <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Saldo</span>
                     <span id="total" class="saldo-text">€ 0,00</span>
                 </div>
-                <div id="acc-title-text" style="font-weight: 800; font-size: 16px;">Laden...</div>
+                <div id="acc-title-text" class="acc-title-text">Laden...</div>
             </div>
             <div class="header-btns-aside">
                 <button class="aside-btn" style="height:32px; width:32px; border-radius:8px; border:none; background:var(--theme-btn-bg); color:var(--theme-btn-text);" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
@@ -170,7 +174,6 @@ applyTheme(localStorage.getItem('payit-theme') || 'light');
 function selectAccount(id) { activeAccountId = id; localStorage.setItem('lastActiveAccountId', id); const a = accounts.find(x => x.id === id); document.getElementById('acc-title-text').innerText = a ? a.name : ""; renderAccounts(); renderTransactions(); document.getElementById('sidebar').classList.remove('open'); }
 function renderAccounts() { const s = document.getElementById('sidebar-accounts'); s.innerHTML = ''; accounts.forEach(a => { const bal = transactions.filter(t => t.accountId === a.id).reduce((sum, t) => sum + Number(t.amount), 0); const d = document.createElement('div'); d.className = `acc-item ${activeAccountId === a.id ? 'active' : ''}`; d.onclick = () => selectAccount(a.id); d.innerHTML = `<span class="acc-name">${a.name}</span><span class="acc-bal">${formatCurrency(bal)}</span>`; s.appendChild(d); }); }
 
-// DE HERSTELDE SORTEER-LOGICA
 function renderTransactions() { 
     const c = document.getElementById('transactions-container'); 
     c.innerHTML = ''; 
@@ -179,7 +182,6 @@ function renderTransactions() {
     
     let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed'); 
     
-    // 1. Eerst afwachtend, dan bevestigd. 2. Per groep op datum nieuw-oud.
     displayList.sort((a, b) => {
         if (a.status !== b.status) return a.status === 'pending' ? -1 : 1;
         return new Date(b.date) - new Date(a.date);
@@ -209,7 +211,7 @@ function duplicateToAccount() { let t = transactions.find(x => x.id === editingI
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
 async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
 function openAccMgmtModal() { document.getElementById('accMgmtModal').style.display = 'flex'; document.getElementById('edit-acc-list').style.display = 'none'; }
-function closeAccMgmtModal() { document.getElementById('accMgmtModal').style.display = 'none'; }
+function closeAccMgmtModal() { document.getElementById('accMgmtModal').style.none; }
 async function createNewAccount() { const n = prompt("Naam rekening:"); if (n && n.trim()) { accounts.push({ id: Date.now().toString(), name: n.trim() }); await syncToCloud(); renderAccounts(); } }
 function showEditAccountList() { const c = document.getElementById('acc-edit-items'); c.innerHTML = ''; accounts.forEach(a => { const d = document.createElement('div'); d.className = 'btn-menu'; d.style.justifyContent = 'space-between'; d.innerHTML = `<span>${a.name}</span><div style="display:flex; gap:10px;"><button onclick="editAccountName('${a.id}')">✏️</button><button onclick="confirmDeleteAccount('${a.id}')">🗑️</button></div>`; c.appendChild(d); }); document.getElementById('edit-acc-list').style.display = 'block'; }
 async function editAccountName(id) { const a = accounts.find(x => x.id === id); const n = prompt("Nieuwe naam:", a.name); if (n && n.trim()) { a.name = n.trim(); await syncToCloud(); renderAccounts(); showEditAccountList(); } }

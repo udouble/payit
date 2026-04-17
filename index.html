@@ -49,7 +49,6 @@
     .tr-memo-list { font-size: 15px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; opacity: 0.8; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; text-align: right; min-width: 120px; margin-left: auto; }
 
-    /* PULL TO REFRESH UI */
     #ptr-indicator { height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--primary); transition: height 0.2s; background: var(--bg-body); }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
@@ -107,6 +106,7 @@
       </div>
     </div>
     <div class="sidebar-content" id="sidebar-accounts"></div>
+    <div style="padding: 15px; border-top: 1px solid var(--border); font-size: 11px; font-weight: 800; color: var(--text-muted); text-align: center;" id="sync-label-desktop">Sync OK</div>
   </aside>
 
   <main class="main-view" id="main-view">
@@ -145,16 +145,13 @@
 <div class="modal" id="accMgmtModal">
   <div class="modal-content">
     <h3 style="margin:0; color:var(--primary); margin-bottom: 15px; font-weight: 800;">Beheer Rekeningen</h3>
-    
     <button class="btn-menu" onclick="createNewAccount()"><span>➕</span> Nieuwe rekening aanmaken</button>
     <button class="btn-menu" onclick="showEditAccountList()"><span>✏️</span> Bestaande rekening wijzigen/wissen</button>
     <button class="btn-menu" onclick="downloadBackup()"><span>💾</span> Back-up maken (Export)</button>
-    
     <div id="edit-acc-list" style="display:none; margin-top:15px; border-top:1px solid var(--border); padding-top:10px;">
         <p style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Selecteer om te wijzigen:</p>
         <div id="acc-edit-items"></div>
     </div>
-
     <button class="btn-action" style="width:100%; margin-top:20px; background:var(--bg-input); color:var(--text-muted);" onclick="closeAccMgmtModal()">Sluiten</button>
   </div>
 </div>
@@ -229,12 +226,15 @@ mainView.addEventListener('touchend', () => {
     } else { ptr.style.height = '0'; }
 });
 
+// STATUS UPDATE HELPER
+function updateSyncStatus(msg) {
+    if(document.getElementById('sync-label-mobile')) document.getElementById('sync-label-mobile').innerText = msg;
+    if(document.getElementById('sync-label-desktop')) document.getElementById('sync-label-desktop').innerText = msg;
+}
+
 window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.getElementById('modal').style.display === 'flex') saveTransaction(); });
 
-function openAccMgmtModal() { 
-    document.getElementById('accMgmtModal').style.display = 'flex'; 
-    document.getElementById('edit-acc-list').style.display = 'none';
-}
+function openAccMgmtModal() { document.getElementById('accMgmtModal').style.display = 'flex'; document.getElementById('edit-acc-list').style.display = 'none'; }
 function closeAccMgmtModal() { document.getElementById('accMgmtModal').style.display = 'none'; }
 
 async function createNewAccount() {
@@ -327,12 +327,7 @@ function renderTransactions() {
     let list = transactions.filter(t => t.accountId === activeAccountId);
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
     let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
-    
-    displayList.sort((a, b) => {
-        if (a.status !== b.status) return a.status === 'pending' ? -1 : 1;
-        return new Date(b.date) - new Date(a.date);
-    });
-
+    displayList.sort((a, b) => (a.status !== b.status) ? (a.status === 'pending' ? -1 : 1) : new Date(b.date) - new Date(a.date));
     displayList.forEach(t => {
         const div = document.createElement('div'); div.className = 'tr-row';
         div.onclick = () => openModal(t.id);
@@ -386,8 +381,7 @@ function syncWheels() { setupWheel('wheel-day', 1, 31, currentPickerDate.getDate
 
 function openModal(id = null) {
     editingId = id; document.getElementById('modal').style.display = 'flex';
-    document.getElementById('dup-ui').style.display = 'none';
-    document.getElementById('btnDupConfirm').style.display = 'none';
+    document.getElementById('dup-ui').style.display = 'none'; document.getElementById('btnDupConfirm').style.display = 'none';
     document.getElementById('btnSave').style.display = 'block';
     document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join('');
     if (id) {
@@ -409,11 +403,8 @@ function toggleDuplicateUI() {
     const ui = document.getElementById('dup-ui');
     const select = document.getElementById('dup-target-account');
     select.innerHTML = accounts.map(a => `<option value="${a.id}" ${a.id === activeAccountId ? 'selected' : ''}>${a.name}</option>`).join('');
-    ui.style.display = 'block';
-    document.getElementById('btnDupConfirm').style.display = 'block';
-    document.getElementById('btnSave').style.display = 'none';
-    document.getElementById('btnDelete').style.display = 'none';
-    document.getElementById('btnDup').style.display = 'none';
+    ui.style.display = 'block'; document.getElementById('btnDupConfirm').style.display = 'block';
+    document.getElementById('btnSave').style.display = 'none'; document.getElementById('btnDelete').style.display = 'none'; document.getElementById('btnDup').style.display = 'none';
 }
 
 async function saveTransaction() {
@@ -427,8 +418,7 @@ async function saveTransaction() {
 }
 
 function duplicateToAccount() {
-    let t = transactions.find(x => x.id === editingId);
-    if (!t) return;
+    let t = transactions.find(x => x.id === editingId); if (!t) return;
     const targetAccId = document.getElementById('dup-target-account').value;
     const today = new Date().toISOString().split('T')[0];
     let newTr = { ...t, id: Date.now().toString(), date: today, status: 'pending', accountId: targetAccId };
@@ -439,7 +429,7 @@ function duplicateToAccount() {
 function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
 async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
 
-async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); document.getElementById('sync-label-mobile').innerText = "Sync OK"; } catch (e) {} }
+async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); updateSyncStatus("Sync OK"); } catch (e) { updateSyncStatus("Fout bij sync"); } }
 async function loadFromCloud() {
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
@@ -450,7 +440,8 @@ async function loadFromCloud() {
             const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
             if (lastId) selectAccount(lastId);
         }
-    } catch (e) {}
+        updateSyncStatus("Sync OK");
+    } catch (e) { updateSyncStatus("Fout bij laden"); }
 }
 loadFromCloud();
 </script>

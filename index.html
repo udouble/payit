@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0.6 - Account Management Fix</title>
+  <title>Payit v3.0 - Gold Master</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -28,7 +28,7 @@
     .sidebar { width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; }
     .sidebar-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
     .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; }
-    .main-view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background-color: var(--bg-body); position: relative; padding-bottom: 80px; }
+    .main-view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background-color: var(--bg-body); position: relative; padding-bottom: 80px; -webkit-overflow-scrolling: touch; }
     
     .acc-item { padding: 12px 16px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; border: 1px solid transparent; display: flex; flex-direction: column; gap: 2px; transition: all 0.2s; position: relative; z-index: 5; }
     .acc-item.active { background: rgba(63, 140, 255, 0.1); border-color: var(--primary); }
@@ -49,6 +49,9 @@
     .tr-memo-list { font-size: 15px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; opacity: 0.8; }
     .tr-amount { font-family: "SF Mono", monospace; font-weight: 700; font-size: 15px; text-align: right; min-width: 120px; margin-left: auto; }
 
+    /* PULL TO REFRESH UI */
+    #ptr-indicator { height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--primary); transition: height 0.2s; background: var(--bg-body); }
+
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     .modal-content { background: var(--bg-card); width: 90%; max-width: 420px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 85vh; overflow-y: auto; }
     input, select { width: 100%; height: 44px; padding: 0 12px; margin-top: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 16px; box-sizing: border-box; outline: none; appearance: none; }
@@ -59,6 +62,7 @@
 
     .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
     .cal-mac-view { padding: 12px; display: block; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
     .cal-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 4px; text-align: center; }
     .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
     .cal-cell.active { background: var(--primary); color: white; }
@@ -105,7 +109,8 @@
     <div class="sidebar-content" id="sidebar-accounts"></div>
   </aside>
 
-  <main class="main-view">
+  <main class="main-view" id="main-view">
+    <div id="ptr-indicator">Trek om te vernieuwen...</div>
     <div class="content-wrapper">
       <div id="transaction-view">
         <div class="header-wrapper">
@@ -134,7 +139,7 @@
 <nav class="iphone-nav">
   <button class="nav-item" onclick="toggleSidebar()"><span class="nav-icon">💳</span><span class="nav-label">Rekeningen</span></button>
   <button class="nav-item" onclick="openModal()"><span class="nav-icon" style="color:var(--primary); font-size:24px;">⊕</span><span class="nav-label">Nieuw</span></button>
-  <button class="nav-item"><span class="nav-icon">🔄</span><span class="nav-label" id="sync-label-mobile">Sync OK</span></button>
+  <button class="nav-item" onclick="loadFromCloud()"><span class="nav-icon">🔄</span><span class="nav-label" id="sync-label-mobile">Sync OK</span></button>
 </nav>
 
 <div class="modal" id="accMgmtModal">
@@ -203,9 +208,29 @@ let categories = ["Opzij","BMW","Belastingen","Delhaize","Etentjes","Pensioen","
 let accounts = [], transactions = [], activeAccountId = null, editingId = null, showConfirmed = false;
 let currentPickerDate = new Date();
 
+// PULL TO REFRESH LOGICA
+let touchStart = 0;
+const mainView = document.getElementById('main-view');
+const ptr = document.getElementById('ptr-indicator');
+
+mainView.addEventListener('touchstart', e => { touchStart = e.touches[0].pageY; }, {passive: true});
+mainView.addEventListener('touchmove', e => {
+    const touchY = e.touches[0].pageY;
+    const diff = touchY - touchStart;
+    if (mainView.scrollTop <= 0 && diff > 0) {
+        ptr.style.height = Math.min(diff, 60) + 'px';
+        if (diff > 60) ptr.innerText = "Laat los om te vernieuwen";
+    }
+}, {passive: true});
+mainView.addEventListener('touchend', () => {
+    if (parseInt(ptr.style.height) > 50) {
+        ptr.innerText = "Synchroniseren...";
+        loadFromCloud().then(() => { ptr.style.height = '0'; ptr.innerText = "Trek om te vernieuwen..."; });
+    } else { ptr.style.height = '0'; }
+});
+
 window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.getElementById('modal').style.display === 'flex') saveTransaction(); });
 
-// --- ACCOUNT BEHEER FUNCTIES ---
 function openAccMgmtModal() { 
     document.getElementById('accMgmtModal').style.display = 'flex'; 
     document.getElementById('edit-acc-list').style.display = 'none';
@@ -219,7 +244,6 @@ async function createNewAccount() {
         accounts.push(newAcc);
         await syncToCloud();
         renderAccounts();
-        alert("Rekening aangemaakt.");
     }
 }
 
@@ -254,32 +278,24 @@ async function editAccountName(id) {
 
 async function confirmDeleteAccount(id) {
     const acc = accounts.find(a => a.id === id);
-    if (confirm(`Weet je zeker dat je "${acc.name}" wilt verwijderen?`)) {
-        if (confirm(`LAATSTE WAARSCHUWING: Alle transacties van "${acc.name}" gaan verloren. Doorgaan?`)) {
-            transactions = transactions.filter(t => t.accountId !== id);
-            accounts = accounts.filter(a => a.id !== id);
-            await syncToCloud();
-            renderAccounts();
-            if (activeAccountId === id) {
-                activeAccountId = accounts.length > 0 ? accounts[0].id : null;
-                location.reload();
-            }
-            showEditAccountList();
-        }
+    if (confirm(`Wissen?`)) {
+        transactions = transactions.filter(t => t.accountId !== id);
+        accounts = accounts.filter(a => a.id !== id);
+        await syncToCloud();
+        renderAccounts();
+        location.reload();
     }
 }
 
 function downloadBackup() {
     const data = JSON.stringify({ categories, accounts, transactions }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `payit_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.href = URL.createObjectURL(blob);
+    a.download = `payit_backup.json`;
     a.click();
 }
 
-// --- CORE LOGICA (ONGEWIJZIGD) ---
 function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", "."); return parseFloat(clean) || 0; }
 function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -311,7 +327,12 @@ function renderTransactions() {
     let list = transactions.filter(t => t.accountId === activeAccountId);
     document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd";
     let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed');
-    displayList.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.date) - new Date(a.date));
+    
+    displayList.sort((a, b) => {
+        if (a.status !== b.status) return a.status === 'pending' ? -1 : 1;
+        return new Date(b.date) - new Date(a.date);
+    });
+
     displayList.forEach(t => {
         const div = document.createElement('div'); div.className = 'tr-row';
         div.onclick = () => openModal(t.id);

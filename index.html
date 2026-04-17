@@ -37,9 +37,13 @@
 
     .content-wrapper { padding: 10px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     .header-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; position: relative; }
-    .header-card { flex: 1; background: var(--bg-card); border-radius: 12px; padding: 6px 16px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); min-height: 44px; }
-    .header-btns-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; position: relative; z-index: 100; }
+    
+    /* GECORRIGEERDE HEADER LAYOUT: NAAM BOVEN SALDO */
+    .header-card { flex: 1; background: var(--bg-card); border-radius: 12px; padding: 10px 16px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); min-height: 50px; }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
+    .header-acc-name { font-weight: 800; font-size: 14px; color: var(--text-main); }
+
+    .header-btns-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; position: relative; z-index: 100; }
 
     .tr-row { background: var(--bg-card); margin-bottom: 4px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; overflow: hidden; height: 50px; box-sizing: border-box; z-index: 5; }
     .tr-status-line { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
@@ -82,8 +86,7 @@
     }
 
     @media (max-width: 600px) {
-      .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 8px 12px !important; gap: 4px; }
-      .tr-row { height: auto !important; padding: 12px 14px !important; display: flex !important; flex-direction: row !important; }
+      .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 8px 12px !important; gap: 2px; }
     }
 
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
@@ -115,11 +118,11 @@
       <div id="transaction-view">
         <div class="header-wrapper">
             <div class="header-card">
-                <div style="display:flex; align-items:baseline; gap:12px;">
+                <div id="acc-title-text" class="header-acc-name">Laden...</div>
+                <div style="display:flex; align-items:baseline; gap:8px;">
                     <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Saldo</span>
                     <span id="total" class="saldo-text">€ 0,00</span>
                 </div>
-                <div id="acc-title-text" style="font-weight: 800; font-size: 16px;">Laden...</div>
             </div>
             <div class="header-btns-aside">
                 <button class="aside-btn" style="height:32px; width:32px; border-radius:8px; border:none; background:var(--theme-btn-bg); color:var(--theme-btn-text);" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
@@ -226,7 +229,6 @@ mainView.addEventListener('touchend', () => {
     } else { ptr.style.height = '0'; }
 });
 
-// STATUS UPDATE HELPER
 function updateSyncStatus(msg) {
     if(document.getElementById('sync-label-mobile')) document.getElementById('sync-label-mobile').innerText = msg;
     if(document.getElementById('sync-label-desktop')) document.getElementById('sync-label-desktop').innerText = msg;
@@ -242,8 +244,7 @@ async function createNewAccount() {
     if (name && name.trim()) {
         const newAcc = { id: Date.now().toString(), name: name.trim() };
         accounts.push(newAcc);
-        await syncToCloud();
-        renderAccounts();
+        await syncToCloud(); renderAccounts();
     }
 }
 
@@ -252,8 +253,7 @@ function showEditAccountList() {
     container.innerHTML = '';
     accounts.forEach(acc => {
         const div = document.createElement('div');
-        div.className = 'btn-menu';
-        div.style.justifyContent = 'space-between';
+        div.className = 'btn-menu'; div.style.justifyContent = 'space-between';
         div.innerHTML = `<span>${acc.name}</span>
             <div style="display:flex; gap:10px;">
                 <button onclick="editAccountName('${acc.id}')" style="background:none; border:none; cursor:pointer;">✏️</button>
@@ -268,32 +268,24 @@ async function editAccountName(id) {
     const acc = accounts.find(a => a.id === id);
     const newName = prompt("Nieuwe naam voor deze rekening:", acc.name);
     if (newName && newName.trim()) {
-        acc.name = newName.trim();
-        await syncToCloud();
-        renderAccounts();
+        acc.name = newName.trim(); await syncToCloud(); renderAccounts();
         if (activeAccountId === id) document.getElementById('acc-title-text').innerText = acc.name;
         showEditAccountList();
     }
 }
 
 async function confirmDeleteAccount(id) {
-    const acc = accounts.find(a => a.id === id);
     if (confirm(`Wissen?`)) {
         transactions = transactions.filter(t => t.accountId !== id);
         accounts = accounts.filter(a => a.id !== id);
-        await syncToCloud();
-        renderAccounts();
-        location.reload();
+        await syncToCloud(); renderAccounts(); location.reload();
     }
 }
 
 function downloadBackup() {
     const data = JSON.stringify({ categories, accounts, transactions }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `payit_backup.json`;
-    a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `payit_backup.json`; a.click();
 }
 
 function parseNumericValue(str) { if (!str) return 0; let clean = str.toString().replace(/[^0-9,.-]/g, "").replace(",", "."); return parseFloat(clean) || 0; }
@@ -307,8 +299,7 @@ function selectAccount(accId) {
     activeAccountId = accId; localStorage.setItem('lastActiveAccountId', accId); 
     const acc = accounts.find(a => a.id === accId);
     document.getElementById('acc-title-text').innerText = acc ? acc.name : "Geen rekening"; 
-    renderAccounts(); renderTransactions();
-    document.getElementById('sidebar').classList.remove('open');
+    renderAccounts(); renderTransactions(); document.getElementById('sidebar').classList.remove('open');
 }
 
 function renderAccounts() {
@@ -340,40 +331,26 @@ function renderTransactions() {
 }
 
 function setupWheel(id, start, end, selected) {
-    const col = document.getElementById(id);
-    let html = '<div class="wheel-spacer"></div>';
+    const col = document.getElementById(id); let html = '<div class="wheel-spacer"></div>';
     for (let i = start; i <= end; i++) html += `<div class="wheel-item" data-val="${i}">${i.toString().padStart(2, '0')}</div>`;
-    html += '<div class="wheel-spacer"></div>';
-    col.innerHTML = html;
+    html += '<div class="wheel-spacer"></div>'; col.innerHTML = html;
     col.onscroll = () => {
-        const idx = Math.round(col.scrollTop / 34);
-        const items = col.getElementsByClassName('wheel-item');
+        const idx = Math.round(col.scrollTop / 34); const items = col.getElementsByClassName('wheel-item');
         for(let it of items) it.classList.remove('selected');
-        if(items[idx]) {
-            items[idx].classList.add('selected');
-            const v = parseInt(items[idx].dataset.val);
-            if(id === 'wheel-day') currentPickerDate.setDate(v);
-            if(id === 'wheel-month') currentPickerDate.setMonth(v-1);
-            if(id === 'wheel-year') currentPickerDate.setFullYear(v);
-            renderCalGrid();
-        }
+        if(items[idx]) { items[idx].classList.add('selected'); const v = parseInt(items[idx].dataset.val); if(id === 'wheel-day') currentPickerDate.setDate(v); if(id === 'wheel-month') currentPickerDate.setMonth(v-1); if(id === 'wheel-year') currentPickerDate.setFullYear(v); renderCalGrid(); }
     };
     setTimeout(() => col.scrollTop = (selected - start) * 34, 100);
 }
 
 function renderCalGrid() {
-    const grid = document.getElementById('cal-grid'); if(!grid) return;
-    grid.innerHTML = '';
+    const grid = document.getElementById('cal-grid'); if(!grid) return; grid.innerHTML = '';
     const months = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
     document.getElementById('cal-label').innerText = `${months[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`;
     let firstDay = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth(), 1).getDay();
     firstDay = (firstDay === 0) ? 6 : firstDay - 1;
     const daysInMonth = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth() + 1, 0).getDate();
     for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-    for(let i=1; i<=daysInMonth; i++) {
-        const isActive = i === currentPickerDate.getDate();
-        grid.innerHTML += `<div class="cal-cell ${isActive ? 'active' : ''}" onclick="setCalDay(${i})">${i}</div>`;
-    }
+    for(let i=1; i<=daysInMonth; i++) { const isActive = i === currentPickerDate.getDate(); grid.innerHTML += `<div class="cal-cell ${isActive ? 'active' : ''}" onclick="setCalDay(${i})">${i}</div>`; }
 }
 function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
 function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
@@ -382,8 +359,7 @@ function syncWheels() { setupWheel('wheel-day', 1, 31, currentPickerDate.getDate
 function openModal(id = null) {
     editingId = id; document.getElementById('modal').style.display = 'flex';
     document.getElementById('dup-ui').style.display = 'none'; document.getElementById('btnDupConfirm').style.display = 'none';
-    document.getElementById('btnSave').style.display = 'block';
-    document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join('');
+    document.getElementById('btnSave').style.display = 'block'; document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join('');
     if (id) {
         let t = transactions.find(x => x.id === id); currentPickerDate = new Date(t.date);
         document.getElementById('category').value = t.category; document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status;
@@ -400,8 +376,7 @@ function openModal(id = null) {
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
 function toggleDuplicateUI() {
-    const ui = document.getElementById('dup-ui');
-    const select = document.getElementById('dup-target-account');
+    const ui = document.getElementById('dup-ui'); const select = document.getElementById('dup-target-account');
     select.innerHTML = accounts.map(a => `<option value="${a.id}" ${a.id === activeAccountId ? 'selected' : ''}>${a.name}</option>`).join('');
     ui.style.display = 'block'; document.getElementById('btnDupConfirm').style.display = 'block';
     document.getElementById('btnSave').style.display = 'none'; document.getElementById('btnDelete').style.display = 'none'; document.getElementById('btnDup').style.display = 'none';
@@ -409,20 +384,16 @@ function toggleDuplicateUI() {
 
 async function saveTransaction() {
     const catVal = document.getElementById('category').value.trim(); if(!catVal) return;
-    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie "${catVal}" aanmaken?`)) return; categories.push(catVal); }
+    if(!categories.includes(catVal)) { if(!confirm(`Nieuwe categorie?`)) return; categories.push(catVal); }
     let amt = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value);
-    const isoDate = currentPickerDate.toISOString().split('T')[0];
-    let data = { id: editingId || Date.now().toString(), date: isoDate, category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
+    let data = { id: editingId || Date.now().toString(), date: currentPickerDate.toISOString().split('T')[0], category: catVal, memo: document.getElementById('memo').value, amount: amt, status: document.getElementById('status').value, accountId: activeAccountId };
     if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = data; } else transactions.push(data);
     closeModal(); await syncToCloud(); renderTransactions(); renderAccounts();
 }
 
 function duplicateToAccount() {
     let t = transactions.find(x => x.id === editingId); if (!t) return;
-    const targetAccId = document.getElementById('dup-target-account').value;
-    const today = new Date().toISOString().split('T')[0];
-    let newTr = { ...t, id: Date.now().toString(), date: today, status: 'pending', accountId: targetAccId };
-    transactions.push(newTr);
+    transactions.push({ ...t, id: Date.now().toString(), date: new Date().toISOString().split('T')[0], status: 'pending', accountId: document.getElementById('dup-target-account').value });
     closeModal(); syncToCloud(); renderTransactions(); renderAccounts();
 }
 
@@ -435,7 +406,7 @@ async function loadFromCloud() {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
         const result = await response.json();
         if (result?.[0]?.data) {
-            const d = result[0].data; if(d.categories) categories = d.categories; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
+            const d = result[0].data; categories = d.categories || categories; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true;
             renderAccounts(); renderTransactions();
             const lastId = localStorage.getItem('lastActiveAccountId') || (accounts.length > 0 ? accounts[0].id : null);
             if (lastId) selectAccount(lastId);

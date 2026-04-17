@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0.9 - Full Restore</title>
+  <title>Payit v3.0 - Gold Master</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -91,7 +91,7 @@
 <div class="app-container">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <span style="font-weight: 800; color: var(--primary); font-size: 20px;">Payit</span>
+      <span style="font-weight: 800; color: var(--primary); font-size: 20px;">Payit v3.0</span>
       <div style="display:flex; gap:8px;">
           <button class="aside-btn" style="height:32px; width:32px; border-radius:8px; border:none; background:var(--theme-btn-bg); color:var(--theme-btn-text);" onclick="toggleTheme()" id="theme-icon-sidebar">☀️</button>
           <button class="aside-btn" style="height:32px; border-radius:8px; border:1px solid var(--border); color:var(--primary); background:var(--bg-card); width:32px; font-size:18px; cursor:pointer;" onclick="openAccMgmtModal()">+</button>
@@ -169,7 +169,31 @@ applyTheme(localStorage.getItem('payit-theme') || 'light');
 
 function selectAccount(id) { activeAccountId = id; localStorage.setItem('lastActiveAccountId', id); const a = accounts.find(x => x.id === id); document.getElementById('acc-title-text').innerText = a ? a.name : ""; renderAccounts(); renderTransactions(); document.getElementById('sidebar').classList.remove('open'); }
 function renderAccounts() { const s = document.getElementById('sidebar-accounts'); s.innerHTML = ''; accounts.forEach(a => { const bal = transactions.filter(t => t.accountId === a.id).reduce((sum, t) => sum + Number(t.amount), 0); const d = document.createElement('div'); d.className = `acc-item ${activeAccountId === a.id ? 'active' : ''}`; d.onclick = () => selectAccount(a.id); d.innerHTML = `<span class="acc-name">${a.name}</span><span class="acc-bal">${formatCurrency(bal)}</span>`; s.appendChild(d); }); }
-function renderTransactions() { const c = document.getElementById('transactions-container'); c.innerHTML = ''; let list = transactions.filter(t => t.accountId === activeAccountId); document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed'); displayList.sort((a, b) => new Date(b.date) - new Date(a.date)); displayList.forEach(t => { const d = document.createElement('div'); d.className = 'tr-row'; d.onclick = () => openModal(t.id); d.innerHTML = `<div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div class="tr-main-content"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span><span class="tr-memo-list">${t.memo || ''}</span></div><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>`; c.appendChild(d); }); document.getElementById('total').innerText = formatCurrency(list.reduce((sum, t) => sum + Number(t.amount), 0)); }
+
+// DE HERSTELDE SORTEER-LOGICA
+function renderTransactions() { 
+    const c = document.getElementById('transactions-container'); 
+    c.innerHTML = ''; 
+    let list = transactions.filter(t => t.accountId === activeAccountId); 
+    document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; 
+    
+    let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed'); 
+    
+    // 1. Eerst afwachtend, dan bevestigd. 2. Per groep op datum nieuw-oud.
+    displayList.sort((a, b) => {
+        if (a.status !== b.status) return a.status === 'pending' ? -1 : 1;
+        return new Date(b.date) - new Date(a.date);
+    });
+
+    displayList.forEach(t => { 
+        const d = document.createElement('div'); 
+        d.className = 'tr-row'; 
+        d.onclick = () => openModal(t.id); 
+        d.innerHTML = `<div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div class="tr-main-content"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span><span class="tr-memo-list">${t.memo || ''}</span></div><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>`; 
+        c.appendChild(d); 
+    }); 
+    document.getElementById('total').innerText = formatCurrency(list.reduce((sum, t) => sum + Number(t.amount), 0)); 
+}
 
 function setupWheel(id, s, e, sel) { const col = document.getElementById(id); let h = '<div class="wheel-spacer"></div>'; for (let i = s; i <= e; i++) h += `<div class="wheel-item" data-val="${i}">${i.toString().padStart(2, '0')}</div>`; h += '<div class="wheel-spacer"></div>'; col.innerHTML = h; col.onscroll = () => { const idx = Math.round(col.scrollTop / 34); const items = col.getElementsByClassName('wheel-item'); if(items[idx]) { Array.from(items).forEach(x => x.classList.remove('selected')); items[idx].classList.add('selected'); const v = parseInt(items[idx].dataset.val); if(id === 'wheel-day') currentPickerDate.setDate(v); if(id === 'wheel-month') currentPickerDate.setMonth(v-1); if(id === 'wheel-year') currentPickerDate.setFullYear(v); renderCalGrid(); } }; setTimeout(() => col.scrollTop = (sel - s) * 34, 100); }
 function renderCalGrid() { const g = document.getElementById('cal-grid'); if(!g) return; g.innerHTML = ''; const m = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"]; document.getElementById('cal-label').innerText = `${m[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`; let f = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth(), 1).getDay(); f = (f === 0) ? 6 : f - 1; const dIM = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth() + 1, 0).getDate(); for(let i=0; i<f; i++) g.innerHTML += `<div></div>`; for(let i=1; i<=dIM; i++) { const act = i === currentPickerDate.getDate(); g.innerHTML += `<div class="cal-cell ${act ? 'active' : ''}" onclick="setCalDay(${i})">${i}</div>`; } }

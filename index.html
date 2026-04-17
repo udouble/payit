@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Payit v2.0.7 - Visual Sync Label</title>
+  <title>Payit v2.0.9 - Full Restore</title>
   <style>
     :root {
       --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-card: #ffffff; --bg-input: #f8fafc;
@@ -24,17 +24,13 @@
     
     body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); -webkit-font-smoothing: antialiased; overflow: hidden; overscroll-behavior-y: contain; transition: background-color 0.3s, color 0.3s; }
     .app-container { display: flex; height: 100vh; }
-    
     .sidebar { width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; }
     .sidebar-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
     .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; }
-    
-    /* NIEUW: Sidebar Footer voor Mac Sync Status */
     .sidebar-footer { padding: 10px; text-align: center; border-top: 1px solid var(--border); background: var(--bg-sidebar); }
     .sync-text { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
 
     .main-view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background-color: var(--bg-body); position: relative; padding-bottom: 80px; }
-    
     .acc-item { padding: 12px 16px; border-radius: 10px; margin-bottom: 4px; cursor: pointer; border: 1px solid transparent; display: flex; flex-direction: column; gap: 2px; transition: all 0.2s; position: relative; z-index: 5; }
     .acc-item.active { background: rgba(63, 140, 255, 0.1); border-color: var(--primary); }
     .acc-name { font-weight: 700; font-size: 14px; pointer-events: none; }
@@ -64,10 +60,10 @@
 
     .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
     .cal-mac-view { padding: 12px; display: block; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
     .cal-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 4px; text-align: center; }
     .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
     .cal-cell.active { background: var(--primary); color: white; }
-
     .cal-touch-view { display: none; justify-content: space-around; height: 150px; position: relative; padding: 10px 0; }
     .wheel-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; scrollbar-width: none; }
     .wheel-col::-webkit-scrollbar { display: none; }
@@ -83,15 +79,9 @@
       .cal-touch-view { display: flex; }
     }
 
-    @media (max-width: 600px) {
-      .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 8px 12px !important; gap: 4px; }
-      .tr-row { height: auto !important; padding: 12px 14px !important; display: flex !important; flex-direction: row !important; }
-    }
-
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
     .btn-action { height: 48px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 14px; }
     .btn-menu { width: 100%; text-align: left; padding: 0 15px; margin-top: 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; height: 50px; display: flex; align-items: center; gap: 10px; color: var(--text-main); font-weight: 600; cursor: pointer; }
-    
     .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
     .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
   </style>
@@ -104,4 +94,104 @@
       <span style="font-weight: 800; color: var(--primary); font-size: 20px;">Payit</span>
       <div style="display:flex; gap:8px;">
           <button class="aside-btn" style="height:32px; width:32px; border-radius:8px; border:none; background:var(--theme-btn-bg); color:var(--theme-btn-text);" onclick="toggleTheme()" id="theme-icon-sidebar">☀️</button>
-          <button class="aside-btn" style="height:32px; border-radius:8
+          <button class="aside-btn" style="height:32px; border-radius:8px; border:1px solid var(--border); color:var(--primary); background:var(--bg-card); width:32px; font-size:18px; cursor:pointer;" onclick="openAccMgmtModal()">+</button>
+      </div>
+    </div>
+    <div class="sidebar-content" id="sidebar-accounts"></div>
+    <div class="sidebar-footer"><span class="sync-text" id="sync-label-desktop">Sync: OK</span></div>
+  </aside>
+
+  <main class="main-view">
+    <div class="content-wrapper">
+        <div class="header-wrapper">
+            <div class="header-card">
+                <div style="display:flex; align-items:baseline; gap:12px;">
+                    <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Saldo</span>
+                    <span id="total" class="saldo-text">€ 0,00</span>
+                </div>
+                <div id="acc-title-text" style="font-weight: 800; font-size: 16px;">Laden...</div>
+            </div>
+            <div class="header-btns-aside">
+                <button class="aside-btn" style="height:32px; width:32px; border-radius:8px; border:none; background:var(--theme-btn-bg); color:var(--theme-btn-text);" onclick="toggleTheme()" id="theme-icon-desktop">☀️</button>
+                <button class="aside-btn" style="height:32px; border-radius:8px; border:none; background:var(--primary); color:white; padding:0 12px; font-size:13px; font-weight:700;" onclick="openModal()">+ Nieuw</button>
+            </div>
+        </div>
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 5px;">
+            <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span>
+            <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Filter...</button>
+        </div>
+        <div id="transactions-container"></div>
+    </div>
+  </main>
+</div>
+
+<nav class="iphone-nav">
+  <button class="nav-item" onclick="toggleSidebar()"><span class="nav-icon">💳</span><span class="nav-label">Rekeningen</span></button>
+  <button class="nav-item" onclick="openModal()"><span class="nav-icon" style="color:var(--primary); font-size:24px;">⊕</span><span class="nav-label">Nieuw</span></button>
+  <button class="nav-item"><span class="nav-icon">🔄</span><span class="nav-label" id="sync-label-mobile">Sync OK</span></button>
+</nav>
+
+<div class="modal" id="accMgmtModal"><div class="modal-content"><h3 style="margin:0; color:var(--primary); margin-bottom: 15px; font-weight: 800;">Beheer Rekeningen</h3><button class="btn-menu" onclick="createNewAccount()"><span>➕</span> Nieuwe rekening aanmaken</button><button class="btn-menu" onclick="showEditAccountList()"><span>✏️</span> Bestaande rekening wijzigen/wissen</button><button class="btn-menu" onclick="downloadBackup()"><span>💾</span> Back-up maken (Export)</button><div id="edit-acc-list" style="display:none; margin-top:15px; border-top:1px solid var(--border); padding-top:10px;"><div id="acc-edit-items"></div></div><button class="btn-action" style="width:100%; margin-top:20px; background:var(--bg-input); color:var(--text-muted);" onclick="closeAccMgmtModal()">Sluiten</button></div></div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3 style="margin:0; color:var(--primary); margin-bottom: 8px; font-weight: 800;">Transactie</h3>
+    <div class="cal-engine">
+        <div class="cal-mac-view"><div class="cal-header"><button onclick="changeMonth(-1)">&lt;</button><span id="cal-label"></span><button onclick="changeMonth(1)">&gt;</button></div><div id="cal-grid" class="cal-grid"></div></div>
+        <div class="cal-touch-view"><div class="wheel-col" id="wheel-day"></div><div class="wheel-col" id="wheel-month"></div><div class="wheel-col" id="wheel-year"></div></div>
+    </div>
+    <input type="text" id="category" placeholder="Categorie" list="cat-list"><datalist id="cat-list"></datalist>
+    <input type="text" id="memo" placeholder="Memo / Omschrijving">
+    <div style="display:flex; gap:10px;"><input type="text" id="income" placeholder="In" style="color:var(--positive)"><input type="text" id="expense" placeholder="Uit" style="color:var(--negative)"></div>
+    <select id="status"><option value="pending">Afwachtend</option><option value="confirmed">Bevestigd</option></select>
+    <div id="dup-ui" style="display:none; border:1px solid var(--primary); padding:10px; border-radius:10px; margin-top:10px; background:rgba(63, 140, 255, 0.05);"><label style="font-size:11px; font-weight:800; color:var(--primary); text-transform:uppercase;">Dupliceren naar:</label><select id="dup-target-account" style="margin-top:5px;"></select></div>
+    <div class="btn-grid"><button class="btn-action" onclick="closeModal()">Annuleren</button><button id="btnSave" class="btn-action" style="background:var(--primary); color:white;" onclick="saveTransaction()">Opslaan</button><button id="btnDelete" class="btn-action" style="background:rgba(239,68,68,0.1); color:var(--negative); display:none;" onclick="deleteTransaction()">Wissen</button><button id="btnDup" class="btn-action" style="background:var(--primary); color:white; display:none;" onclick="toggleDuplicateUI()">Dupliceren...</button><button id="btnDupConfirm" class="btn-action" style="background:var(--positive); color:white; display:none; grid-column: 1 / -1;" onclick="duplicateToAccount()">Bevestig Duplicatie</button></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://bfbcyskqgasqouzbakpe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYmN5c2txZ2FzcW91emJha3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjkxMzcsImV4cCI6MjA5MTUwNTEzN30._0_530X8aEaLJmPpH0oBoUZnDdG3O0oIwsWHkP1VxqQ';
+const DB_RECORD_ID = 'main_user'; 
+let categories = ["Opzij","BMW","Belastingen","Delhaize","Etentjes","Pensioen","Lening","BTW-voorziening","Rekening courant"];
+let accounts = [], transactions = [], activeAccountId = null, editingId = null, showConfirmed = false, currentPickerDate = new Date();
+
+function setSyncStatus(s) { document.getElementById('sync-label-desktop').innerText = `Sync: ${s}`; document.getElementById('sync-label-mobile').innerText = `Sync ${s}`; }
+async function syncToCloud() { try { await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { categories, accounts, transactions, showConfirmed } }) }); setSyncStatus("OK"); } catch (e) { setSyncStatus("Fout"); } }
+async function loadFromCloud() { try { const r = await fetch(`${SUPABASE_URL}/rest/v1/payit?id=eq.${DB_RECORD_ID}&select=data`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }); const res = await r.json(); if (res?.[0]?.data) { const d = res[0].data; if(d.categories) categories = d.categories; accounts = d.accounts; transactions = d.transactions; showConfirmed = d.showConfirmed === true; renderAccounts(); renderTransactions(); const lastId = localStorage.getItem('lastActiveAccountId') || (accounts[0]?.id); if (lastId) selectAccount(lastId); setSyncStatus("OK"); } } catch (e) { setSyncStatus("Fout"); } }
+
+function parseNumericValue(s) { if (!s) return 0; let c = s.toString().replace(/[^0-9,.-]/g, "").replace(",", "."); return parseFloat(c) || 0; }
+function formatCurrency(n) { return new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR' }).format(n); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function applyTheme(t) { document.body.setAttribute('data-theme', t); localStorage.setItem('payit-theme', t); }
+function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
+applyTheme(localStorage.getItem('payit-theme') || 'light');
+
+function selectAccount(id) { activeAccountId = id; localStorage.setItem('lastActiveAccountId', id); const a = accounts.find(x => x.id === id); document.getElementById('acc-title-text').innerText = a ? a.name : ""; renderAccounts(); renderTransactions(); document.getElementById('sidebar').classList.remove('open'); }
+function renderAccounts() { const s = document.getElementById('sidebar-accounts'); s.innerHTML = ''; accounts.forEach(a => { const bal = transactions.filter(t => t.accountId === a.id).reduce((sum, t) => sum + Number(t.amount), 0); const d = document.createElement('div'); d.className = `acc-item ${activeAccountId === a.id ? 'active' : ''}`; d.onclick = () => selectAccount(a.id); d.innerHTML = `<span class="acc-name">${a.name}</span><span class="acc-bal">${formatCurrency(bal)}</span>`; s.appendChild(d); }); }
+function renderTransactions() { const c = document.getElementById('transactions-container'); c.innerHTML = ''; let list = transactions.filter(t => t.accountId === activeAccountId); document.getElementById('filterBtn').innerText = showConfirmed ? "Verberg bevestigd" : "Toon bevestigd"; let displayList = showConfirmed ? [...list] : list.filter(t => t.status !== 'confirmed'); displayList.sort((a, b) => new Date(b.date) - new Date(a.date)); displayList.forEach(t => { const d = document.createElement('div'); d.className = 'tr-row'; d.onclick = () => openModal(t.id); d.innerHTML = `<div class="tr-status-line ${t.status === 'confirmed' ? 'green-bg' : 'red-bg'}"></div><div class="tr-main-content"><span class="tr-date">${t.date}</span><span class="tr-cat">${t.category}</span><span class="tr-memo-list">${t.memo || ''}</span></div><span class="tr-amount ${t.amount < 0 ? 'neg-text' : 'pos-text'}">${formatCurrency(t.amount)}</span>`; c.appendChild(d); }); document.getElementById('total').innerText = formatCurrency(list.reduce((sum, t) => sum + Number(t.amount), 0)); }
+
+function setupWheel(id, s, e, sel) { const col = document.getElementById(id); let h = '<div class="wheel-spacer"></div>'; for (let i = s; i <= e; i++) h += `<div class="wheel-item" data-val="${i}">${i.toString().padStart(2, '0')}</div>`; h += '<div class="wheel-spacer"></div>'; col.innerHTML = h; col.onscroll = () => { const idx = Math.round(col.scrollTop / 34); const items = col.getElementsByClassName('wheel-item'); if(items[idx]) { Array.from(items).forEach(x => x.classList.remove('selected')); items[idx].classList.add('selected'); const v = parseInt(items[idx].dataset.val); if(id === 'wheel-day') currentPickerDate.setDate(v); if(id === 'wheel-month') currentPickerDate.setMonth(v-1); if(id === 'wheel-year') currentPickerDate.setFullYear(v); renderCalGrid(); } }; setTimeout(() => col.scrollTop = (sel - s) * 34, 100); }
+function renderCalGrid() { const g = document.getElementById('cal-grid'); if(!g) return; g.innerHTML = ''; const m = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"]; document.getElementById('cal-label').innerText = `${m[currentPickerDate.getMonth()]} ${currentPickerDate.getFullYear()}`; let f = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth(), 1).getDay(); f = (f === 0) ? 6 : f - 1; const dIM = new Date(currentPickerDate.getFullYear(), currentPickerDate.getMonth() + 1, 0).getDate(); for(let i=0; i<f; i++) g.innerHTML += `<div></div>`; for(let i=1; i<=dIM; i++) { const act = i === currentPickerDate.getDate(); g.innerHTML += `<div class="cal-cell ${act ? 'active' : ''}" onclick="setCalDay(${i})">${i}</div>`; } }
+function setCalDay(d) { currentPickerDate.setDate(d); renderCalGrid(); syncWheels(); }
+function changeMonth(dir) { currentPickerDate.setMonth(currentPickerDate.getMonth() + dir); renderCalGrid(); syncWheels(); }
+function syncWheels() { setupWheel('wheel-day', 1, 31, currentPickerDate.getDate()); setupWheel('wheel-month', 1, 12, currentPickerDate.getMonth() + 1); setupWheel('wheel-year', 2020, 2035, currentPickerDate.getFullYear()); }
+
+function openModal(id = null) { editingId = id; document.getElementById('modal').style.display = 'flex'; document.getElementById('dup-ui').style.display = 'none'; document.getElementById('btnDupConfirm').style.display = 'none'; document.getElementById('btnSave').style.display = 'block'; document.getElementById('cat-list').innerHTML = categories.sort().map(c => `<option value="${c}">`).join(''); if (id) { let t = transactions.find(x => x.id === id); currentPickerDate = new Date(t.date); document.getElementById('category').value = t.category; document.getElementById('memo').value = t.memo; document.getElementById('status').value = t.status; if(t.amount >= 0) { document.getElementById('income').value = t.amount; document.getElementById('expense').value = ''; } else { document.getElementById('expense').value = Math.abs(t.amount); document.getElementById('income').value = ''; } document.getElementById('btnDelete').style.display = 'block'; document.getElementById('btnDup').style.display = 'block'; } else { currentPickerDate = new Date(); document.getElementById('category').value = ''; document.getElementById('memo').value = ''; document.getElementById('income').value = ''; document.getElementById('expense').value = ''; document.getElementById('btnDelete').style.display = 'none'; document.getElementById('btnDup').style.display = 'none'; } renderCalGrid(); syncWheels(); }
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+function toggleDuplicateUI() { const u = document.getElementById('dup-ui'); const s = document.getElementById('dup-target-account'); s.innerHTML = accounts.map(a => `<option value="${a.id}" ${a.id === activeAccountId ? 'selected' : ''}>${a.name}</option>`).join(''); u.style.display = 'block'; document.getElementById('btnDupConfirm').style.display = 'block'; document.getElementById('btnSave').style.display = 'none'; document.getElementById('btnDelete').style.display = 'none'; document.getElementById('btnDup').style.display = 'none'; }
+async function saveTransaction() { const c = document.getElementById('category').value.trim(); if(!c) return; if(!categories.includes(c)) { if(!confirm(`Nieuwe categorie "${c}" aanmaken?`)) return; categories.push(c); } let a = parseNumericValue(document.getElementById('income').value) - parseNumericValue(document.getElementById('expense').value); const d = { id: editingId || Date.now().toString(), date: currentPickerDate.toISOString().split('T')[0], category: c, memo: document.getElementById('memo').value, amount: a, status: document.getElementById('status').value, accountId: activeAccountId }; if (editingId) { let idx = transactions.findIndex(t => t.id === editingId); if(idx > -1) transactions[idx] = d; } else transactions.push(d); closeModal(); await syncToCloud(); renderTransactions(); renderAccounts(); }
+function duplicateToAccount() { let t = transactions.find(x => x.id === editingId); if (!t) return; const targetAccId = document.getElementById('dup-target-account').value; let n = { ...t, id: Date.now().toString(), date: new Date().toISOString().split('T')[0], status: 'pending', accountId: targetAccId }; transactions.push(n); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); }
+function deleteTransaction() { if(confirm('Wissen?')) { transactions = transactions.filter(t => t.id !== editingId); closeModal(); syncToCloud(); renderTransactions(); renderAccounts(); } }
+async function toggleConfirmed() { showConfirmed = !showConfirmed; renderTransactions(); await syncToCloud(); }
+function openAccMgmtModal() { document.getElementById('accMgmtModal').style.display = 'flex'; document.getElementById('edit-acc-list').style.display = 'none'; }
+function closeAccMgmtModal() { document.getElementById('accMgmtModal').style.display = 'none'; }
+async function createNewAccount() { const n = prompt("Naam rekening:"); if (n && n.trim()) { accounts.push({ id: Date.now().toString(), name: n.trim() }); await syncToCloud(); renderAccounts(); } }
+function showEditAccountList() { const c = document.getElementById('acc-edit-items'); c.innerHTML = ''; accounts.forEach(a => { const d = document.createElement('div'); d.className = 'btn-menu'; d.style.justifyContent = 'space-between'; d.innerHTML = `<span>${a.name}</span><div style="display:flex; gap:10px;"><button onclick="editAccountName('${a.id}')">✏️</button><button onclick="confirmDeleteAccount('${a.id}')">🗑️</button></div>`; c.appendChild(d); }); document.getElementById('edit-acc-list').style.display = 'block'; }
+async function editAccountName(id) { const a = accounts.find(x => x.id === id); const n = prompt("Nieuwe naam:", a.name); if (n && n.trim()) { a.name = n.trim(); await syncToCloud(); renderAccounts(); showEditAccountList(); } }
+async function confirmDeleteAccount(id) { if (confirm(`Wissen?`)) { transactions = transactions.filter(t => t.accountId !== id); accounts = accounts.filter(a => a.id !== id); await syncToCloud(); renderAccounts(); showEditAccountList(); } }
+function downloadBackup() { const d = JSON.stringify({ categories, accounts, transactions }, null, 2); const b = new Blob([d], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `payit_backup.json`; a.click(); }
+loadFromCloud();
+</script>
+</body>
+</html>

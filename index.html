@@ -34,7 +34,7 @@
 
     .header-fixed-part { padding: 10px; flex-shrink: 0; z-index: 100; background-color: var(--bg-body); }
     .header-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .header-card { flex: 1; background: var(--bg-card); border-radius: 12px; padding: 10px 16px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); min-height: 50px; }
+    .header-card { flex: 1; background: var(--bg-card); border-radius: 12px; padding: 10px 16px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); min-height: 50px; cursor: pointer; }
     .saldo-text { font-size: 26px; font-weight: 800; color: var(--orange); }
     .header-acc-name { font-weight: 800; font-size: 14px; color: var(--text-main); }
     .header-btns-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; }
@@ -67,34 +67,20 @@
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; border: none; background: none; color: var(--text-muted); cursor: pointer; }
     .nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
-    .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
-    .cal-mac-view { padding: 12px; display: block; }
-    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
-    .cal-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 4px; text-align: center; }
-    .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
-    .cal-cell.active { background: var(--primary); color: white; }
-
-    .cal-touch-view { display: none; justify-content: space-around; height: 150px; position: relative; padding: 10px 0; }
-    .wheel-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; scrollbar-width: none; }
-    .wheel-col::-webkit-scrollbar { display: none; }
-    .wheel-item { height: 34px; line-height: 34px; scroll-snap-align: center; font-size: 16px; color: var(--text-muted); }
-    .wheel-item.selected { color: var(--primary); font-weight: 800; }
-    .wheel-spacer { height: 58px; }
-
     @media (max-width: 1025px) {
       .sidebar { position: fixed; transform: translateX(-100%); height: 100%; box-shadow: 20px 0 50px rgba(0,0,0,0.1); }
       .sidebar.open { transform: translateX(0); }
       .iphone-nav { display: flex; }
-      .cal-mac-view { display: none; }
-      .cal-touch-view { display: flex; }
+      /* Voor iPhone alleen de sync knop laten staan of balk leeg laten */
+      .nav-item:not(:last-child) { display: none; }
     }
 
     @media (max-width: 600px) {
       .header-card { flex-direction: column !important; align-items: flex-start !important; padding: 8px 12px !important; gap: 2px; }
-      /* EXTRA RUIMTE TUSSEN CAT EN MEMO (gap naar 3px verhoogd) */
       .tr-text-group { flex-direction: column; align-items: flex-start; gap: 3px; }
       .tr-cat { min-width: 0; max-width: 100%; line-height: 1.0; }
       .tr-memo-list { font-size: 11px; line-height: 1.0; }
+      #sync-status-header { display: block !important; }
     }
 
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
@@ -103,6 +89,21 @@
     
     .green-bg { background-color: var(--positive); } .red-bg { background-color: var(--negative); }
     .pos-text { color: var(--positive); } .neg-text { color: var(--negative); }
+
+    .cal-engine { margin-top: 10px; border: 1px solid var(--border); border-radius: 15px; background: var(--bg-input); overflow: hidden; }
+    .cal-mac-view { padding: 12px; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
+    .cal-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 4px; text-align: center; }
+    .cal-cell { padding: 8px 0; font-size: 13px; cursor: pointer; border-radius: 8px; font-weight: 600; }
+    .cal-cell.active { background: var(--primary); color: white; }
+    .cal-touch-view { display: none; justify-content: space-around; height: 150px; position: relative; padding: 10px 0; }
+    .wheel-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; scrollbar-width: none; }
+    .wheel-col::-webkit-scrollbar { display: none; }
+    .wheel-item { height: 34px; line-height: 34px; scroll-snap-align: center; font-size: 16px; color: var(--text-muted); }
+    .wheel-item.selected { color: var(--primary); font-weight: 800; }
+    .wheel-spacer { height: 58px; }
+
+    @media (max-width: 1025px) { .cal-mac-view { display: none; } .cal-touch-view { display: flex; } }
   </style>
 </head>
 <body>
@@ -125,7 +126,7 @@
     <div class="content-wrapper">
         <div class="header-fixed-part">
             <div class="header-wrapper">
-                <div class="header-card">
+                <div class="header-card" onclick="toggleSidebar()">
                     <div id="acc-title-text" class="header-acc-name">Laden...</div>
                     <div style="display:flex; align-items:baseline; gap:8px;">
                         <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Saldo</span>
@@ -138,7 +139,7 @@
                 </div>
             </div>
             <div style="display:flex; justify-content: space-between; align-items: center; padding: 0 5px;">
-                <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Historie</span>
+                <span id="sync-status-header" style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Sync OK</span>
                 <button id="filterBtn" onclick="toggleConfirmed()" style="background:none; border:none; color:var(--primary); font-size: 11px; font-weight: 700; cursor:pointer;">Laden...</button>
             </div>
         </div>
@@ -151,8 +152,7 @@
 </div>
 
 <nav class="iphone-nav">
-  <button class="nav-item" onclick="toggleSidebar()"><span class="nav-icon">💳</span><span class="nav-label">Rekeningen</span></button>
-  <button class="nav-item" onclick="openModal()"><span class="nav-icon" style="color:var(--primary); font-size:24px;">⊕</span><span class="nav-label">Nieuw</span></button>
+  <div style="flex:1"></div>
   <button class="nav-item" onclick="loadFromCloud()"><span class="nav-icon">🔄</span><span class="nav-label" id="sync-label-mobile">Sync OK</span></button>
 </nav>
 
@@ -219,15 +219,9 @@ let categories = ["Opzij","BMW","Belastingen","Delhaize","Etentjes","Pensioen","
 let accounts = [], transactions = [], activeAccountId = null, editingId = null, showConfirmed = false;
 let currentPickerDate = new Date();
 
-// KEYBOARD SHORTCUTS
 window.addEventListener('keydown', (e) => { 
-    if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
-        e.preventDefault();
-        openModal();
-    }
-    if (e.key === 'Enter' && document.getElementById('modal').style.display === 'flex') {
-        saveTransaction();
-    } 
+    if ((e.metaKey || e.ctrlKey) && e.key === 'e') { e.preventDefault(); openModal(); }
+    if (e.key === 'Enter' && document.getElementById('modal').style.display === 'flex') { saveTransaction(); } 
 });
 
 let touchStart = 0;
@@ -253,6 +247,7 @@ scrollArea.addEventListener('touchend', () => {
 function updateSyncStatus(msg) {
     if(document.getElementById('sync-label-mobile')) document.getElementById('sync-label-mobile').innerText = msg;
     if(document.getElementById('sync-label-desktop')) document.getElementById('sync-label-desktop').innerText = msg;
+    if(document.getElementById('sync-status-header')) document.getElementById('sync-status-header').innerText = msg;
 }
 
 function openAccMgmtModal() { document.getElementById('accMgmtModal').style.display = 'flex'; document.getElementById('edit-acc-list').style.display = 'none'; }
@@ -260,10 +255,7 @@ function closeAccMgmtModal() { document.getElementById('accMgmtModal').style.dis
 
 async function createNewAccount() {
     const name = prompt("Naam:");
-    if (name && name.trim()) {
-        accounts.push({ id: Date.now().toString(), name: name.trim() });
-        await syncToCloud(); renderAccounts();
-    }
+    if (name && name.trim()) { accounts.push({ id: Date.now().toString(), name: name.trim() }); await syncToCloud(); renderAccounts(); }
 }
 
 function showEditAccountList() {
